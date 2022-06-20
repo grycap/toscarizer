@@ -1,0 +1,19 @@
+#FROM ai-sprint/app_base_image:latest
+FROM python:3.8
+
+COPY src/requirements.txt src/requirements.sys ./
+
+RUN apt update && \
+    xargs apt install -y --no-install-recommends < requirements.sys  && \
+    apt-get autoremove -y && apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* && rm -rf ~/.cache/
+
+RUN pip install --upgrade pip
+RUN pip install --no-cache-dir -r requirements.txt
+
+RUN mkdir /opt/{{component_name}}
+
+WORKDIR /opt/{{component_name}}
+
+COPY onnx onnx_model
+COPY script.sh {{component_name}}_script.sh
+COPY src/{{component_name}}/ .
