@@ -1,4 +1,3 @@
-from email.policy import default
 import click
 import yaml
 import sys
@@ -35,9 +34,10 @@ def fdl(design_dir):
     resources = parse_resources("%s/%s" % (design_dir, RESOURCES_FILE))
     dag = parse_dag("%s/%s" % (design_dir, DAG_FILE))
     fdl = generate_fdl(dag, resources)
-    with open("%s/oscar/fdl.yaml" % design_dir, 'w+') as f:
+    fdl_file = "%s/oscar/fdl.yaml" % design_dir
+    with open(fdl_file, 'w+') as f:
         yaml.safe_dump(fdl, f, indent=2)
-    print("DONE. FDL file has been generated.") 
+    print("DONE. FDL file %s has been generated." % fdl_file) 
 
 oscariser_cli.add_command(docker)
 oscariser_cli.add_command(fdl)
