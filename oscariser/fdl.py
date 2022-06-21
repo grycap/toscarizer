@@ -9,6 +9,8 @@ def get_service(component, previous, resources):
         input_path = "%s/input" % component
     else:
         input_path = "%s/output" % previous
+    if not resources.get(component, {}).get("containerLink"):
+        raise Exception("No containerLink found for component: %s" % component)
     service = {
         "name": component,
         "image": resources.get(component, {}).get("containerLink"),
