@@ -1,0 +1,26 @@
+functions:
+  oscar:
+  - computationallayer1:
+      cpu: 0.9
+      image: registry.gitlab.polimi.it/ai-sprint/blurry-faces-Dep1-RasPi:latest
+      input:
+      - path: blurry-faces-onnx/input
+        storage_provider: minio
+      memory: 2048Mi
+      name: blurry-faces-onnx
+      output:
+      - path: blurry-faces-onnx/output
+        storage_provider: minio
+      script: blurry-faces-onnx_script.sh
+  - computationallayer2:
+      cpu: 0.9
+      image: registry.gitlab.polimi.it/ai-sprint/mask-detector-VM1:latest
+      input:
+      - path: blurry-faces-onnx/output
+        storage_provider: minio
+      memory: 4096Mi
+      name: mask-detector
+      output:
+      - path: mask-detector/output
+        storage_provider: minio
+      script: mask-detector_script.sh

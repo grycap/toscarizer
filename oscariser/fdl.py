@@ -1,6 +1,6 @@
 import sys
 import yaml
-from utils import RESOURCES_FILE, DAG_FILE, parse_dag, parse_resources
+from oscariser.utils import RESOURCES_FILE, DAG_FILE, parse_dag, parse_resources
 
 
 def get_service(component, previous, resources):

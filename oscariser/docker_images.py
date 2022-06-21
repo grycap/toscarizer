@@ -2,13 +2,14 @@ import docker
 import sys
 import tempfile
 import yaml
-from utils import RESOURCES_FILE, DAG_FILE, parse_dag, parse_resources
+from oscariser.utils import RESOURCES_FILE, DAG_FILE, parse_dag, parse_resources
 
 
 DOCKERFILE_TEMPLATE = "templates/Dockerfile.template"
 
 
 def generate_dockerfiles(dag, resources):
+    """Generates dockerfiles per each component using the template."""
     with open(DOCKERFILE_TEMPLATE, 'r') as f:
         dockerfile_tpl = f.read()
 
@@ -20,6 +21,7 @@ def generate_dockerfiles(dag, resources):
 
 
 def build_and_push(registry, dockerfiles, username, password, platform=None, push=True, build=True):
+    """Build and push the images per each component using the dockerfiles specified."""
     try:
         dclient = docker.from_env()
     except docker.errors.DockerException:
@@ -49,6 +51,7 @@ def build_and_push(registry, dockerfiles, username, password, platform=None, pus
 
 
 def update_resources(docker_images, resource_file):
+    """Update the resources.yaml file adding the containerLink."""
     with open(resource_file, 'r') as f:
         resources = yaml.safe_load(f)
 
