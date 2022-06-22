@@ -8,9 +8,11 @@ from oscariser.utils import parse_dag, parse_resources, RESOURCES_FILE, DAG_FILE
 from oscariser.fdl import generate_fdl
 from oscariser.docker_images import generate_dockerfiles, build_and_push, update_resources
 
+
 @click.group()
 def oscariser_cli():
     pass
+
 
 @click.command()
 @click.option("--design-dir", help="Path to the design of the AI-SPRINT application.", type=str, required=True)
@@ -26,7 +28,8 @@ def docker(design_dir, username, password, registry, dry_run):
     print("Docker images generated and pushed to the registry.")
     print("\n".join(map(lambda x: "%s: %s" % (x, docker_images[x][1]), docker_images)))
     update_resources(docker_images, "%s/%s" % (design_dir, RESOURCES_FILE))
-    print("DONE. Updated resouces file with new image links.") 
+    print("DONE. Updated resouces file with new image links.")
+
 
 @click.command()
 @click.option("--design-dir", help="Path to the design of the AI-SPRINT application.", type=str, required=True)
@@ -37,10 +40,12 @@ def fdl(design_dir):
     fdl_file = "%s/oscar/fdl.yaml" % design_dir
     with open(fdl_file, 'w+') as f:
         yaml.safe_dump(fdl, f, indent=2)
-    print("DONE. FDL file %s has been generated." % fdl_file) 
+    print("DONE. FDL file %s has been generated." % fdl_file)
+
 
 oscariser_cli.add_command(docker)
 oscariser_cli.add_command(fdl)
+
 
 if __name__ == '__main__':
     oscariser_cli()

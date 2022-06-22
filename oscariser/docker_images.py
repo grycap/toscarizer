@@ -15,7 +15,8 @@ def generate_dockerfiles(dag, resources):
 
     dockerfiles = {}
     for component in dag:
-        dockerfiles[component] = (resources[component]["image"], dockerfile_tpl.replace("{{component_name}}", component))
+        dockerfiles[component] = (resources[component]["image"],
+                                  dockerfile_tpl.replace("{{component_name}}", component))
 
     return dockerfiles
 
@@ -25,7 +26,8 @@ def build_and_push(registry, dockerfiles, username, password, platform=None, pus
     try:
         dclient = docker.from_env()
     except docker.errors.DockerException:
-        raise Exception("Error getting docker client. Check if current user has the correct permissions (docker group).")
+        raise Exception("Error getting docker client. Check if current user"
+                        " has the correct permissions (docker group).")
 
     if push:
         dclient.login(username=username, password=password, registry=registry)
