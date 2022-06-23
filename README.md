@@ -19,7 +19,12 @@ oscariser --help
 oscariser docker --registry registry.gitlab.polimi.it/ai-sprint --username user --password pass --design-dir design_example
 ```
 
-### Step4: Generate the corresponding OSCAR FDL file
+### Step4: Generate the corresponding OSCAR FDL files
 ```
 oscariser fdl --design-dir design_example
+```
+
+### Step5: Generate the corresponding TOSCA YAML files
+```
+oscariser tosca --design-dir design_example
 ```
