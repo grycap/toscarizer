@@ -1,19 +1,19 @@
 from setuptools import setup
 
 setup(
-    name='oscariser',
+    name='toscarizer',
     version='0.1',
     author='Miguel Caballer',
-    long_description='OSCARISER',
-    url='https://gitlab.polimi.it/grycap/oscariser',
+    long_description='TOSCARIZER',
+    url='https://gitlab.polimi.it/grycap/toscarizer',
     python_requires='>=3.7',
-    packages=["oscariser", "oscariser.bin"],
-    package_dir={"oscariser": "oscariser",
-                 "oscariser.bin": "oscariser/bin  "},
+    packages=["toscarizer", "toscarizer.bin"],
+    package_dir={"toscarizer": "toscarizer",
+                 "toscarizer.bin": "toscarizer/bin  "},
     install_requires=['PyYAML', 'networkx', 'docker'],
     entry_points={
         'console_scripts': [
-            'oscariser=oscariser.bin.oscariser_cli:oscariser_cli',
+            'toscarizer=toscarizer.bin.toscarizer_cli:toscarizer_cli',
         ]
     }
 )

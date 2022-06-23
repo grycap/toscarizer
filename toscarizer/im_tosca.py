@@ -1,7 +1,7 @@
 import yaml
 import copy
 
-from oscariser.utils import RESOURCES_FILE
+from toscarizer.utils import RESOURCES_FILE
 
 TOSCA_TEMPLATE = "templates/oscar.yaml"
 

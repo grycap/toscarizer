@@ -1,5 +1,5 @@
 import yaml
-from oscariser.utils import RESOURCES_FILE, DAG_FILE, parse_dag, parse_resources
+from toscarizer.utils import RESOURCES_FILE, DAG_FILE, parse_dag, parse_resources
 
 
 def get_service(component, previous, resources):

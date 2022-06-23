@@ -4,14 +4,14 @@ import sys
 
 sys.path.append(".")
 
-from oscariser.utils import parse_dag, parse_resources, RESOURCES_FILE, DAG_FILE
-from oscariser.fdl import generate_fdl
-from oscariser.docker_images import generate_dockerfiles, build_and_push, update_resources
-from oscariser.im_tosca import gen_tosca_yaml
+from toscarizer.utils import parse_dag, parse_resources, RESOURCES_FILE, DAG_FILE
+from toscarizer.fdl import generate_fdl
+from toscarizer.docker_images import generate_dockerfiles, build_and_push, update_resources
+from toscarizer.im_tosca import gen_tosca_yaml
 
 
 @click.group()
-def oscariser_cli():
+def toscarizer_cli():
     pass
 
 
@@ -55,9 +55,9 @@ def tosca(design_dir):
         print("DONE. TOSCA file %s has been generated for Computational Layer: %s." % (tosca_file, cl))
 
 
-oscariser_cli.add_command(docker)
-oscariser_cli.add_command(fdl)
-oscariser_cli.add_command(tosca)
+toscarizer_cli.add_command(docker)
+toscarizer_cli.add_command(fdl)
+toscarizer_cli.add_command(tosca)
 
 if __name__ == '__main__':
-    oscariser_cli()
+    toscarizer_cli()

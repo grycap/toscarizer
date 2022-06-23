@@ -1,7 +1,7 @@
 import docker
 import tempfile
 import yaml
-from oscariser.utils import RESOURCES_FILE, DAG_FILE, parse_dag, parse_resources
+from toscarizer.utils import RESOURCES_FILE, DAG_FILE, parse_dag, parse_resources
 
 
 DOCKERFILE_TEMPLATE = "templates/Dockerfile.template"
