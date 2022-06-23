@@ -7,6 +7,7 @@ sys.path.append(".")
 from oscariser.utils import parse_dag, parse_resources, RESOURCES_FILE, DAG_FILE
 from oscariser.fdl import generate_fdl
 from oscariser.docker_images import generate_dockerfiles, build_and_push, update_resources
+from oscariser.im_tosca import gen_tosca_yaml
 
 
 @click.group()
@@ -43,9 +44,20 @@ def fdl(design_dir):
     print("DONE. FDL file %s has been generated." % fdl_file)
 
 
+@click.command()
+@click.option("--design-dir", help="Path to the design of the AI-SPRINT application.", type=str, required=True)
+def tosca(design_dir):
+    toscas = gen_tosca_yaml("%s/%s" % (design_dir, RESOURCES_FILE))
+    for cl, tosca in toscas.items():
+        tosca_file = "%s/im/%s.yaml" % (design_dir, cl)
+        with open(tosca_file, 'w+') as f:
+            yaml.safe_dump(tosca, f, indent=2)
+        print("DONE. TOSCA file %s has been generated for Computational Layer: %s." % (tosca_file, cl))
+
+
 oscariser_cli.add_command(docker)
 oscariser_cli.add_command(fdl)
-
+oscariser_cli.add_command(tosca)
 
 if __name__ == '__main__':
     oscariser_cli()

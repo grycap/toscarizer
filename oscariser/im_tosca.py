@@ -5,6 +5,7 @@ from oscariser.utils import RESOURCES_FILE
 
 TOSCA_TEMPLATE = "templates/oscar.yaml"
 
+
 def gen_oscar_name():
     # TODO: https://github.com/grycap/im-dashboard/blob/master/app/utils.py#L435
     return None
@@ -15,7 +16,6 @@ def gen_tosca_yaml(resource_file):
         tosca_tpl = yaml.safe_load(f)
 
     inputs = gen_tosca_input_value(resource_file)
-    print(inputs)
     res = {}
     for cl, input_values in inputs.items():
         res[cl] = copy.deepcopy(tosca_tpl)
@@ -58,12 +58,13 @@ def gen_tosca_input_value(resource_file):
                         for proc in list(res["processors"].values()):
                             cores += proc.get("computingUnits", 0)
                             sgx = proc.get("SGXFlag")
-                        
+
                         input_values[cl_name]["wn_cpus"] = cores
                         input_values[cl_name]["wn_sgx"] = sgx
 
-                        for acc in list(res["accelerators"].values()):
-                            acc[""]
+                        for acc in list(res.get("accelerators", {}).values()):
+                            # TODO: look for GPUs
+                            pass
 
     except Exception as ex:
         print("Error reading resources.yaml: %s" % ex)
