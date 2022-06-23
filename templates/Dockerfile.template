@@ -14,6 +14,7 @@ RUN mkdir /opt/{{component_name}}
 
 WORKDIR /opt/{{component_name}}
 
+# Not all the cases will include the onnx model
 COPY onnx onnx_model
 COPY script.sh {{component_name}}_script.sh
 COPY src/{{component_name}}/ .
