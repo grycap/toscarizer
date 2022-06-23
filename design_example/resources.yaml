@@ -25,7 +25,7 @@ System:
                   storageSize: 64GB
                   storageType: flash
                   processors:
-                    - processor1:
+                     processor1:
                         name: P1-4
                         type: Cortex-A72
                         architecture: ARM64
@@ -165,7 +165,7 @@ System:
                 image: blurry-faces-Dep1-RasPi
                 memorySize: 2048
                 computingUnits: 0.9
-                candidateExecutionLayers: [1]
+                candidateExecutionResources: [RaspPi_NeuralStick]
     component2:
         name: mask-detector
         number: 2
@@ -175,4 +175,4 @@ System:
                 image: mask-detector-VM1
                 memorySize: 4096
                 computingUnits: 0.9
-                candidateExecutionLayers: [2]
+                candidateExecutionResources: [VM1]

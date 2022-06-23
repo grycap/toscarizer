@@ -1,26 +1,34 @@
 import docker
 import tempfile
 import yaml
+
+import sys
+sys.path.append(".")
+
 from toscarizer.utils import RESOURCES_FILE, DAG_FILE, parse_dag, parse_resources
 
 
 DOCKERFILE_TEMPLATE = "templates/Dockerfile.template"
 
 
-def generate_dockerfiles(dag, resources):
+def generate_dockerfiles(components, resources):
     """Generates dockerfiles per each component using the template."""
     with open(DOCKERFILE_TEMPLATE, 'r') as f:
         dockerfile_tpl = f.read()
 
     dockerfiles = {}
-    for component in dag:
-        dockerfiles[component] = (resources[component]["image"],
-                                  dockerfile_tpl.replace("{{component_name}}", component))
+    for component, partitions in components["components"].items():
+        for partition in list(partitions["partitions"].values()):
+            if resources["arm64"]:
+                dockerfiles["%s_AMD64" % partition] = ("linux/amd64", dockerfile_tpl.replace("{{component_name}}", partition))
+                dockerfiles["%s_ARM64" % partition] = ("linux/arm64", dockerfile_tpl.replace("{{component_name}}", partition))
+            else:
+                dockerfiles["%s_AMD64" % partition] = ("linux/amd64", dockerfile_tpl.replace("{{component_name}}", partition))
 
     return dockerfiles
 
 
-def build_and_push(registry, dockerfiles, username, password, platform=None, push=True, build=True):
+def build_and_push(registry, dockerfiles, username, password, push=True, build=True):
     """Build and push the images per each component using the dockerfiles specified."""
     try:
         dclient = docker.from_env()
@@ -33,8 +41,8 @@ def build_and_push(registry, dockerfiles, username, password, platform=None, pus
 
     res = {}
     for name, elem in dockerfiles.items():
-        image_name, dockerfile = elem
-        image = "%s/%s:latest" % (registry, image_name)
+        platform, dockerfile = elem
+        image = "%s/%s:latest" % (registry, name)
         with tempfile.TemporaryDirectory() as tmpdirname:
             with open("%s/Dockerfile" % tmpdirname, 'w') as f:
                 f.write(dockerfile)
@@ -72,7 +80,7 @@ if __name__ == "__main__":
     if len(sys.argv) > 1:
         dir = sys.argv[1]
     else:
-        dir = "."
+        dir = "/home/micafer/toscarizer/design_example/"
 
     resources = parse_resources("%s/%s" % (dir, RESOURCES_FILE))
     dag = parse_dag("%s/%s" % (dir, DAG_FILE))
