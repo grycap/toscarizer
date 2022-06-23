@@ -69,9 +69,9 @@ System:
           computationallayer2:
             name: Private Cloud Layer
             number: 2
-            type: Physical
+            type: Virtual
             Resources: 
-              - resource1:
+               resource1:
                   name: VM1
                   totalNodes: 41
                   description: Inhouse VM Type 1 UPV
@@ -86,7 +86,7 @@ System:
                   measuredBoot: False
                   onSpot: False
                   processors:
-                    - processor1:
+                     processor1:
                         name: Xeon
                         type: SkyLake
                         architecture: amd64
@@ -98,7 +98,7 @@ System:
             number: 2
             type: Virtual
             Resources:
-             - resource1:
+              resource1:
                   name: VM2
                   totalNodes: 5
                   description: VM Type 2 AWS
@@ -135,7 +135,7 @@ System:
                   measuredBoot: False
                   onSpot: False
                   processors:
-                    - processor1:
+                     processor1:
                         name: P1-8
                         type: Xeon SkyLake
                         architecture: IntelX86
@@ -147,7 +147,7 @@ System:
             number: 3
             type: Virtual
             Resources: 
-               - resource1:
+                resource1:
                   name: AWS
                   description: FaaS of  AWS Lambda
                   cost: 0.0001561

@@ -1,5 +1,4 @@
 import docker
-import sys
 import tempfile
 import yaml
 from oscariser.utils import RESOURCES_FILE, DAG_FILE, parse_dag, parse_resources
@@ -68,6 +67,8 @@ def update_resources(docker_images, resource_file):
 
 
 if __name__ == "__main__":
+    import sys
+
     if len(sys.argv) > 1:
         dir = sys.argv[1]
     else:

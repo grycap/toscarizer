@@ -1,4 +1,3 @@
-import sys
 import yaml
 from oscariser.utils import RESOURCES_FILE, DAG_FILE, parse_dag, parse_resources
 
@@ -57,6 +56,8 @@ def generate_fdl(dag, resources):
 
 
 if __name__ == "__main__":
+    import sys
+
     if len(sys.argv) > 1:
         dir = sys.argv[1]
     else:
