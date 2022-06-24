@@ -2,6 +2,9 @@ import docker
 import tempfile
 import yaml
 
+import sys
+sys.path.append(".")
+
 from toscarizer.utils import CONTAINERS_FILE, RESOURCES_FILE, COMPONENT_FILE, parse_resources
 
 
@@ -86,7 +89,7 @@ if __name__ == "__main__":
     if len(sys.argv) > 1:
         dir = sys.argv[1]
     else:
-        dir = "/home/micafer/codigo/toscarizer/design_example/"
+        dir = "/home/micafer/codigo/toscarizer/app"
 
     resources = parse_resources("%s/%s" % (dir, RESOURCES_FILE))
     with open("%s/%s" % (dir, COMPONENT_FILE), 'r') as f:

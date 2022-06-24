@@ -46,14 +46,23 @@ def parse_resources(resource_file):
             # We assume that there will be only one container per component
             # and only one elem in the executionLayers
             arm64 = False
+            layer = None
+
             if "candidateExecutionLayers" in elem:
+                layer = elem["candidateExecutionLayers"][0]
                 arm64 = all([cls[layer]["arch"].lower() == "arm64" for layer in elem["candidateExecutionLayers"]])
+
             cont = list(elem["Containers"].values())[0]
             if "Containers" in cont:
                 cont = list(cont["Containers"].values())[0]
+
+            if "executionLayers" in cont:
+                layer = cont["executionLayers"]
+
             res_dict[elem["name"]] = {"memory": cont["memorySize"],
                                       "cpu": cont["computingUnits"],
                                       "image": cont["image"],
+                                      "layer": layer,
                                       "arm64": arm64}
     except Exception as ex:
         print("Error reading resources.yaml: %s" % ex)
