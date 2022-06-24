@@ -6,12 +6,12 @@ System:
       AccessDelay: 0.00000277
       Bandwidth: 10000
       ComputationalLayers: 
-          computationallayer1:
+         computationalLayer1:
             name: Edge Layer
             number: 1
-            type: Physical
+            type: PhysicalAlreadyProvisioned
             Resources: 
-              resource1:
+               resource1:
                   name: RaspPi
                   totalNodes: 3
                   description: Raspberry PIs 4 Model B
@@ -25,14 +25,14 @@ System:
                   storageSize: 64GB
                   storageType: flash
                   processors:
-                    - processor1:
+                     processor1:
                         name: P1-4
                         type: Cortex-A72
                         architecture: ARM64
                         computingUnits: 4
                         internalMemory: 4
                         SGXFlag: False
-              resource2:
+               resource2:
                   name: RaspPi_NeuralStick
                   totalNodes: 3
                   description: Raspberry PIs 4 Model B with Neural stick 
@@ -46,10 +46,10 @@ System:
                   storageSize: 64GB
                   storageType: flash
                   processors:
-                    processor1:
+                     processor1:
                         name: P1-4
                         type: Cortex-A72
-                        architecture: arm64
+                        architecture: ARM64
                         computingUnits: 4
                         internalMemory: 4
                         SGXFlag: False
@@ -60,20 +60,20 @@ System:
                         powerDraw: 1
                         memorySize:  4096
                         processors:
-                          processor1:
-                              name: P5
-                              type: Movidius Myriad X VPU
-                              architecture: SHAVE
-                              computingUnits: 16
-                              internalMemory: 0.256
-          computationallayer2:
+                            processor1:
+                                name: P5
+                                type: Movidius Myriad X VPU
+                                architecture: SHAVE
+                                computingUnits: 16
+                                internalMemory: 0.256
+         computationalLayer2:
             name: Private Cloud Layer
             number: 2
-            type: Virtual
+            type: PhysicalAlreadyProvisioned
             Resources: 
                resource1:
                   name: VM1
-                  totalNodes: 41
+                  totalNodes: 4
                   description: Inhouse VM Type 1 UPV
                   cost: 0.675
                   memorySize: 8192
@@ -82,6 +82,7 @@ System:
                   operatingSystemDistribution: Ubuntu
                   operatingSystemType: Linux
                   operatingSystemVersion: 22.04
+                  operatingSystemImageId: ost://horsemem.i3m.upv.es/c99bc2af-76dd-498f-ba6f-36889db66856 
                   secureBoot: False
                   measuredBoot: False
                   onSpot: False
@@ -89,19 +90,19 @@ System:
                      processor1:
                         name: Xeon
                         type: SkyLake
-                        architecture: amd64
+                        architecture: AMD64
                         computingUnits: 4
                         internalMemory: 64
                         SGXFlag: False
-          computationallayer3:
+         computationalLayer3:
             name: Public Cloud Layer
-            number: 2
+            number: 3
             type: Virtual
             Resources:
               resource1:
                   name: VM2
                   totalNodes: 5
-                  description: VM Type 2 AWS
+                  description: c7g.xlarge
                   cost: 0.9
                   memorySize: 8192
                   storageSize: 25
@@ -109,28 +110,30 @@ System:
                   operatingSystemDistribution: Ubuntu
                   operatingSystemType: Linux
                   operatingSystemVersion: 20.04
+                  operatingSystemImageId: aws://us-east-1/ami-09e67e426f25ce0d7
                   secureBoot: False
                   measuredBoot: False
                   onSpot: False
                   processors:
-                    processor1:
+                     processor1:
                         name: Xeon
                         type: SkyLake
                         architecture: IntelX86
                         computingUnits: 4
                         internalMemory: 64
                         SGXFlag: False
-            resource2:
+              resource2:
                   name: VM3
                   totalNodes: 5
-                  description: VM Type 2 AWS
-                  cost: 0.9
+                  description: c7g.2xlarge 
+                  cost: 1.8
                   memorySize: 16384
                   storageSize: 25
                   storageType: SSD
                   operatingSystemDistribution: Ubuntu
                   operatingSystemType: Linux
                   operatingSystemVersion: 20.04
+                  operatingSystemImageId: aws://us-east-1/ami-09e67e426f25ce0d7
                   secureBoot: False
                   measuredBoot: False
                   onSpot: False
@@ -142,37 +145,55 @@ System:
                         computingUnits: 8
                         internalMemory: 64
                         SGXFlag: False
-          computationallayer4:
+         computationalLayer4:
             name: FaaS Layer
-            number: 3
-            type: Virtual
+            number: 4
+            type: NativeCloudFunction
             Resources: 
                 resource1:
-                  name: AWS
-                  description: FaaS of  AWS Lambda
+                  architecture: IntelX86
+                  name: AWS-FaaS
+                  description: AWS Lambda
                   cost: 0.0001561
                   memorySize: 8192
-                  storageSize: 512
-  architecture: x86
-  region:  Milan
+                  storageSize: 0.512
+                  region:  Milan 
+                  idleTime: 600
+                  transitionCost:  0.02625
   Components:
-    component1:
+     component1:
         name: blurry-faces-onnx
-        number: 1
         candidateExecutionLayers: [1]
         Containers:
-            container1: 
-                image: blurry-faces-Dep1-RasPi
+             container1: 
+                image: blurry-faces-onnx
                 memorySize: 2048
                 computingUnits: 0.9
-                candidateExecutionLayers: [1]
-    component2:
+                candidateExecutionResources: [RasPi, RaspPi_NeuralStick]
+     component1_partitionX_1:
+        name: blurry-faces-onnx_partition1_1
+        candidateExecutionLayers: [1]
+        Containers:
+          container2: 
+            image: blurry-faces-onnx_partition1_1
+            memorySize: 1024
+            computingUnits: 0.9
+            candidateExecutionResources: [RasPi, RaspPi_NeuralStick]
+     component1_partitionX_2:
+        name: blurry-faces-onnx_partition1_2
+        candidateExecutionLayers: [2]
+        Containers:
+          container3: 
+            image: blurry-faces-onnx_partition1_2
+            memorySize: 1024
+            computingUnits: 0.9
+            candidateExecutionResources: [VM1]
+     component2:
         name: mask-detector
-        number: 2
         candidateExecutionLayers: [2,3,4]
         Containers:
-            container11:
-                image: mask-detector-VM1
+             container1:
+                image: mask-detector
                 memorySize: 4096
-                computingUnits: 0.9
-                candidateExecutionLayers: [2]
+                computingUnits: 4
+                candidateExecutionResources: [VM1, VM2, VM3, AWS-FaaS]

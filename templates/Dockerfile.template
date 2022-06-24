@@ -1,7 +1,12 @@
 #FROM ai-sprint/app_base_image:latest
 FROM python:3.8
 
-COPY src/requirements.txt src/requirements.sys ./
+RUN mkdir /opt/{{component_name}}
+
+WORKDIR /opt/{{component_name}}
+
+COPY script.sh {{component_name}}_script.sh
+COPY src/{{component_name}}/ .
 
 RUN apt update && \
     xargs apt install -y --no-install-recommends < requirements.sys  && \
@@ -9,12 +14,3 @@ RUN apt update && \
 
 RUN pip install --upgrade pip
 RUN pip install --no-cache-dir -r requirements.txt
-
-RUN mkdir /opt/{{component_name}}
-
-WORKDIR /opt/{{component_name}}
-
-# Not all the cases will include the onnx model
-COPY onnx onnx_model
-COPY script.sh {{component_name}}_script.sh
-COPY src/{{component_name}}/ .
