@@ -2,10 +2,11 @@ import networkx as nx
 import yaml
 
 # Default file names
-RESOURCES_FILE = "resources.yaml"
-DAG_FILE = "application_dag.yaml"
-COMPONENT_FILE = "component_partitions.yaml"
-CONTAINERS_FILE = "containers.yaml"
+RESOURCES_FILE = "designs/common_config/resources.yaml"
+DAG_FILE = "designs/common_config/application_dag.yaml"
+COMPONENT_FILE = "designs/component_partitions.yaml"
+CONTAINERS_FILE = "designs/containers.yaml"
+RESOURCES_COMPLETE_FILE = "deployments/resources_complete.yaml"
 
 
 def parse_dag(dag_file):
