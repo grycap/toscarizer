@@ -2,9 +2,6 @@ import docker
 import tempfile
 import yaml
 
-import sys
-sys.path.append(".")
-
 from toscarizer.utils import CONTAINERS_FILE, RESOURCES_FILE, COMPONENT_FILE, parse_resources
 
 

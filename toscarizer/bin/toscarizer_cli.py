@@ -4,7 +4,7 @@ import sys
 
 sys.path.append(".")
 
-from toscarizer.utils import parse_dag, parse_resources, RESOURCES_FILE, COMPONENT_FILE, CONTAINERS_FILE, DAG_FILE, RESOURCES_COMPLETE_FILE
+from toscarizer.utils import parse_dag, parse_resources, RESOURCES_FILE, COMPONENT_FILE, CONTAINERS_FILE, RESOURCES_COMPLETE_FILE, BASE_DAG_FILE, OPTIMAL_DAG_FILE
 from toscarizer.fdl import generate_fdl
 from toscarizer.docker_images import generate_dockerfiles, build_and_push, generate_containers
 from toscarizer.im_tosca import gen_tosca_yaml
@@ -33,12 +33,19 @@ def docker(application_dir, username, password, registry, dry_run):
 
 
 @click.command()
-@click.option("--design-dir", help="Path to the design of the AI-SPRINT application.", type=str, required=True)
-def fdl(design_dir):
-    resources = parse_resources("%s/%s" % (design_dir, RESOURCES_FILE))
-    dag = parse_dag("%s/%s" % (design_dir, DAG_FILE))
+@click.option("--application_dir", help="Path to the AI-SPRINT application.", required=True)
+def fdl(application_dir):
+    resources = parse_resources("%s/%s" % (application_dir, RESOURCES_COMPLETE_FILE))
+    dag = parse_dag("%s/%s" % (application_dir, BASE_DAG_FILE))
     fdl = generate_fdl(dag, resources)
-    fdl_file = "%s/oscar/fdl.yaml" % design_dir
+    fdl_file = "%s/deployments/base/oscar/fdl.yaml" % application_dir
+    with open(fdl_file, 'w+') as f:
+        yaml.safe_dump(fdl, f, indent=2)
+    print("DONE. FDL file %s has been generated." % fdl_file)
+
+    dag = parse_dag("%s/%s" % (application_dir, OPTIMAL_DAG_FILE))
+    fdl = generate_fdl(dag, resources)
+    fdl_file = "%s/deployments/optimal_deployment/oscar/fdl.yaml" % application_dir
     with open(fdl_file, 'w+') as f:
         yaml.safe_dump(fdl, f, indent=2)
     print("DONE. FDL file %s has been generated." % fdl_file)
