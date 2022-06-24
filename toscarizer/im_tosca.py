@@ -35,7 +35,7 @@ def gen_tosca_input_value(resource_file):
 
         for nd in list(resources["System"]["NetworkDomains"].values()):
             for cl_name, cl in nd["ComputationalLayers"].items():
-                if cl["type"] == "Virtual":
+                if cl["type"] in ["Virtual", "PhysicalToBeProvisioned"]:
                     input_values[cl_name] = {}
                     for res in list(cl["Resources"].values()):
                         input_values[cl_name]["cluster_name"] = gen_oscar_name()

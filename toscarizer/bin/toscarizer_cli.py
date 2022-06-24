@@ -45,11 +45,11 @@ def fdl(design_dir):
 
 
 @click.command()
-@click.option("--design-dir", help="Path to the design of the AI-SPRINT application.", type=str, required=True)
-def tosca(design_dir):
-    toscas = gen_tosca_yaml("%s/%s" % (design_dir, RESOURCES_FILE))
+@click.option("--deployment-dir", help="Path to the deployment of the AI-SPRINT application.", type=str, required=True)
+def tosca(deployment_dir):
+    toscas = gen_tosca_yaml("%s/%s" % (deployment_dir, RESOURCES_FILE))
     for cl, tosca in toscas.items():
-        tosca_file = "%s/im/%s.yaml" % (design_dir, cl)
+        tosca_file = "%s/im/%s.yaml" % (deployment_dir, cl)
         with open(tosca_file, 'w+') as f:
             yaml.safe_dump(tosca, f, indent=2)
         print("DONE. TOSCA file %s has been generated for Computational Layer: %s." % (tosca_file, cl))
