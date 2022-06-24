@@ -5,7 +5,7 @@ import yaml
 import sys
 sys.path.append(".")
 
-from toscarizer.utils import RESOURCES_FILE, DAG_FILE, parse_dag, parse_resources
+from toscarizer.utils import CONTAINERS_FILE, RESOURCES_FILE, COMPONENT_FILE, parse_resources
 
 
 DOCKERFILE_TEMPLATE = "templates/Dockerfile.template"
@@ -18,12 +18,15 @@ def generate_dockerfiles(components, resources):
 
     dockerfiles = {}
     for component, partitions in components["components"].items():
-        for partition in list(partitions["partitions"].values()):
-            if resources["arm64"]:
-                dockerfiles["%s_AMD64" % partition] = ("linux/amd64", dockerfile_tpl.replace("{{component_name}}", partition))
-                dockerfiles["%s_ARM64" % partition] = ("linux/arm64", dockerfile_tpl.replace("{{component_name}}", partition))
+        dockerfiles[component] = {}
+        for partition in partitions["partitions"]:
+            dockerfiles[component][partition] = []
+            dockerfile = dockerfile_tpl.replace("{{component_name}}", partition)
+            if resources[partition]["arm64"]:
+                dockerfiles[component][partition].append(("linux/amd64", dockerfile))
+                dockerfiles[component][partition].append(("linux/arm64", dockerfile))
             else:
-                dockerfiles["%s_AMD64" % partition] = ("linux/amd64", dockerfile_tpl.replace("{{component_name}}", partition))
+                dockerfiles[component][partition].append(("linux/amd64", dockerfile))
 
     return dockerfiles
 
@@ -40,38 +43,44 @@ def build_and_push(registry, dockerfiles, username, password, push=True, build=T
         dclient.login(username=username, password=password, registry=registry)
 
     res = {}
-    for name, elem in dockerfiles.items():
-        platform, dockerfile = elem
-        image = "%s/%s:latest" % (registry, name)
-        with tempfile.TemporaryDirectory() as tmpdirname:
-            with open("%s/Dockerfile" % tmpdirname, 'w') as f:
-                f.write(dockerfile)
-                if build:
-                    dclient.images.build(path=tmpdirname, tag=image, pull=True, platform=platform)
+    for component, partitions in dockerfiles.items():
+        res[component] = {}
+        for partition, docker_images in partitions.items():
+            res[component][partition] = []
+            for (platform, dockerfile) in docker_images:
+                if platform == "linux/amd64":
+                    name = "%s_AMD64" % partition
+                else:
+                    name = "%s_ARM64" % partition
+                image = "%s/%s:latest" % (registry, name)
+                with tempfile.TemporaryDirectory() as tmpdirname:
+                    with open("%s/Dockerfile" % tmpdirname, 'w') as f:
+                        f.write(dockerfile)
+                        if build:
+                            dclient.images.build(path=tmpdirname, tag=image, pull=True, platform=platform)
 
-        # Pushing new image
-        res[name] = (True, image)
-        if push:
-            for line in dclient.images.push(image, stream=True, decode=True):
-                if 'error' in line:
-                    res[name] = (False, "Error pushing image: %s" % line['errorDetail']['message'])
+                # Pushing new image
+                res[component][partition].append(image)
+                if push:
+                    for line in dclient.images.push(image, stream=True, decode=True):
+                        if 'error' in line:
+                            raise Exception("Error pushing image: %s" % line['errorDetail']['message'])
 
     return res
 
 
-def update_resources(docker_images, resource_file):
-    """Update the resources.yaml file adding the containerLink."""
-    with open(resource_file, 'r') as f:
-        resources = yaml.safe_load(f)
+def generate_containers(docker_images, containers_file):
+    """Create the containers.yaml file adding the image URL."""
+    containers = {"components": {}}
 
-    for _, elem in resources["System"]["Components"].items():
-        success, image_name = docker_images.get(elem["name"], (False, None))
-        if success:
-            cont_name = list(elem["Containers"].keys())[0]
-            elem["Containers"][cont_name]["containerLink"] = image_name
+    for component, partitions in docker_images.items():
+        containers["components"][component] = {"docker_images": []}
+        for images in list(partitions.values()):
+            for image_url in images:
+                containers["components"][component]["docker_images"].append(image_url)
 
-    with open(resource_file, 'w') as f:
-        f.write(yaml.safe_dump(resources, indent=2))
+    with open(containers_file, 'w') as f:
+        f.write(yaml.safe_dump(containers, indent=2))
 
 
 if __name__ == "__main__":
@@ -80,17 +89,18 @@ if __name__ == "__main__":
     if len(sys.argv) > 1:
         dir = sys.argv[1]
     else:
-        dir = "/home/micafer/toscarizer/design_example/"
+        dir = "/home/micafer/codigo/toscarizer/design_example/"
 
     resources = parse_resources("%s/%s" % (dir, RESOURCES_FILE))
-    dag = parse_dag("%s/%s" % (dir, DAG_FILE))
+    with open("%s/%s" % (dir, COMPONENT_FILE), 'r') as f:
+        components = yaml.safe_load(f)
 
-    dockerfiles = generate_dockerfiles(dag, resources)
+    dockerfiles = generate_dockerfiles(components, resources)
 
     registry = "registry.gitlab.polimi.it/ai-sprint"
     username = ""
     password = ""
 
-    docker_images = build_and_push(registry, dockerfiles, username, password, None, False, False)
+    docker_images = build_and_push(registry, dockerfiles, username, password, False, False)
 
-    update_resources(docker_images, "%s/%s" % (dir, RESOURCES_FILE))
+    generate_containers(docker_images, "%s/%s" % (dir, CONTAINERS_FILE))

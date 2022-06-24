@@ -4,9 +4,9 @@ import sys
 
 sys.path.append(".")
 
-from toscarizer.utils import parse_dag, parse_resources, RESOURCES_FILE, DAG_FILE
+from toscarizer.utils import parse_dag, parse_resources, RESOURCES_FILE, COMPONENT_FILE, CONTAINERS_FILE, DAG_FILE
 from toscarizer.fdl import generate_fdl
-from toscarizer.docker_images import generate_dockerfiles, build_and_push, update_resources
+from toscarizer.docker_images import generate_dockerfiles, build_and_push, generate_containers
 from toscarizer.im_tosca import gen_tosca_yaml
 
 
@@ -23,13 +23,13 @@ def toscarizer_cli():
 @click.option("--dry-run", help="Registry to push the generated docker images.", default=False, is_flag=True)
 def docker(design_dir, username, password, registry, dry_run):
     resources = parse_resources("%s/%s" % (design_dir, RESOURCES_FILE))
-    dag = parse_dag("%s/%s" % (design_dir, DAG_FILE))
-    dockerfiles = generate_dockerfiles(dag, resources)
-    docker_images = build_and_push(registry, dockerfiles, username, password, None, not dry_run, not dry_run)
+    with open("%s/%s" % (design_dir, COMPONENT_FILE), 'r') as f:
+        components = yaml.safe_load(f)
+    dockerfiles = generate_dockerfiles(components, resources)
+    docker_images = build_and_push(registry, dockerfiles, username, password, not dry_run, not dry_run)
     print("Docker images generated and pushed to the registry.")
-    print("\n".join(map(lambda x: "%s: %s" % (x, docker_images[x][1]), docker_images)))
-    update_resources(docker_images, "%s/%s" % (design_dir, RESOURCES_FILE))
-    print("DONE. Updated resouces file with new image links.")
+    generate_containers(docker_images, "%s/%s" % (design_dir, CONTAINERS_FILE))
+    print("DONE. %s file created with new image URLs." % CONTAINERS_FILE)
 
 
 @click.command()

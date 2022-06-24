@@ -4,7 +4,8 @@ import yaml
 # Default file names
 RESOURCES_FILE = "resources.yaml"
 DAG_FILE = "application_dag.yaml"
-COMPONENT_FILE = "component.yaml"
+COMPONENT_FILE = "component_partitions.yaml"
+CONTAINERS_FILE = "containers.yaml"
 
 
 def parse_dag(dag_file):
@@ -31,12 +32,14 @@ def parse_resources(resource_file):
         cls = {}
         for _, nd in resources["System"]["NetworkDomains"].items():
             for cl_name, cl in nd["ComputationalLayers"].items():
-                cls[cl["number"]] = {"name": cl_name}
+                cls[cl["number"]] = {"name": cl_name, "arch": None}
                 for res in list(cl["Resources"].values()):
-                    for proc in (res.get("processors", {}).values()):
-                        cls[cl["number"]]["arch"] = proc["architecture"]
+                    if res.get("architecture"):
+                        cls[cl["number"]]["arch"] = res.get("architecture")
+                    else:
+                        for proc in (res.get("processors", {}).values()):
+                            cls[cl["number"]]["arch"] = proc["architecture"]
 
-    
         for _, elem in resources["System"]["Components"].items():
             # We assume that there will be only one container per component
             # and only one elem in the candidateExecutionLayers
