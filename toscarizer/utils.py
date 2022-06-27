@@ -3,7 +3,8 @@ import yaml
 
 # Default file names
 RESOURCES_FILE = "designs/common_config/resources.yaml"
-DAG_FILE = "designs/common_config/application_dag.yaml"
+BASE_DAG_FILE = "deployments/base/application_dag.yaml"
+OPTIMAL_DAG_FILE = "deployments/optimal_deployment/application_dag.yaml"
 COMPONENT_FILE = "designs/component_partitions.yaml"
 CONTAINERS_FILE = "designs/containers.yaml"
 RESOURCES_COMPLETE_FILE = "deployments/resources_complete.yaml"
@@ -43,13 +44,23 @@ def parse_resources(resource_file):
 
         for _, elem in resources["System"]["Components"].items():
             # We assume that there will be only one container per component
-            # and only one elem in the candidateExecutionLayers
-            arm64 = all([cls[layer]["arch"].lower() == "arm64" for layer in elem["candidateExecutionLayers"]])
-            for _, cont in elem["Containers"].items():
-                res_dict[elem["name"]] = {"memory": cont["memorySize"],
-                                          "cpu": cont["computingUnits"],
-                                          "image": cont["image"],
-                                          "arm64": arm64}
+            # and only one elem in the executionLayers
+            arm64 = False
+            layer = None
+
+            if "candidateExecutionLayers" in elem:
+                layer = elem["candidateExecutionLayers"][0]
+                arm64 = all([cls[layer]["arch"].lower() == "arm64" for layer in elem["candidateExecutionLayers"]])
+            if "executionLayer" in elem:
+                layer = elem["executionLayer"]
+
+            cont = list(elem["Containers"].values())[0]
+
+            res_dict[elem["name"]] = {"memory": cont["memorySize"],
+                                      "cpu": cont["computingUnits"],
+                                      "image": cont["image"],
+                                      "layer": layer,
+                                      "arm64": arm64}
     except Exception as ex:
         print("Error reading resources.yaml: %s" % ex)
     return res_dict

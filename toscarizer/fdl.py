@@ -1,5 +1,9 @@
 import yaml
-from toscarizer.utils import RESOURCES_FILE, DAG_FILE, parse_dag, parse_resources
+
+import sys
+sys.path.append(".")
+
+from toscarizer.utils import RESOURCES_COMPLETE_FILE, BASE_DAG_FILE, parse_dag, parse_resources
 
 
 def get_service(component, previous, resources):
@@ -8,11 +12,9 @@ def get_service(component, previous, resources):
         input_path = "%s/input" % component
     else:
         input_path = "%s/output" % previous
-    if not resources.get(component, {}).get("containerLink"):
-        raise Exception("No containerLink found for component: %s" % component)
     service = {
         "name": component,
-        "image": resources.get(component, {}).get("containerLink"),
+        "image": resources.get(component, {}).get("image"),
         "script": "%s_script.sh" % component,
         "input": [{
             "storage_provider": "minio",
@@ -61,10 +63,10 @@ if __name__ == "__main__":
     if len(sys.argv) > 1:
         dir = sys.argv[1]
     else:
-        dir = "."
+        dir = "/home/micafer/codigo/toscarizer/app"
 
-    resources = parse_resources("%s/%s" % (dir, RESOURCES_FILE))
-    dag = parse_dag("%s/%s" % (dir, DAG_FILE))
+    resources = parse_resources("%s/%s" % (dir, RESOURCES_COMPLETE_FILE))
+    dag = parse_dag("%s/%s" % (dir, BASE_DAG_FILE))
 
     fdl = generate_fdl(dag, resources)
 

@@ -102,45 +102,42 @@ System:
                         internalMemory: 64
                         SGXFlag: False             
   Components:
-     component1:
-        name: blurry-faces
-        Containers:
-           component1_partition1_1:
-           name: blurry-faces-onnx_partition1_1
-           executionLayers: 1
-           Containers:
-             container2: 
-                image: registry.gitlab.polimi.it/ai-sprint/blurry-faces-onnx_partition1_1:latest
-                memorySize: 1024
-                computingUnits: 0.9
-                trustedExecution: False
-                networkProtection: False
-                fileSystemProtection: False
-                GPURequirement: False
-                selectedExecutionResource: RaspPi_NeuralStick
-        component1_partition1_2:
-            name: blurry-faces-onnx_partition1_2
-            executionLayers: 2
-            Containers:
-             container3: 
-                image: registry.gitlab.polimi.it/ai-sprint/blurry-faces-onnx_partition1_2:latest
-                memorySize: 1024
-                computingUnits: 0.9
-                trustedExecution: False
-                networkProtection: False
-                fileSystemProtection: False
-                GPURequirement: False
-                selectedExecutionResource: VM1
-     component2:
-        name: mask-detector
-        executionLayers: 3
-        Containers:
-             container1:
-                image: registry.gitlab.polimi.it/ai-sprint/mask-detector:tag
-                memorySize: 4096
-                computingUnits: 0.9
-                trustedExecution: False
-                networkProtection: False
-                fileSystemProtection: False
-                GPURequirement: False
-                executionResources:  VM3 
+   component1_partition1_1:
+      name: blurry-faces-onnx_partition1_1
+      executionLayer: 1
+      Containers:
+         container2: 
+            image: registry.gitlab.polimi.it/ai-sprint/blurry-faces-onnx_partition1_1:latest
+            memorySize: 1024
+            computingUnits: 0.9
+            trustedExecution: False
+            networkProtection: False
+            fileSystemProtection: False
+            GPURequirement: False
+            selectedExecutionResource: RaspPi_NeuralStick
+   component1_partition1_2:
+      name: blurry-faces-onnx_partition1_2
+      executionLayer: 2
+      Containers:
+         container3: 
+            image: registry.gitlab.polimi.it/ai-sprint/blurry-faces-onnx_partition1_2:latest
+            memorySize: 1024
+            computingUnits: 0.9
+            trustedExecution: False
+            networkProtection: False
+            fileSystemProtection: False
+            GPURequirement: False
+            selectedExecutionResource: VM1
+   component2:
+      name: mask-detector
+      executionLayer: 3
+      Containers:
+         container1:
+            image: registry.gitlab.polimi.it/ai-sprint/mask-detector:tag
+            memorySize: 4096
+            computingUnits: 0.9
+            trustedExecution: False
+            networkProtection: False
+            fileSystemProtection: False
+            GPURequirement: False
+            executionResources:  VM3 
