@@ -1,9 +1,0 @@
-components:
-  blurry-faces-onnx:
-    partitions:
-      - blurry-faces-onnx
-      - blurry-faces-onnx_partition1_1
-      - blurry-faces-onnx_partition1_2
-  mask-detector:
-    partitions:
-      - mask-detector

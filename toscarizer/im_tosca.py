@@ -69,16 +69,3 @@ def gen_tosca_input_value(resource_file):
     except Exception as ex:
         print("Error reading resources.yaml: %s" % ex)
     return input_values
-
-
-if __name__ == "__main__":
-    import sys
-
-    if len(sys.argv) > 1:
-        dir = sys.argv[1]
-    else:
-        dir = "."
-
-    for cl, tosca in gen_tosca_yaml("%s/%s" % (dir, RESOURCES_FILE)).items():
-        print("TOSCA for Computational Layer: %s" % cl)
-        print(yaml.safe_dump(tosca, indent=2))
