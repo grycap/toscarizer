@@ -3,11 +3,13 @@ import yaml
 
 # Default file names
 RESOURCES_FILE = "designs/common_config/resources.yaml"
+COMPONENT_FILE = "designs/common_config/component_partitions.yaml"
+CONTAINERS_FILE = "designs/common_config/containers.yaml"
+ANNOTATIONS_FILE = "designs/common_config/annotations.yaml"
+
+RESOURCES_COMPLETE_FILE = "deployments/resources_complete.yaml"
 BASE_DAG_FILE = "deployments/base/application_dag.yaml"
 OPTIMAL_DAG_FILE = "deployments/optimal_deployment/application_dag.yaml"
-COMPONENT_FILE = "designs/component_partitions.yaml"
-CONTAINERS_FILE = "designs/containers.yaml"
-RESOURCES_COMPLETE_FILE = "deployments/resources_complete.yaml"
 
 
 def parse_dag(dag_file):

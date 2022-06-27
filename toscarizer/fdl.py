@@ -1,8 +1,4 @@
 import yaml
-
-import sys
-sys.path.append(".")
-
 from toscarizer.utils import RESOURCES_COMPLETE_FILE, BASE_DAG_FILE, parse_dag, parse_resources
 
 
@@ -55,19 +51,3 @@ def generate_fdl(dag, resources):
                 components_done.append(next_component)
 
     return fdl
-
-
-if __name__ == "__main__":
-    import sys
-
-    if len(sys.argv) > 1:
-        dir = sys.argv[1]
-    else:
-        dir = "/home/micafer/codigo/toscarizer/app"
-
-    resources = parse_resources("%s/%s" % (dir, RESOURCES_COMPLETE_FILE))
-    dag = parse_dag("%s/%s" % (dir, BASE_DAG_FILE))
-
-    fdl = generate_fdl(dag, resources)
-
-    print(yaml.safe_dump(fdl, indent=2))

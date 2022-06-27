@@ -25,7 +25,7 @@ def docker(application_dir, username, password, registry, dry_run):
     resources = parse_resources("%s/%s" % (application_dir, RESOURCES_FILE))
     with open("%s/%s" % (application_dir, COMPONENT_FILE), 'r') as f:
         components = yaml.safe_load(f)
-    dockerfiles = generate_dockerfiles(components, resources)
+    dockerfiles = generate_dockerfiles(application_dir,     components, resources)
     docker_images = build_and_push(registry, dockerfiles, username, password, not dry_run, not dry_run)
     print("Docker images generated and pushed to the registry.")
     generate_containers(docker_images, "%s/%s" % (application_dir, CONTAINERS_FILE))
