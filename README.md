@@ -16,15 +16,15 @@ toscarizer --help
 
 ### Step3: Build and push the container images needed by each component of the application
 ```
-toscarizer docker --registry registry.gitlab.polimi.it/ai-sprint --username user --password pass --design-dir design_example
+toscarizer docker --registry registry.gitlab.polimi.it/ai-sprint --username user --password pass --application_dir app
 ```
 
 ### Step4: Generate the corresponding OSCAR FDL files
 ```
-toscarizer fdl --design-dir design_example
+toscarizer fdl --application_dir app
 ```
 
 ### Step5: Generate the corresponding TOSCA YAML files
 ```
-toscarizer tosca --design-dir design_example
+toscarizer tosca --application_dir app
 ```
