@@ -51,13 +51,10 @@ def parse_resources(resource_file):
             if "candidateExecutionLayers" in elem:
                 layer = elem["candidateExecutionLayers"][0]
                 arm64 = all([cls[layer]["arch"].lower() == "arm64" for layer in elem["candidateExecutionLayers"]])
+            if "executionLayer" in elem:
+                layer = elem["executionLayer"]
 
             cont = list(elem["Containers"].values())[0]
-            if "Containers" in cont:
-                cont = list(cont["Containers"].values())[0]
-
-            if "executionLayers" in cont:
-                layer = cont["executionLayers"]
 
             res_dict[elem["name"]] = {"memory": cont["memorySize"],
                                       "cpu": cont["computingUnits"],
