@@ -1,8 +1,20 @@
+from operator import contains
 import yaml
 from toscarizer.utils import RESOURCES_COMPLETE_FILE, BASE_DAG_FILE, parse_dag, parse_resources
 
 
-def get_service(component, previous, resources):
+def get_image_url(component, resources, containers):
+    arch = "amd64"
+    if resources[component].get("arm64"):
+        arch = "arm64"
+    for images in list(containers["components"].values()):
+        for image in images["docker_images"]:
+            if "/%s_%s" % (component, arch) in image:
+                return image
+    return None
+
+
+def get_service(component, previous, resources, containers):
     """Generate the OSCAR service FDL."""
     if not previous:
         input_path = "%s/input" % component
@@ -10,7 +22,7 @@ def get_service(component, previous, resources):
         input_path = "%s/output" % previous
     service = {
         "name": component,
-        "image": resources.get(component, {}).get("image"),
+        "image": get_image_url(component, resources, containers),
         "script": "%s_script.sh" % component,
         "input": [{
             "storage_provider": "minio",
@@ -26,7 +38,7 @@ def get_service(component, previous, resources):
     return service
 
 
-def generate_fdl(dag, resources):
+def generate_fdl(dag, resources, containers):
     """Generates the FDL for the dag and resources provided."""
     fdl = {"functions": {"oscar": []}}
     oscar = fdl["functions"]["oscar"]
@@ -38,7 +50,7 @@ def generate_fdl(dag, resources):
         cluster_name = "computationallayer%s" % resources.get(component, {}).get("layer", "0")
         # Add the node
         if component not in components_done:
-            service = get_service(component, None, resources)
+            service = get_service(component, None, resources, containers)
             oscar.append({cluster_name: service})
             components_done.append(component)
 
@@ -46,7 +58,7 @@ def generate_fdl(dag, resources):
         for next_component in next_items:
             cluster_name = "computationallayer%s" % resources.get(next_component, {}).get("layer", "0")
             if next_component not in components_done:
-                service = get_service(next_component, component, resources)
+                service = get_service(next_component, component, resources, containers)
                 oscar.append({cluster_name: service})
                 components_done.append(next_component)
 

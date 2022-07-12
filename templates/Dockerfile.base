@@ -3,6 +3,8 @@ LABEL maintainer="Miguel Caballer <micafer1@upv.es>"
 LABEL version="0.1"
 LABEL description="Base container image for the AI-SPRINT use cases."
 
+# TODO: Install AI-SPRINT library
+
 RUN pip install --upgrade pip
 RUN pip install --no-cache-dir \
     numpy==1.23.0 \

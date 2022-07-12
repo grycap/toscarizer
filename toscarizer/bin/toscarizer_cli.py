@@ -36,8 +36,10 @@ def docker(application_dir, username, password, registry, dry_run):
 @click.option("--application_dir", help="Path to the AI-SPRINT application.", required=True)
 def fdl(application_dir):
     resources = parse_resources("%s/%s" % (application_dir, RESOURCES_FILE))
+    with open("%s/%s" % (application_dir, CONTAINERS_FILE), 'r') as f:
+        containers = yaml.safe_load(f)
     dag = parse_dag("%s/%s" % (application_dir, BASE_DAG_FILE))
-    fdl = generate_fdl(dag, resources)
+    fdl = generate_fdl(dag, resources, containers)
     fdl_file = "%s/deployments/base/oscar/fdl.yaml" % application_dir
     with open(fdl_file, 'w+') as f:
         yaml.safe_dump(fdl, f, indent=2)
@@ -45,7 +47,7 @@ def fdl(application_dir):
 
     resources = parse_resources("%s/%s" % (application_dir, RESOURCES_COMPLETE_FILE))
     dag = parse_dag("%s/%s" % (application_dir, OPTIMAL_DAG_FILE))
-    fdl = generate_fdl(dag, resources)
+    fdl = generate_fdl(dag, resources, containers)
     fdl_file = "%s/deployments/optimal_deployment/oscar/fdl.yaml" % application_dir
     with open(fdl_file, 'w+') as f:
         yaml.safe_dump(fdl, f, indent=2)

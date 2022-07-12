@@ -54,7 +54,7 @@ def build_and_push(registry, dockerfiles, username, password, push=True, build=T
             res[component][partition] = []
             for (platform, dockerfile) in docker_images:
                 if platform == "linux/amd64":
-                    name = "%s_amd4" % partition
+                    name = "%s_amd64" % partition
                 else:
                     name = "%s_arm64" % partition
                 image = "%s/%s:latest" % (registry, name)
