@@ -2,14 +2,14 @@ import networkx as nx
 import yaml
 
 # Default file names
-RESOURCES_FILE = "designs/common_config/resources.yaml"
-COMPONENT_FILE = "designs/common_config/component_partitions.yaml"
-CONTAINERS_FILE = "designs/common_config/containers.yaml"
-ANNOTATIONS_FILE = "designs/common_config/annotations.yaml"
+RESOURCES_FILE = "common_config/resources.yaml"
+COMPONENT_FILE = "aisprint/designs/component_partitions.yaml"
+CONTAINERS_FILE = "aisprint/designs/containers.yaml"
+ANNOTATIONS_FILE = "common_config/annotations.yaml"
 
-RESOURCES_COMPLETE_FILE = "deployments/resources_complete.yaml"
-BASE_DAG_FILE = "deployments/base/application_dag.yaml"
-OPTIMAL_DAG_FILE = "deployments/optimal_deployment/application_dag.yaml"
+RESOURCES_COMPLETE_FILE = "aisprint/deployments/resources_complete.yaml"
+BASE_DAG_FILE = "aisprint/deployments/base/application_dag.yaml"
+OPTIMAL_DAG_FILE = "aisprint/deployments/optimal_deployment/application_dag.yaml"
 
 
 def parse_dag(dag_file):
