@@ -9,40 +9,15 @@ topology_template:
   inputs:
     fe_cpus:
       type: integer
-      default: 2
+      default: 4
     fe_mem:
       type: scalar-unit.size
       default: 4 GB
-  
-    wn_num:
-      type: integer
-      default: 1
-    wn_cpus:
-      type: integer
-      default: 2
-    wn_mem:
-      type: scalar-unit.size
-      default: 4 GB
-    wn_sgx:
-      type: boolean
-      default: False
-    wn_preemtible_instance:
-      type: boolean
-      default: False
     storage_size:
       type: string
-      default: 50 GB
+      default: 100 GB
   
-    os_type:
-      type: string
-      default: linux
-    os_distribution:
-      type: string
-      default: ubuntu
-    os_version:
-      type: string
-      default: "20.04"
-    os_image:
+    fe_os_image:
       type: string
       default: ""
 
@@ -163,10 +138,8 @@ topology_template:
             mem_size: { get_input: fe_mem }
         os:
           properties:
-            distribution: { get_input: os_distribution }
-            type: { get_input: os_type }
-            version:  { get_input: os_version }
-            image: { get_input: os_image }
+            type: linux
+            image: { get_input: fe_os_image }
       requirements:
         - local_storage:
             node: my_block_storage
@@ -218,3 +191,13 @@ topology_template:
       value: { concat: [ 'https://', get_property: [dns_reg_minio, record_name], '.', get_property: [dns_reg_minio, domain_name], '/' ] }
     console_minio_endpoint:
       value: { concat: [ 'https://', get_property: [dns_reg_console_minio, record_name], '.', get_property: [dns_reg_console_minio, domain_name], '/' ] }
+    admin_token:
+      value: { get_input: admin_token }
+    oscar_password:
+      value: { get_input: oscar_password }
+    minio_password:
+      value: { get_input: minio_password }
+    fe_node_ip:
+      value: { get_attribute: [ front, public_address, 0 ] }
+    fe_node_creds:
+      value: { get_attribute: [ front, endpoint, credential, 0 ] }
