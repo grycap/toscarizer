@@ -140,4 +140,4 @@ System:
             networkProtection: False
             fileSystemProtection: False
             GPURequirement: False
-            executionResources:  VM3 
+            selectedExecutionResource:  VM2 

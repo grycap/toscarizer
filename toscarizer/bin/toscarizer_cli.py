@@ -7,7 +7,7 @@ sys.path.append(".")
 from toscarizer.utils import parse_dag, parse_resources, RESOURCES_FILE, COMPONENT_FILE, CONTAINERS_FILE, RESOURCES_COMPLETE_FILE, BASE_DAG_FILE, OPTIMAL_DAG_FILE
 from toscarizer.fdl import generate_fdl
 from toscarizer.docker_images import generate_dockerfiles, build_and_push, generate_containers
-from toscarizer.im_tosca import gen_tosca_yaml
+from toscarizer.im_tosca import gen_tosca_yamls
 
 
 @click.group()
@@ -57,9 +57,9 @@ def fdl(application_dir):
 @click.command()
 @click.option("--application_dir", help="Path to the AI-SPRINT application.", required=True)
 def tosca(application_dir):
-    toscas = gen_tosca_yaml("%s/%s" % (application_dir, RESOURCES_COMPLETE_FILE))
+    toscas = gen_tosca_yamls("%s/%s" % (application_dir, RESOURCES_COMPLETE_FILE))
     for cl, tosca in toscas.items():
-        tosca_file = "%s/deployments/optimal_deployment/im/%s.yaml" % (application_dir, cl)
+        tosca_file = "%s/aisprint/deployments/optimal_deployment/im/%s.yaml" % (application_dir, cl)
         with open(tosca_file, 'w+') as f:
             yaml.safe_dump(tosca, f, indent=2)
         print("DONE. TOSCA file %s has been generated for Computational Layer: %s." % (tosca_file, cl))

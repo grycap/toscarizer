@@ -2,7 +2,7 @@ functions:
   oscar:
   - computationallayer1:
       cpu: 0.9
-      image: blurry-faces-onnx
+      image: registry.gitlab.polimi.it/ai-sprint/blurry-faces-onnx_arm64:latest
       input:
       - path: blurry-faces-onnx/input
         storage_provider: minio
@@ -14,7 +14,7 @@ functions:
       script: blurry-faces-onnx_script.sh
   - computationallayer2:
       cpu: 4
-      image: mask-detector
+      image: registry.gitlab.polimi.it/ai-sprint/mask-detector_amd64:latest
       input:
       - path: blurry-faces-onnx/output
         storage_provider: minio

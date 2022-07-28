@@ -1,71 +1,118 @@
 import yaml
 import copy
+import random
+import string
 
 from toscarizer.utils import RESOURCES_FILE
 
 TOSCA_TEMPLATE = "templates/oscar.yaml"
+WN_TOSCA_TEMPLATE = "templates/oscar_wn.yaml"
 
+
+def get_random_string(length):
+    # choose from all lowercase letter
+    letters = string.ascii_lowercase
+    result_str = ''.join(random.choice(letters) for i in range(length))
+    return result_str
 
 def gen_oscar_name():
     # TODO: https://github.com/grycap/im-dashboard/blob/master/app/utils.py#L435
+    return "oscar-cluster-%s" % get_random_string(8)
+
+
+def merge_templates(template, new_template):
+    for item in ["inputs", "node_templates", "outputs"]:
+        if item in new_template["topology_template"]:
+            if item not in template["topology_template"]:
+                template["topology_template"][item] = {}
+            template["topology_template"][item].update(new_template["topology_template"][item])
+    return template
+
+
+def find_compute_layer(resources, layer_num):
+    for nd in list(resources["System"]["NetworkDomains"].values()):
+        if "ComputationalLayers" in nd:
+            for _, cl in nd["ComputationalLayers"].items():
+                if cl.get("number") == layer_num:
+                    return cl
     return None
 
 
-def gen_tosca_yaml(resource_file):
+def find_resource_by_name(compute_layer, res_name):
+    for res in list(compute_layer["Resources"].values()):
+        if res.get("name") == res_name:
+            return res
+    return None
+
+
+def gen_tosca_yamls(resource_file):
     with open(TOSCA_TEMPLATE, 'r') as f:
         tosca_tpl = yaml.safe_load(f)
 
-    inputs = gen_tosca_input_value(resource_file)
-    res = {}
-    for cl, input_values in inputs.items():
-        res[cl] = copy.deepcopy(tosca_tpl)
-        for input_name, input_value in input_values.items():
-            if input_value is not None and input_name in res[cl]["topology_template"]["inputs"]:
-                res[cl]["topology_template"]["inputs"][input_name] = input_value
+    with open(WN_TOSCA_TEMPLATE, 'r') as f:
+        wn_tosca_tpl = yaml.safe_load(f)
 
-    return res
-
-
-def gen_tosca_input_value(resource_file):
-    """Parse the resources.yaml file."""
-    input_values = {}
+    tosca_res = {}
     try:
         with open(resource_file, 'r') as f:
             resources = yaml.safe_load(f)
 
-        for nd in list(resources["System"]["NetworkDomains"].values()):
-            for cl_name, cl in nd["ComputationalLayers"].items():
-                if cl["type"] in ["Virtual", "PhysicalToBeProvisioned"]:
-                    input_values[cl_name] = {}
-                    for res in list(cl["Resources"].values()):
-                        input_values[cl_name]["cluster_name"] = gen_oscar_name()
-                        input_values[cl_name]["wn_num"] = res.get("totalNodes")
-                        input_values[cl_name]["os_type"] = res.get("operatingSystemType")
-                        input_values[cl_name]["os_distribution"] = res.get("operatingSystemDistribution")
-                        input_values[cl_name]["os_version"] = res.get("operatingSystemVersion")
-                        input_values[cl_name]["os_image"] = res.get("operatingSystemImageId")
-                        if res.get("memorySize"):
-                            input_values[cl_name]["wn_mem"] = "%s MB" % res.get("memorySize")
-                        if res.get("storageSize"):
-                            input_values[cl_name]["storage_size"] = "%s GB" % res.get("storageSize")
-                        if res.get("storageType") == "SSD":
-                            # TODO: Improve
-                            input_values[cl_name]["volume_type"] = "gp3"
-                        input_values[cl_name]["wn_preemtible_instance"] = res.get("onSpot")
+        for comp_id, component in resources["System"]["Components"].items():
+            tosca_comp = copy.deepcopy(tosca_tpl)
+            compute_layer = find_compute_layer(resources, component["executionLayer"])
+            if not compute_layer:
+                raise Exception("No compute layer %s found." % component["executionLayer"])
+            if compute_layer["type"] != "NativeCloudFunction":
+                tosca_comp["topology_template"]["inputs"]["cluster_name"]["default"] = gen_oscar_name()
+                tosca_comp["topology_template"]["inputs"]["domain_name"]["default"] = "im.grycap.net"
+                tosca_comp["topology_template"]["inputs"]["admin_token"]["default"] = get_random_string(16)
+                tosca_comp["topology_template"]["inputs"]["oscar_password"]["default"] = get_random_string(16)
+                tosca_comp["topology_template"]["inputs"]["minio_password"]["default"] = get_random_string(16)
+                tosca_comp["topology_template"]["inputs"]["fe_os_image"]["default"] = None
+                for cont_id, cont in component["Containers"].items():
+                    res = find_resource_by_name(compute_layer, cont["selectedExecutionResource"])
+                    if not res:
+                        raise Exception("Not resource %s in compute layer %s." % (cont["selectedExecutionResource"],
+                                                                                    component["executionLayer"]))
+                    tosca_wn = copy.deepcopy(wn_tosca_tpl)
+                    wn_name = "%s_%s" % (component["name"], cont_id)
 
-                        cores = 0
-                        sgx = None
-                        for proc in list(res["processors"].values()):
-                            cores += proc.get("computingUnits", 0)
-                            sgx = proc.get("SGXFlag")
+                    wn_node = tosca_wn["topology_template"]["node_templates"].pop("wn_node")
+                    wn_node["requirements"][0]["host"] = "wn_%s" % wn_name
 
-                        input_values[cl_name]["wn_cpus"] = cores
-                        input_values[cl_name]["wn_sgx"] = sgx
+                    wn = tosca_wn["topology_template"]["node_templates"].pop("wn")
+                    wn["capabilities"]["scalable"]["properties"]["count"] = res.get("totalNodes")
+                    wn["capabilities"]["host"]["properties"]["mem_size"] = "%s MB" % res.get("memorySize")
+                    wn["capabilities"]["host"]["properties"]["preemtible_instance"] = res.get("onSpot", False)
 
-                        for acc in list(res.get("accelerators", {}).values()):
-                            # TODO: look for GPUs
-                            pass
+                    wn["capabilities"]["os"]["properties"]["distribution"] = res.get("operatingSystemDistribution")
+                    wn["capabilities"]["os"]["properties"]["version"] = res.get("operatingSystemVersion")
+                    wn["capabilities"]["os"]["properties"]["image"] = res.get("operatingSystemImageId")
+
+                    # For the FE set the image of the first WN
+                    if tosca_comp["topology_template"]["inputs"]["fe_os_image"]["default"] is None:
+                        tosca_comp["topology_template"]["inputs"]["fe_os_image"]["default"] = res.get("operatingSystemImageId")
+
+                    cores = 0
+                    sgx = False
+                    for proc in list(res["processors"].values()):
+                        cores += proc.get("computingUnits", 0)
+                        if proc.get("SGXFlag"):
+                            sgx = True
+
+                    for acc in list(res.get("accelerators", {}).values()):
+                        # TODO: look for GPUs
+                        pass
+
+                    wn["capabilities"]["host"]["properties"]["num_cpus"] = cores
+                    wn["capabilities"]["host"]["properties"]["sgx"] = sgx
+
+                    tosca_wn["topology_template"]["node_templates"]["wn_node_%s" % wn_name] = wn_node
+                    tosca_wn["topology_template"]["node_templates"]["wn_%s" % wn_name] = wn
+
+                    tosca_res[component["name"]] = merge_templates(tosca_comp, tosca_wn)
 
     except Exception as ex:
-        print("Error reading resources.yaml: %s" % ex)
-    return input_values
+        print("Error reading resources file: %s" % ex)
+
+    return tosca_res
