@@ -73,7 +73,19 @@ def set_node_credentials(node_tpl, username, key):
                                                                   "token": key}
 
 
-def gen_tosca_yamls(resource_file):
+def get_physical_resource_data(comp_layer, res, phys_file, node_type, value, index=None):
+    for cl in list(phys_file["ComputationalLayers"].values()):
+        if cl["number"] == comp_layer["number"]:
+            for r in list(cl["Resources"].values()):
+                if r["name"] == res["name"]:
+                    if index is not None:
+                        return r[node_type][index][value]
+                    else:
+                        return r[node_type][value]
+    return None
+
+
+def gen_tosca_yamls(resource_file, phys_file):
     with open(TOSCA_TEMPLATE, 'r') as f:
         tosca_tpl = yaml.safe_load(f)
 
@@ -81,22 +93,21 @@ def gen_tosca_yamls(resource_file):
         wn_tosca_tpl = yaml.safe_load(f)
 
     tosca_res = {}
+    phys_nodes = {}
+    res = None
     try:
         with open(resource_file, 'r') as f:
             resources = yaml.safe_load(f)
+
+        if phys_file:
+            with open(phys_file, 'r') as f:
+                phys_nodes = yaml.safe_load(f)
 
         for comp_id, component in resources["System"]["Components"].items():
             tosca_comp = copy.deepcopy(tosca_tpl)
             compute_layer = find_compute_layer(resources, component["executionLayer"])
             if not compute_layer:
                 raise Exception("No compute layer %s found." % component["executionLayer"])
-
-            if compute_layer["type"] == "PhysicalAlreadyProvisioned":
-                # Add nets to enable to set IP of the nodes
-                tosca_comp = add_nets(tosca_comp)
-                tosca_comp = set_ip_details(tosca_comp, "front", "pub_network", "TODO-pub", 1)
-                tosca_comp = set_ip_details(tosca_comp, "front", "priv_network", "TODO-priv", 0)
-                set_node_credentials(tosca_comp["topology_template"]["node_templates"]["front"], "TODO", "TODO")
 
             if compute_layer["type"] != "NativeCloudFunction":
                 tosca_comp["topology_template"]["inputs"]["cluster_name"]["default"] = gen_oscar_name()
@@ -144,13 +155,15 @@ def gen_tosca_yamls(resource_file):
                     wn["capabilities"]["host"]["properties"]["sgx"] = sgx
 
                     if compute_layer["type"] == "PhysicalAlreadyProvisioned":
-                        set_node_credentials(wn, "TODO", "TODO")
                         # as each wn will have different ip, we have to create 
                         # one node per wn to reach totalNodes
                         wn["capabilities"]["scalable"]["properties"]["count"] = 1
                         for num in range(1, res.get("totalNodes")):
-                            # TODO: Get the WN ip
-                            wn_ip = "TODO-priv-%s" % num
+                            ssh_user = get_physical_resource_data(compute_layer, res, phys_nodes, "wns", "ssh_user", num-1)
+                            ssh_key = get_physical_resource_data(compute_layer, res, phys_nodes, "wns", "ssh_key", num-1)
+                            set_node_credentials(wn, ssh_user, ssh_key)
+
+                            wn_ip = get_physical_resource_data(compute_layer, res, phys_nodes, "wns", "private_ip", num-1)
                             tosca_comp = set_ip_details(tosca_comp, "wn_%s_%s" % (wn_name, num), "priv_network", wn_ip, 0)
                             tosca_wn["topology_template"]["node_templates"]["wn_node_%s_%s" % (wn_name, num)] = copy.deepcopy(wn_node)
                             tosca_wn["topology_template"]["node_templates"]["wn_%s_%s" % (wn_name, num)] = copy.deepcopy(wn)
@@ -160,6 +173,17 @@ def gen_tosca_yamls(resource_file):
                         tosca_wn["topology_template"]["node_templates"]["wn_%s" % wn_name] = wn
 
                         tosca_res[component["name"]] = merge_templates(tosca_comp, tosca_wn)
+
+            if compute_layer["type"] == "PhysicalAlreadyProvisioned":
+                # Add nets to enable to set IP of the nodes
+                tosca_comp = add_nets(tosca_comp)
+                pub_ip = get_physical_resource_data(compute_layer, res, phys_nodes, "fe_node", "public_ip")
+                priv_ip = get_physical_resource_data(compute_layer, res, phys_nodes, "fe_node", "private_ip")
+                tosca_comp = set_ip_details(tosca_comp, "front", "pub_network", pub_ip, 1)
+                tosca_comp = set_ip_details(tosca_comp, "front", "priv_network", priv_ip, 0)
+                ssh_user = get_physical_resource_data(compute_layer, res, phys_nodes, "fe_node", "ssh_user")
+                ssh_key = get_physical_resource_data(compute_layer, res, phys_nodes, "fe_node", "ssh_key")
+                set_node_credentials(tosca_comp["topology_template"]["node_templates"]["front"], ssh_user, ssh_key)
 
     except Exception as ex:
         print("Error reading resources file: %s" % ex)

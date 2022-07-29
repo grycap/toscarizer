@@ -6,6 +6,7 @@ RESOURCES_FILE = "common_config/resources.yaml"
 COMPONENT_FILE = "aisprint/designs/component_partitions.yaml"
 CONTAINERS_FILE = "aisprint/designs/containers.yaml"
 ANNOTATIONS_FILE = "common_config/annotations.yaml"
+PHYSICAL_NODES_FILE = "common_config/physical_nodes.yaml"
 
 RESOURCES_COMPLETE_FILE = "aisprint/deployments/resources_complete.yaml"
 BASE_DAG_FILE = "aisprint/deployments/base/application_dag.yaml"
