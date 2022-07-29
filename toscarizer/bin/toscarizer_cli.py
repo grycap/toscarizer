@@ -1,7 +1,7 @@
-from email.policy import default
 import click
 import yaml
 import sys
+import requests
 import os.path
 
 sys.path.append(".")
@@ -82,18 +82,46 @@ def tosca(application_dir, resource_file, phys_file):
 
     toscas = gen_tosca_yamls(resource_file, phys_file)
     for cl, tosca in toscas.items():
-        if resource_file:
-            tosca_file = "%s/%s.yaml" % (os.path.dirname(resource_file), cl)
-        else:
+        if application_dir:
             tosca_file = "%s/aisprint/deployments/optimal_deployment/im/%s.yaml" % (application_dir, cl)
+        else:
+            tosca_file = "%s/%s.yaml" % (os.path.dirname(resource_file), cl)
         with open(tosca_file, 'w+') as f:
             yaml.safe_dump(tosca, f, indent=2)
         print("DONE. TOSCA file %s has been generated for Computational Layer: %s." % (tosca_file, cl))
 
 
+@click.command()
+@click.option('--im_url', required=True)
+@click.option('--im_auth', required=True)
+@click.option('--verify', required=False, default=False)
+@click.option('--tosca_file', multiple=True, required=True)
+def deploy(im_url, im_auth, verify, tosca_file):
+    with open(im_auth, 'r') as f:
+        auth_data = f.read().replace("\n", "\\n")
+
+    headers = {"Authorization": auth_data}
+    headers["Content-Type"] = "text/yaml"
+    url = "%s/infrastructures" % im_url
+    res = {}
+    for file in tosca_file:
+        with open(file, 'r') as f:
+            tosca_data = f.read()
+        resp = requests.request("POST", url, verify=verify, headers=headers, data=tosca_data)
+        success = resp.status_code == 200
+        res[file] = {}
+        if success:
+            res[file]["infId"] = resp.text
+        else:
+            res[file]["error"] = resp.text
+
+    print(yaml.safe_dump(res, indent=2))
+
+
 toscarizer_cli.add_command(docker)
 toscarizer_cli.add_command(fdl)
 toscarizer_cli.add_command(tosca)
+toscarizer_cli.add_command(deploy)
 
 if __name__ == '__main__':
     toscarizer_cli()
