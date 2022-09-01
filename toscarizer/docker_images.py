@@ -21,18 +21,17 @@ def generate_dockerfiles(app_dir, components, resources):
         dockerfiles[component] = {}
         for partition in partitions["partitions"]:
             dockerfiles[component][partition] = []
-            if component == partition:
-                dockerfile_path = "%s/designs/%s/%s_base/Dockerfile" % (app_dir, component, partition)
-            else:
-                dockerfile_path = "%s/designs/%s/%s/Dockerfile" % (app_dir, component, partition)
-            dockerfile = dockerfile_tpl.replace("{{component_name}}", partition)
+            dockerfile_path = "%s/aisprint/designs/%s/%s/Dockerfile" % (app_dir, component, partition)
+            dockerfile = dockerfile_tpl.replace("{{component_name}}", "%s_%s" % (component, partition))
             with open(dockerfile_path, 'w+') as f:
                 f.write(dockerfile)
-            if resources[partition]["arm64"]:
-                dockerfiles[component][partition].append(("linux/amd64", dockerfile_path))
-                dockerfiles[component][partition].append(("linux/arm64", dockerfile_path))
+            if partition == "base":
+                part_name = component
             else:
-                dockerfiles[component][partition].append(("linux/amd64", dockerfile_path))
+                part_name = "%s_%s" % (component, partition)
+
+            for platform in resources[part_name]["platforms"]:
+                dockerfiles[component][partition].append(("linux/%s" % platform, dockerfile_path))
 
     return dockerfiles
 

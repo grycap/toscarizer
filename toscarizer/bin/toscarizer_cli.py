@@ -6,7 +6,7 @@ import os.path
 
 sys.path.append(".")
 
-from toscarizer.utils import parse_dag, parse_resources, RESOURCES_FILE, COMPONENT_FILE, CONTAINERS_FILE, RESOURCES_COMPLETE_FILE, BASE_DAG_FILE, OPTIMAL_DAG_FILE, PHYSICAL_NODES_FILE
+from toscarizer.utils import DEPLOYMENTS_FILE, parse_dag, parse_resources, RESOURCES_FILE, COMPONENT_FILE, CONTAINERS_FILE, RESOURCES_COMPLETE_FILE, BASE_DAG_FILE, OPTIMAL_DAG_FILE, PHYSICAL_NODES_FILE
 from toscarizer.fdl import generate_fdl
 from toscarizer.docker_images import generate_dockerfiles, build_and_push, generate_containers
 from toscarizer.im_tosca import gen_tosca_yamls
@@ -24,10 +24,10 @@ def toscarizer_cli():
 @click.option("--registry", help="Registry to push the generated docker images.", type=str, required=True)
 @click.option("--dry-run", help="Registry to push the generated docker images.", default=False, is_flag=True)
 def docker(application_dir, username, password, registry, dry_run):
-    resources = parse_resources("%s/%s" % (application_dir, RESOURCES_FILE))
+    resources = parse_resources("%s/%s" % (application_dir, RESOURCES_FILE), "%s/%s" % (application_dir, DEPLOYMENTS_FILE))
     with open("%s/%s" % (application_dir, COMPONENT_FILE), 'r') as f:
         components = yaml.safe_load(f)
-    dockerfiles = generate_dockerfiles(application_dir,     components, resources)
+    dockerfiles = generate_dockerfiles(application_dir, components, resources)
     docker_images = build_and_push(registry, dockerfiles, username, password, not dry_run, not dry_run)
     print("Docker images generated and pushed to the registry.")
     generate_containers(docker_images, "%s/%s" % (application_dir, CONTAINERS_FILE))
