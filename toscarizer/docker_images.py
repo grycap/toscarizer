@@ -36,7 +36,7 @@ def generate_dockerfiles(app_dir, components, resources):
     return dockerfiles
 
 
-def build_and_push(registry, dockerfiles, username, password, push=True, build=True):
+def build_and_push(registry, registry_folder, dockerfiles, username, password, push=True, build=True):
     """Build and push the images per each component using the dockerfiles specified."""
     try:
         dclient = docker.from_env()
@@ -56,7 +56,7 @@ def build_and_push(registry, dockerfiles, username, password, push=True, build=T
                     name = "%s_%s_amd64" % (component, partition)
                 else:
                     name = "%s_%s_arm64" % (component, partition)
-                image = "%s/%s:latest" % (registry, name)
+                image = "%s/%s/%s:latest" % (registry, registry_folder, name)
                 if build:
                     build_dir = os.path.dirname(dockerfile)
                     # Copy the script that is generic
