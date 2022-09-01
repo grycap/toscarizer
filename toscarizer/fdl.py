@@ -5,11 +5,11 @@ from toscarizer.utils import RESOURCES_COMPLETE_FILE, BASE_DAG_FILE, parse_dag, 
 
 def get_image_url(component, resources, containers):
     arch = "amd64"
-    if resources[component].get("arm64"):
+    if "arm64" in resources[component]["platforms"]:
         arch = "arm64"
     for images in list(containers["components"].values()):
         for image in images["docker_images"]:
-            if "/%s_%s" % (component, arch) in image:
+            if "/%s_%s" % (component, arch) in image or "/%s_base_%s" % (component, arch) in image:
                 return image
     return None
 
@@ -47,7 +47,7 @@ def generate_fdl(dag, resources, containers):
     for component, next_items in dag.adj.items():
         # Using the name of the computationallayer
         # asuming that it is computationallayer + the num
-        cluster_name = "computationallayer%s" % resources.get(component, {}).get("layer", "0")
+        cluster_name = resources.get(component, {}).get("layers", [{"name": "computationallayer0"}])[0]["name"]
         # Add the node
         if component not in components_done:
             service = get_service(component, None, resources, containers)

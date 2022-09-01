@@ -43,22 +43,23 @@ def fdl(application_dir, base, optimal):
         print("--base or --optimal options must be set.")
         sys.exit(1)
 
+    with open("%s/%s" % (application_dir, CONTAINERS_FILE), 'r') as f:
+        containers = yaml.safe_load(f)
+
     if base:
-        resources = parse_resources("%s/%s" % (application_dir, RESOURCES_FILE))
-        with open("%s/%s" % (application_dir, CONTAINERS_FILE), 'r') as f:
-            containers = yaml.safe_load(f)
+        resources = parse_resources("%s/%s" % (application_dir, RESOURCES_FILE), "%s/%s" % (application_dir, DEPLOYMENTS_FILE))
         dag = parse_dag("%s/%s" % (application_dir, BASE_DAG_FILE))
         fdl = generate_fdl(dag, resources, containers)
-        fdl_file = "%s/deployments/base/oscar/fdl.yaml" % application_dir
+        fdl_file = "%s/aisprint/deployments/base/oscar/fdl.yaml" % application_dir
         with open(fdl_file, 'w+') as f:
             yaml.safe_dump(fdl, f, indent=2)
         print("DONE. FDL file %s has been generated." % fdl_file)
 
     if optimal:
-        resources = parse_resources("%s/%s" % (application_dir, RESOURCES_COMPLETE_FILE))
+        resources = parse_resources("%s/%s" % (application_dir, RESOURCES_COMPLETE_FILE), "%s/%s" % (application_dir, DEPLOYMENTS_FILE))
         dag = parse_dag("%s/%s" % (application_dir, OPTIMAL_DAG_FILE))
         fdl = generate_fdl(dag, resources, containers)
-        fdl_file = "%s/deployments/optimal_deployment/oscar/fdl.yaml" % application_dir
+        fdl_file = "%s/aisprint/deployments/optimal_deployment/oscar/fdl.yaml" % application_dir
         with open(fdl_file, 'w+') as f:
             yaml.safe_dump(fdl, f, indent=2)
         print("DONE. FDL file %s has been generated." % fdl_file)
