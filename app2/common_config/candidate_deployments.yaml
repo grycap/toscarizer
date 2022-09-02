@@ -1,0 +1,97 @@
+Components:
+   component1:
+      name: blurry-faces-onnx
+      candidateExecutionLayers: [1]
+      Containers:
+         container1:
+            image: registry.gitlab.polimi.it/ai-sprint/blurry-faces-onnx:tag
+            memorySize: 2048
+            computingUnits: 0.9
+            trustedExecution: False
+            networkProtection: False
+            fileSystemProtection: False
+            GPURequirement: False
+            candidateExecutionResources: [RaspPi_NeuralStick]
+         container2:
+            image: registry.gitlab.polimi.it/ai-sprint/blurry-faces-onnx:tag
+            memorySize: 2048
+            computingUnits: 0.9
+            trustedExecution: False
+            networkProtection: False
+            fileSystemProtection: False
+            GPURequirement: False
+            candidateExecutionResources: [MiniPC_Ryzen7]
+   component1_partitionX_1:
+      name: blurry-faces-onnx_partitionX_1
+      candidateExecutionLayers: [1]
+      Containers:
+         container1:
+            image: registry.gitlab.polimi.it/ai-sprint/blurry-faces-onnx_partitionX_1:tag
+            memorySize: 1024
+            computingUnits: 0.9
+            trustedExecution: False
+            networkProtection: False
+            fileSystemProtection: False
+            GPURequirement: False
+            candidateExecutionResources: [RaspPi_NeuralStick]
+         container2:
+            image: registry.gitlab.polimi.it/ai-sprint/blurry-faces-onnx_partitionX_1:tag
+            memorySize: 1024
+            computingUnits: 0.9
+            trustedExecution: False
+            networkProtection: False
+            fileSystemProtection: False
+            GPURequirement: False
+            candidateExecutionResources: [MiniPC_Ryzen7]
+   component1_partitionX_2:
+      name: blurry-faces-onnx_partitionX_2
+      candidateExecutionLayers: [2]
+      Containers:
+         container1:
+            image: registry.gitlab.polimi.it/ai-sprint/blurry-faces-onnx_partitionX_2:tag
+            memorySize: 1024
+            computingUnits: 0.9
+            trustedExecution: False
+            networkProtection: False
+            fileSystemProtection: False
+            GPURequirement: False
+            candidateExecutionResources: [VM1]
+   component2:
+      name: mask-detector-onnx
+      candidateExecutionLayers: [2, 3]
+      Containers:
+         container1:
+            image: registry.gitlab.polimi.it/ai-sprint/mask-detector:tag
+            memorySize: 4096
+            computingUnits: 0.9
+            trustedExecution: False
+            networkProtection: False
+            fileSystemProtection: False
+            GPURequirement: False
+            candidateExecutionResources: [VM1, VM2, VM3]
+   component2_partitionX_1:
+      name: mask-detector-onnx_partitionX_1
+      candidateExecutionLayers: [2, 3]
+      Containers:
+         container1:
+            image: registry.gitlab.polimi.it/ai-sprint/mask-detector-onnx_partitionX_1:tag
+            memorySize: 2048
+            computingUnits: 0.9
+            trustedExecution: False
+            networkProtection: False
+            fileSystemProtection: False
+            GPURequirement: False
+            candidateExecutionResources: [VM1, VM2, VM3]
+   component2_partitionX_2:
+      name: mask-detector-onnx_partitionX_2
+      candidateExecutionLayers: [3, 4]
+      Containers:
+         container1:
+            image: registry.gitlab.polimi.it/ai-sprint/mask-detector-onnx_partitionX_2:tag
+            memorySize: 2048
+            computingUnits: 0.9
+            trustedExecution: False
+            networkProtection: False
+            fileSystemProtection: False
+            GPURequirement: False
+            candidateExecutionResources: [VM2, VM3, AWS-FaaS]

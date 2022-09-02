@@ -10,7 +10,7 @@ setup(
     packages=["toscarizer", "toscarizer.bin"],
     package_dir={"toscarizer": "toscarizer",
                  "toscarizer.bin": "toscarizer/bin  "},
-    install_requires=['PyYAML', 'networkx', 'docker'],
+    install_requires=['PyYAML', 'networkx', 'docker', 'requests'],
     entry_points={
         'console_scripts': [
             'toscarizer=toscarizer.bin.toscarizer_cli:toscarizer_cli',

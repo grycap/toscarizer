@@ -2,14 +2,16 @@ import networkx as nx
 import yaml
 
 # Default file names
-RESOURCES_FILE = "designs/common_config/resources.yaml"
-COMPONENT_FILE = "designs/common_config/component_partitions.yaml"
-CONTAINERS_FILE = "designs/common_config/containers.yaml"
-ANNOTATIONS_FILE = "designs/common_config/annotations.yaml"
+RESOURCES_FILE = "common_config/candidate_resources.yaml"
+DEPLOYMENTS_FILE = "common_config/candidate_deployments.yaml"
+COMPONENT_FILE = "aisprint/designs/component_partitions.yaml"
+CONTAINERS_FILE = "aisprint/designs/containers.yaml"
+ANNOTATIONS_FILE = "common_config/annotations.yaml"
+PHYSICAL_NODES_FILE = "common_config/physical_nodes.yaml"
 
-RESOURCES_COMPLETE_FILE = "deployments/resources_complete.yaml"
-BASE_DAG_FILE = "deployments/base/application_dag.yaml"
-OPTIMAL_DAG_FILE = "deployments/optimal_deployment/application_dag.yaml"
+RESOURCES_COMPLETE_FILE = "aisprint/deployments/optimal_deployment/production_deployments.yaml"
+BASE_DAG_FILE = "aisprint/deployments/base/application_dag.yaml"
+OPTIMAL_DAG_FILE = "aisprint/deployments/optimal_deployment/application_dag.yaml"
 
 
 def parse_dag(dag_file):
@@ -26,43 +28,57 @@ def parse_dag(dag_file):
     return G
 
 
-def parse_resources(resource_file):
+def parse_resources(resource_file, deployments_files):
     """Parse the resources.yaml file."""
     res_dict = {}
     try:
         with open(resource_file, 'r') as f:
             resources = yaml.safe_load(f)
+        with open(deployments_files, 'r') as f:
+            deployments = yaml.safe_load(f)
 
         cls = {}
         for _, nd in resources["System"]["NetworkDomains"].items():
-            for cl_name, cl in nd["ComputationalLayers"].items():
-                cls[cl["number"]] = {"name": cl_name, "arch": None}
-                for res in list(cl["Resources"].values()):
-                    if res.get("architecture"):
-                        cls[cl["number"]]["arch"] = res.get("architecture")
-                    else:
-                        for proc in (res.get("processors", {}).values()):
-                            cls[cl["number"]]["arch"] = proc["architecture"]
+            if not nd["subNetworkDomains"]:
+                for cl_name, cl in nd["ComputationalLayers"].items():
+                    cls[cl["number"]] = {"name": cl_name, "resources": {}}
+                    for res in list(cl["Resources"].values()):
+                        cls[cl["number"]]["resources"][res["name"]] = {}
+                        if res.get("architecture"):
+                            cls[cl["number"]]["resources"][res["name"]]["arch"] = res.get("architecture")
+                        else:
+                            for proc in (res.get("processors", {}).values()):
+                                cls[cl["number"]]["resources"][res["name"]]["arch"] = proc["architecture"]
+                        
+                        if cls[cl["number"]]["resources"][res["name"]]["arch"] not in ["arm64", "amd64"]:
+                            raise Exception("Invalid architecture specified. Valid values: arm64 or amd64.")
 
-        for _, elem in resources["System"]["Components"].items():
-            # We assume that there will be only one container per component
-            # and only one elem in the executionLayers
-            arm64 = False
-            layer = None
+        if "System" in deployments:
+            deployments = deployments["System"]
 
+        for cname, elem in deployments["Components"].items():
+            layers = {}
             if "candidateExecutionLayers" in elem:
-                layer = elem["candidateExecutionLayers"][0]
-                arm64 = all([cls[layer]["arch"].lower() == "arm64" for layer in elem["candidateExecutionLayers"]])
-            if "executionLayer" in elem:
-                layer = elem["executionLayer"]
+                layers = [cls[layer_num] for layer_num in elem["candidateExecutionLayers"]]
+            elif "executionLayer" in elem:
+                layers = [cls[elem["executionLayer"]]]
+            else:
+                raise Exception("Error: no candidateExecutionLayers nor executionLayer defined in Component: %s" % cname)
 
+            platforms = []
+            for l in layers:
+                for r in list(l["resources"].values()):
+                    if r["arch"] not in platforms:
+                        platforms.append(r["arch"])
+
+            # TODO: check this
             cont = list(elem["Containers"].values())[0]
 
             res_dict[elem["name"]] = {"memory": cont["memorySize"],
                                       "cpu": cont["computingUnits"],
-                                      "image": cont["image"],
-                                      "layer": layer,
-                                      "arm64": arm64}
+                                      "image": cont.get("image"),
+                                      "platforms": platforms,
+                                      "layers": layers}
     except Exception as ex:
         print("Error reading resources.yaml: %s" % ex)
     return res_dict

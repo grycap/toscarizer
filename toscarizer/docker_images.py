@@ -11,6 +11,13 @@ DOCKERFILE_TEMPLATE = "templates/Dockerfile.template"
 SCRIPT_TEMPLATE = "templates/script.sh"
 
 
+def get_part_x_name(part_name):
+    """Replaces first num of partition with an X"""
+    ini = part_name.find("_partition")
+    end = part_name.find("_", ini + 10)
+    return part_name[:ini + 10] + "X" + part_name[end:]
+
+
 def generate_dockerfiles(app_dir, components, resources):
     """Generates dockerfiles per each component using the template."""
     with open(DOCKERFILE_TEMPLATE, 'r') as f:
@@ -21,23 +28,25 @@ def generate_dockerfiles(app_dir, components, resources):
         dockerfiles[component] = {}
         for partition in partitions["partitions"]:
             dockerfiles[component][partition] = []
-            if component == partition:
-                dockerfile_path = "%s/designs/%s/%s_base/Dockerfile" % (app_dir, component, partition)
-            else:
-                dockerfile_path = "%s/designs/%s/%s/Dockerfile" % (app_dir, component, partition)
-            dockerfile = dockerfile_tpl.replace("{{component_name}}", partition)
+            dockerfile_path = "%s/aisprint/designs/%s/%s/Dockerfile" % (app_dir, component, partition)
+            dockerfile = dockerfile_tpl.replace("{{component_name}}", "%s_%s" % (component, partition))
             with open(dockerfile_path, 'w+') as f:
                 f.write(dockerfile)
-            if resources[partition]["arm64"]:
-                dockerfiles[component][partition].append(("linux/amd64", dockerfile_path))
-                dockerfiles[component][partition].append(("linux/arm64", dockerfile_path))
+            if partition == "base":
+                part_name = component
             else:
-                dockerfiles[component][partition].append(("linux/amd64", dockerfile_path))
+                part_name = "%s_%s" % (component, partition)
+
+            if part_name not in resources:
+                part_name = get_part_x_name(part_name)
+
+            for platform in resources[part_name]["platforms"]:
+                dockerfiles[component][partition].append(("linux/%s" % platform, dockerfile_path))
 
     return dockerfiles
 
 
-def build_and_push(registry, dockerfiles, username, password, push=True, build=True):
+def build_and_push(registry, registry_folder, dockerfiles, username, password, push=True, build=True):
     """Build and push the images per each component using the dockerfiles specified."""
     try:
         dclient = docker.from_env()
@@ -54,10 +63,12 @@ def build_and_push(registry, dockerfiles, username, password, push=True, build=T
             res[component][partition] = []
             for (platform, dockerfile) in docker_images:
                 if platform == "linux/amd64":
-                    name = "%s_amd4" % partition
+                    name = "%s_%s_amd64" % (component, partition)
                 else:
-                    name = "%s_arm64" % partition
-                image = "%s/%s:latest" % (registry, name)
+                    name = "%s_%s_arm64" % (component, partition)
+                if registry_folder.startswith("/"):
+                    registry_folder = registry_folder[1:]
+                image = "%s/%s/%s:latest" % (registry, registry_folder, name)
                 if build:
                     build_dir = os.path.dirname(dockerfile)
                     # Copy the script that is generic

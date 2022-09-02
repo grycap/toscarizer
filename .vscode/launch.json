@@ -11,9 +11,12 @@
             "program": "${workspaceFolder}/toscarizer/bin/toscarizer_cli.py",
             "console": "integratedTerminal",
             "justMyCode": true,
-            "args": ["docker", "--application_dir", "app", "--registry", "docker.io/micafer", "--username", "user", "--password", "pass"]
-            // "args": ["fdl", "--application_dir", "app"]
-            // "args": ["tosca", "--application_dir", "app"]
+            //"args": ["docker", "--dry-run", "--application_dir", "app2", "--registry", "docker.io", "--registry_folder", "/micafer", "--username", "user", "--password", "pass"]
+            //"args": ["fdl", "--base", "--application_dir", "app2"]
+            //"args": ["fdl", "--optimal", "--application_dir", "app2"]
+            "args": ["tosca", "--base", "--application_dir", "app2"]
+            //"args": ["tosca", "--optimal", "--application_dir", "app2"]
+            //"args": ["deploy", "--im_url", "http://localhost:8800", "--im_auth", "/tmp/auth.dat", "--tosca_file", "app/aisprint/deployments/optimal_deployment/im/mask-detector.yaml"]
         }
     ]
 }

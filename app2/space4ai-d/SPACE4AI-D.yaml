@@ -1,0 +1,34 @@
+Components:
+    component1:
+        dataSize: 0.1
+    component1_partition1_1:
+        dataSize: 0.3
+    component1_partition1_2:
+        dataSize: 0.1
+    component1_partition2_1:
+        dataSize: 0.4
+    component1_partition2_2:
+        dataSize: 0.1
+    component2:
+       dataSize: 0.2
+    component2_partition1_1:
+        dataSize: 0.5
+    component2_partition1_2:
+        dataSize: 0.2
+Time: 1
+EdgeResources: [computationallayer1]
+CloudResources: [computationallayer2, computationallayer3]
+FaaSResources: [computationallayer4]
+Methods:
+    method1:
+        name: RandomGreedy
+        iterations: 1000
+        duration: 10
+    method2:
+        name: TabuSearch
+        startingPointNumber: 10
+        iterations: 100
+        duration: 3600
+        specialParameters:
+            tabuSize: 50
+            score: -
