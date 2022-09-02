@@ -147,12 +147,26 @@ def gen_tosca_yamls(resource_file, phys_file):
                         if proc.get("SGXFlag"):
                             sgx = True
 
+                    gpus = 0
+                    gpu_arch = None
                     for acc in list(res.get("accelerators", {}).values()):
-                        # TODO: look for GPUs
-                        pass
+                        for proc in list(acc["processors"].values()):
+                            if proc.get("type") == "GPU":
+                                gpus += proc.get("computingUnits", 0)
+                                gpu_arch = proc.get("architecture")
+
 
                     wn["capabilities"]["host"]["properties"]["num_cpus"] = cores
                     wn["capabilities"]["host"]["properties"]["sgx"] = sgx
+                    if gpus:
+                        wn["capabilities"]["host"]["properties"]["num_gpus"] = gpus
+                        if gpu_arch:
+                            # We asume this format: gpu_model = vendor model
+                            gpu_arch_parts = gpu_arch.split()
+                            if len(gpu_arch_parts) != 2:
+                                raise Exception("GPU architecture must be with format: VENDOR MODEL")
+                            wn["capabilities"]["host"]["properties"]["gpu_vendor"] = gpu_arch_parts[0]
+                            wn["capabilities"]["host"]["properties"]["gpu_model"] = gpu_arch_parts[1]
 
                     if compute_layer["type"] == "PhysicalAlreadyProvisioned":
                         # as each wn will have different ip, we have to create 
@@ -175,6 +189,8 @@ def gen_tosca_yamls(resource_file, phys_file):
                         tosca_res[component["name"]] = merge_templates(tosca_comp, tosca_wn)
 
             if compute_layer["type"] == "PhysicalAlreadyProvisioned":
+                if not phys_nodes:
+                    raise Exception("Computational layer of type PhysicalAlreadyProvisioned, but Physical Data File not exists.")
                 # Add nets to enable to set IP of the nodes
                 tosca_comp = add_nets(tosca_comp)
                 pub_ip = get_physical_resource_data(compute_layer, res, phys_nodes, "fe_node", "public_ip")

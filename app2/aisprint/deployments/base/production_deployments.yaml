@@ -74,8 +74,7 @@ System:
                   operatingSystemDistribution: Ubuntu
                   operatingSystemType: Linux
                   operatingSystemVersion: 20.04
-                  operatingSystemImageId: ost://horsemem.i3m.upv.es/
-                                c99bc2af-76dd-498f-ba6f-36889db66856 
+                  operatingSystemImageId: ost://horsemem.i3m.upv.es/c99bc2af-76dd-498f-ba6f-36889db66856 
                   secureBoot: False
                   measuredBoot: False
                   onSpot: False
@@ -113,7 +112,7 @@ System:
                 networkProtection: False
                 fileSystemProtection: False
                 GPURequirement: False
-                selectedExecutionResources: RaspPi_NeuralStick
+                selectedExecutionResource: RaspPi_NeuralStick
         component2:
             name: mask-detector-onnx
             executionLayer: 3
