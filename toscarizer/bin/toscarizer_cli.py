@@ -37,7 +37,7 @@ def docker(application_dir, username, password, registry, registry_folder, dry_r
 
 @click.command()
 @click.option("--application_dir", help="Path to the AI-SPRINT application.", required=True)
-@click.option('--base', is_flag=True, help="Generates base FDL for OSCAR-P", default=False)
+@click.option('--base', is_flag=True, help="Generates base FDL for base case", default=False)
 @click.option('--optimal', is_flag=True, help="Generates the optimal FDL", default=False)
 def fdl(application_dir, base, optimal):
     if not base and not optimal:
@@ -68,26 +68,26 @@ def fdl(application_dir, base, optimal):
 
 @click.command()
 @click.option("--application_dir", help="Path to the AI-SPRINT application.", default=None)
-@click.option("--resource_file", help="Path to resource file.", default=None)
-@click.option("--phys_file", help="Path to physical nodes file.", default=None)
-def tosca(application_dir, resource_file, phys_file):
-    if not resource_file:
-        if not application_dir:
-            print("--application_dir or --resource_file options must be set.")
-            sys.exit(1)
-        resource_file = "%s/%s" % (application_dir, RESOURCES_COMPLETE_FILE)
-    if not phys_file:
-        if application_dir:
-            phys_file = "%s/%s" % (application_dir, PHYSICAL_NODES_FILE)
-            if not os.path.isfile(phys_file):
-                phys_file = None
+@click.option('--base', is_flag=True, help="Generates base TOSCA file for base case", default=False)
+@click.option('--optimal', is_flag=True, help="Generates the optimal TOSCA file", default=False)
+def tosca(application_dir, base, optimal):
+    if not base and not optimal:
+        print("--base or --optimal options must be set.")
+        sys.exit(1)
 
-    toscas = gen_tosca_yamls(resource_file, phys_file)
+    if base:
+        resources_file = "%s/%s" % (application_dir, RESOURCES_FILE)
+        deployments_file = "%s/%s" % (application_dir, DEPLOYMENTS_FILE)
+    else:
+        deployments_file = "%s/%s" % (application_dir, RESOURCES_COMPLETE_FILE)
+        resources_file = "%s/%s" % (application_dir, RESOURCES_COMPLETE_FILE)
+
+    toscas = gen_tosca_yamls(resources_file, deployments_file, "%s/%s" % (application_dir, PHYSICAL_NODES_FILE))
     for cl, tosca in toscas.items():
-        if application_dir:
+        if optimal:
             tosca_file = "%s/aisprint/deployments/optimal_deployment/im/%s.yaml" % (application_dir, cl)
         else:
-            tosca_file = "%s/%s.yaml" % (os.path.dirname(resource_file), cl)
+            tosca_file = "%s/aisprint/deployments/base/im/%s.yaml" % (application_dir, cl)
         with open(tosca_file, 'w+') as f:
             yaml.safe_dump(tosca, f, indent=2)
         print("DONE. TOSCA file %s has been generated for Computational Layer: %s." % (tosca_file, cl))
