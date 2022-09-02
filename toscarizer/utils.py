@@ -3,7 +3,7 @@ import yaml
 
 # Default file names
 RESOURCES_FILE = "common_config/candidate_resources.yaml"
-DEPLOYMENTS_FILE = "common_config/candidate-deployments.yaml"
+DEPLOYMENTS_FILE = "common_config/candidate_deployments.yaml"
 COMPONENT_FILE = "aisprint/designs/component_partitions.yaml"
 CONTAINERS_FILE = "aisprint/designs/containers.yaml"
 ANNOTATIONS_FILE = "common_config/annotations.yaml"
@@ -52,6 +52,9 @@ def parse_resources(resource_file, deployments_files):
                         
                         if cls[cl["number"]]["resources"][res["name"]]["arch"] not in ["arm64", "amd64"]:
                             raise Exception("Invalid architecture specified. Valid values: arm64 or amd64.")
+
+        if "System" in deployments:
+            deployments = deployments["System"]
 
         for cname, elem in deployments["Components"].items():
             layers = {}

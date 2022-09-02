@@ -11,6 +11,13 @@ DOCKERFILE_TEMPLATE = "templates/Dockerfile.template"
 SCRIPT_TEMPLATE = "templates/script.sh"
 
 
+def get_part_x_name(part_name):
+    """Replaces first num of partition with an X"""
+    ini = part_name.find("_partition")
+    end = part_name.find("_", ini + 10)
+    return part_name[:ini + 10] + "X" + part_name[end:]
+
+
 def generate_dockerfiles(app_dir, components, resources):
     """Generates dockerfiles per each component using the template."""
     with open(DOCKERFILE_TEMPLATE, 'r') as f:
@@ -29,6 +36,9 @@ def generate_dockerfiles(app_dir, components, resources):
                 part_name = component
             else:
                 part_name = "%s_%s" % (component, partition)
+
+            if part_name not in resources:
+                part_name = get_part_x_name(part_name)
 
             for platform in resources[part_name]["platforms"]:
                 dockerfiles[component][partition].append(("linux/%s" % platform, dockerfile_path))
@@ -56,6 +66,8 @@ def build_and_push(registry, registry_folder, dockerfiles, username, password, p
                     name = "%s_%s_amd64" % (component, partition)
                 else:
                     name = "%s_%s_arm64" % (component, partition)
+                if registry_folder.startswith("/"):
+                    registry_folder = registry_folder[1:]
                 image = "%s/%s/%s:latest" % (registry, registry_folder, name)
                 if build:
                     build_dir = os.path.dirname(dockerfile)

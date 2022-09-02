@@ -1,0 +1,26 @@
+functions:
+  oscar:
+  - computationalLayer1:
+      cpu: 0.9
+      image: docker.io/micafer/blurry-faces-onnx_base_arm64:latest
+      input:
+      - path: blurry-faces-onnx/input
+        storage_provider: minio
+      memory: 2048Mi
+      name: blurry-faces-onnx
+      output:
+      - path: blurry-faces-onnx/output
+        storage_provider: minio
+      script: blurry-faces-onnx_script.sh
+  - computationallayer0:
+      cpu: 0.9
+      image: docker.io/micafer/mask-detector-onnx_base_amd64:latest
+      input:
+      - path: blurry-faces-onnx/output
+        storage_provider: minio
+      memory: 4096Mi
+      name: mask-detector-onnx
+      output:
+      - path: mask-detector-onnx/output
+        storage_provider: minio
+      script: mask-detector-onnx_script.sh

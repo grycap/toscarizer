@@ -1,0 +1,37 @@
+./ai-sprint_mask_detection_app_two_components_partitioned/src/blurry-faces-onnx/main.py:
+  component_name:
+    name: blurry-faces-onnx
+  device_constraints:
+    ram: 1024
+    use_gpu_for:
+    - dnn
+    vram: 2048
+  exec_time:
+    local_time_thr: 20
+  expected_throughput:
+    rate: 1
+  partitionable_model:
+    onnx_file: version-RFB-640.onnx
+  security:
+    filesystemShield: false
+    networkShield: false
+    trustedExecution: false
+./ai-sprint_mask_detection_app_two_components_partitioned/src/mask-detector-onnx/main.py:
+  component_name:
+    name: mask-detector-onnx
+  device_constraints:
+    ram: 1024
+    use_gpu_for:
+    - dnn
+    vram: 2048
+  exec_time:
+    global_time_thr: 40
+    local_time_thr: 10
+    prev_components:
+    - blurry-faces-onnx
+  partitionable_model:
+    onnx_file: yolov3-tiny.onnx
+  security:
+    filesystemShield: false
+    networkShield: false
+    trustedExecution: false

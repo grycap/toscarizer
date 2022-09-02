@@ -1,0 +1,200 @@
+System:
+  name: Mask Detection Application
+  NetworkDomains:
+    ND3: 
+      name: Network Domain 3
+      AccessDelay: 0.00000277
+      Bandwidth: 10000
+      subNetworkDomains: [ND1, ND2]
+    ND1:
+      name: Network Domain 1
+      AccessDelay: 0.00000277
+      Bandwidth: 10000
+      subNetworkDomains: []
+      ComputationalLayers: 
+         computationalLayer1:
+            name: Edge Layer
+            number: 1
+            type: PhysicalAlreadyProvisioned
+            Resources: 
+               resource1:
+                  name: RaspPi_NeuralStick
+                  totalNodes: 1
+                  description: Raspberry PIs 4 Model B with Neural stick 
+                  cost: 0.6
+                  memorySize: 4096
+                  operatingSystemDistribution: Raspbian
+                  operatingSystemType: Linux
+                  operatingSystemVersion: 10
+                  operatingSystemImageId: -
+                  secureBoot: string
+                  measuredBoot: string
+                  storageSize: 64GB
+                  storageType: flash
+                  processors:
+                     processor1:
+                        name: BCM2711
+                        type: Cortex-A72
+                        architecture: arm64
+                        computingUnits: 4
+                        internalMemory: 4
+                        SGXFlag: False
+                  accelerators:
+                      accelerator1:
+                         name: Neural stick 2
+                         GFLOPS: 100
+                         powerDraw: 1
+                         memory: 4096
+                         processors:
+                            processor1:
+                              name: P5
+                              type: Movidius Myriad X VPU
+                              architecture: SHAVE
+                              computingUnits: 16
+                              internalMemory: 0.256
+         computationalLayer2:
+            name: Private cloud Layer
+            number: 2
+            type: PhysicalAlreadyProvisioned
+            Resources: 
+               resource1:
+                  name: VM1
+                  totalNodes: 3
+                  description: Inhouse VM Type 1 UPV	
+                  cost: 0.675
+                  memorySize: 8192
+                  storageSize: 25
+                  storageType: SSD
+                  operatingSystemDistribution: Ubuntu
+                  operatingSystemType: Linux
+                  operatingSystemVersion: 22.04
+                  operatingSystemImageId: ost://horsemem.i3m.upv.es/
+                            c99bc2af-76dd-498f-ba6f-36889db66856XXXX
+                  secureBoot: False
+                  measuredBoot: False
+                  onSpot: False
+                  processors:
+                     processor1:
+                        name: Xeon
+                        type: SkyLake
+                        architecture: amd64
+                        computingUnits: 4
+                        internalMemory: 64
+                        SGXFlag: False
+
+    ND2:
+      name: Network Domain 2
+      AccessDelay: 0.00000277
+      Bandwidth: 40000
+      subNetworkDomains: []
+      ComputationalLayers:
+        computationalLayer3:
+            name: Public Cloud Layer
+            number: 3
+            type: Virtual
+            Resources:
+              resource1:
+                  name: VM2
+                  totalNodes: 3
+                  description: g5.2xlarge 
+                  cost: 1.2
+                  memorySize: 32768
+                  storageSize: 450
+                  storageType: SSD
+                  operatingSystemDistribution: Ubuntu
+                  operatingSystemType: Linux
+                  operatingSystemVersion: 20.04
+                  operatingSystemImageId: ost://horsemem.i3m.upv.es/
+                                c99bc2af-76dd-498f-ba6f-36889db66856 
+                  secureBoot: False
+                  measuredBoot: False
+                  onSpot: False
+                  processors:
+                     processor1:
+                        name: Xeon
+                        type: SkyLake
+                        architecture: IntelX86
+                        computingUnits: 8
+                        internalMemory: 64
+                        SGXFlag: False
+                     accelerators:
+                	    accelerator1:
+                	       name: GPUa10
+                           GFLOPS: 31240
+                	       powerDraw: 150
+                	       memory: 24576
+                	       processors:
+                	           processor1:
+                	              name: G5
+                	              type: GPU
+                                  architecture: nvidia a10g
+                                  computingUnits: 1
+                                  internalMemory: 0.256   
+        computationalLayer4:
+            name: FaaS Layer
+            number: 4
+            type: NativeCloudFunction
+            Resources: 
+                resource1:
+                  name: AWS-FaaS
+                  description: FaaS of  AWS Lambda
+                  architecture: arm64	
+                  cost: 0.0001561
+                  memorySize: 8192
+                  storageSize: 0.512
+	              region:  Milan
+	              idleTime: 600
+                  transitionCost:  0.02625
+  Components:
+        component1_partition1_1:
+           name: blurry-faces-onnx-partition1-1
+           executionLayer: 1
+           Containers:
+             container1: 
+                image: registry.gitlab.polimi.it/ai-sprint/blurry-faces-onnx-partition1-1:tag	
+                memorySize: 1024
+                computingUnits: 0.9
+                trustedExecution: False
+                networkProtection: False
+                fileSystemProtection: False
+                GPURequirement: False
+                selectedExecutionResource: RaspPi_NeuralStick
+        component1_partition1_2:
+            name: blurry-faces-onnx-partition1-2
+            executionLayer: 2
+            Containers:
+              container1: 
+                image: registry.gitlab.polimi.it/ai-sprint/blurry-faces-onnx-partition1-2:tag
+                memorySize: 1024
+                computingUnits: 0.9
+                trustedExecution: False
+                networkProtection: False
+                fileSystemProtection: False
+                GPURequirement: False
+                selectedExecutionResource: VM1
+        component2_partition1_1:
+           name: mask-detector-onnx-partition1-1
+           executionLayer: 3
+           Containers:
+             container1: 
+                image: registry.gitlab.polimi.it/ai-sprint/mask-detector-onnx-partition1-1:tag	
+                memorySize: 2048
+                computingUnits: 0.9
+                trustedExecution: False
+                networkProtection: False
+                fileSystemProtection: False
+                GPURequirement: False
+                selectedExecutionResource: VM2
+        component2_partition1_2:
+            name: mask-detector-onnx-partition1-2
+            executionLayer: 4
+            Containers:
+              container1: 
+                image: registry.gitlab.polimi.it/ai-sprint/mask-detector-onnx-partition1-2:tag
+                memorySize: 2048
+                computingUnits: 0.9
+                trustedExecution: False
+                networkProtection: False
+                fileSystemProtection: False
+                GPURequirement: False
+                selectedExecutionResource: AWS-FaaS
