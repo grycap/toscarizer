@@ -1,0 +1,2 @@
+id = one; type = OpenNebula; host = server:2633; username = user; password = pass
+type = InfrastructureManager; username = user; password = pass

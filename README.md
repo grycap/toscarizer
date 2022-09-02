@@ -54,6 +54,24 @@ In both cases if some resources are of type ``PhysicalAlreadyProvisioned`` an ex
 
 ### Step6: Deploy TOSCA YAML files
 
+To deploy the TOSCA files generated for the base case use:
+
+```sh
+toscarizer deploy --application_dir app --base
+```
+
+To deploy the TOSCA files generated for the optimal case use:
+
+```sh
+toscarizer deploy --application_dir app --optimal
+```
+
+In both cases it assumes that the [IM authentication file](https://imdocs.readthedocs.io/en/latest/client.html#auth-file) is located at path ``app/im/auth.dat``. It will use the EGI IM instance (<https://im.egi.eu/im/>).
+
+But you can also specify the URL of another IM endpoint, an specific IM authentication file, and even the set of TOSCA files to deploy.
+
 ```sh
 toscarizer deploy --im_url http://someim.com --im_auth auth.dat --tosca_file some_path/tosca1.yaml --tosca_file some_path/tosca1.yaml 
 ```
+
+It will return in the standard output a YAML formatted output with the name of each file with the infrastructure ID generated or the error message returned.

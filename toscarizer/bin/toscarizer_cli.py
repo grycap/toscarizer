@@ -1,8 +1,10 @@
+from email.policy import default
 import click
 import yaml
 import sys
 import requests
 import os.path
+import glob
 
 sys.path.append(".")
 
@@ -94,11 +96,39 @@ def tosca(application_dir, base, optimal):
 
 
 @click.command()
-@click.option('--im_url', required=True)
-@click.option('--im_auth', required=True)
+@click.option('--im_url', required=False, default="https://im.egi.eu/im")
+@click.option('--im_auth', required=False)
 @click.option('--verify', required=False, default=False)
-@click.option('--tosca_file', multiple=True, required=True)
-def deploy(im_url, im_auth, verify, tosca_file):
+@click.option("--application_dir", help="Path to the AI-SPRINT application.", required=False, default=None)
+@click.option('--base', is_flag=True, help="Deploys base case infrastructure", required=False, default=False)
+@click.option('--optimal', is_flag=True, help="Deploys optimal case infrastructure", required=False, default=False)
+@click.option('--tosca_file', multiple=True, required=False)
+def deploy(im_url, im_auth, verify, application_dir, base, optimal, tosca_file):
+
+    if application_dir:
+        if not base and not optimal:
+            print("--base or --optimal options must be set.")
+            sys.exit(1)
+        if tosca_file:
+            print("--application_dir option set: --tosca_file will be ignored.")
+
+        if optimal:
+            tosca_dir = "%s/aisprint/deployments/optimal_deployment/im" % application_dir
+        else:
+            tosca_dir = "%s/aisprint/deployments/base/im" % application_dir
+        tosca_file = glob.glob("%s/*.yaml" % tosca_dir)
+
+    elif not tosca_file:
+        print("--application_dir or --tosca_file options must be set.")
+        sys.exit(1)
+
+
+    if not im_auth and application_dir:
+        im_auth = "%s/im/auth.dat" % application_dir
+    if not os.path.isfile(im_auth):
+        print("IM auth data does not exit." % im_auth)
+        sys.exit(-1)
+
     with open(im_auth, 'r') as f:
         auth_data = f.read().replace("\n", "\\n")
 
@@ -106,6 +136,7 @@ def deploy(im_url, im_auth, verify, tosca_file):
     headers["Content-Type"] = "text/yaml"
     url = "%s/infrastructures" % im_url
     res = {}
+
     for file in tosca_file:
         with open(file, 'r') as f:
             tosca_data = f.read()
