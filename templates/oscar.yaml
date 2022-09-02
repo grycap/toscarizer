@@ -155,33 +155,6 @@ topology_template:
       properties:
         size: { get_input: storage_size }
 
-    wn_node:
-      type: tosca.nodes.indigo.LRMS.WorkerNode.Kubernetes
-      properties:
-        front_end_ip: { get_attribute: [ front, private_address, 0 ] }
-        version: 1.23.6
-      requirements:
-        - host: wn
-
-    wn:
-      type: tosca.nodes.indigo.Compute
-      capabilities:
-        scalable:
-          properties:
-            count:  { get_input: wn_num }
-        host:
-          properties:
-            num_cpus: { get_input: wn_cpus }
-            mem_size: { get_input: wn_mem }
-            sgx: { get_input: wn_sgx }
-            preemtible_instance: { get_input: wn_preemtible_instance }
-        os:
-          properties:
-            distribution: { get_input: os_distribution }
-            type: { get_input: os_type }
-            version:  { get_input: os_version }
-            image: { get_input: os_image }
-
   outputs:
     dashboard_endpoint:
       value: { concat: [ 'https://', get_property: [dns_reg, record_name], '.', get_property: [dns_reg, domain_name], '/dashboard/' ] }

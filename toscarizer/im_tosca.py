@@ -28,7 +28,10 @@ def merge_templates(template, new_template):
     return template
 
 
-def find_compute_layer(resources, layer_num):
+def find_compute_layer(resources, component):
+    layer_num = component.get("executionLayer")
+    if not layer_num:
+        layer_num = component["candidateExecutionLayers"][0]
     for nd in list(resources["System"]["NetworkDomains"].values()):
         if "ComputationalLayers" in nd:
             for _, cl in nd["ComputationalLayers"].items():
@@ -37,7 +40,10 @@ def find_compute_layer(resources, layer_num):
     return None
 
 
-def find_resource_by_name(compute_layer, res_name):
+def find_resource_by_name(compute_layer, cont):
+    res_name = cont.get("selectedExecutionResource")
+    if not res_name:
+        res_name = cont["candidateExecutionResources"][0]
     for res in list(compute_layer["Resources"].values()):
         if res.get("name") == res_name:
             return res
@@ -110,9 +116,9 @@ def gen_tosca_yamls(resource_file, deployments_file, phys_file):
 
         for _, component in deployments["Components"].items():
             tosca_comp = copy.deepcopy(tosca_tpl)
-            compute_layer = find_compute_layer(resources, component.get("executionLayer", component["candidateExecutionLayers"][0]))
+            compute_layer = find_compute_layer(resources, component)
             if not compute_layer:
-                raise Exception("No compute layer %s found." % component.get("executionLayer", component["candidateExecutionLayers"][0]))
+                raise Exception("No compute layer found for component." % component.get("name"))
 
             if compute_layer["type"] != "NativeCloudFunction":
                 tosca_comp["topology_template"]["inputs"]["cluster_name"]["default"] = gen_oscar_name()
@@ -122,12 +128,9 @@ def gen_tosca_yamls(resource_file, deployments_file, phys_file):
                 tosca_comp["topology_template"]["inputs"]["minio_password"]["default"] = get_random_string(16)
                 tosca_comp["topology_template"]["inputs"]["fe_os_image"]["default"] = None
                 for cont_id, cont in component["Containers"].items():
-                    res = find_resource_by_name(compute_layer, cont.get("selectedExecutionResource", cont["candidateExecutionResources"][0]))
+                    res = find_resource_by_name(compute_layer, cont)
                     if not res:
-                        raise Exception("Not resource %s in compute layer %s." % (cont.get("selectedExecutionResource",
-                                                                                           cont["candidateExecutionResources"][0]),
-                                                                                  component.get("executionLayer",
-                                                                                                component["candidateExecutionLayers"][0])))
+                        raise Exception("Not resource found for a container in component %s." % component.get("name"))
                     tosca_wn = copy.deepcopy(wn_tosca_tpl)
                     wn_name = "%s_%s" % (component["name"], cont_id)
 
