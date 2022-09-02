@@ -1,4 +1,4 @@
-#FROM registry.gitlab.polimi.it/ai-sprint/app_base_image:latest
+#FROM registry.gitlab.polimi.it/ai-sprint/apps/base:latest
 FROM registry.gitlab.polimi.it/grycap/toscarizer/ai-sprint-base:latest
 
 RUN mkdir /opt/{{component_name}}
