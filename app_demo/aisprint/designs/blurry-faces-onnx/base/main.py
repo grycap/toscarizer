@@ -29,7 +29,7 @@ def main(args):
     # --------------
 
     # load and preprocess image
-    orig_image = cv2.imread(input)
+    orig_image = cv2.imread(args['input'])
     image = cv2.cvtColor(orig_image, cv2.COLOR_BGR2RGB)
     # image = cv2.resize(image, (320, 240))
     image = cv2.resize(image, (640, 480))
