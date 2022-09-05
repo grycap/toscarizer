@@ -1,11 +1,11 @@
 #FROM registry.gitlab.polimi.it/ai-sprint/apps/base:latest
-FROM registry.gitlab.polimi.it/grycap/toscarizer/ai-sprint-base:latest
+FROM registry.gitlab.polimi.it/ai-sprint/toscarizer/ai-sprint-base
 
 RUN mkdir /opt/{{component_name}}
 
 WORKDIR /opt/{{component_name}}
 
-COPY *.py requirements.txt requirements.sys script.sh onnx /opt/{{component_name}}/
+COPY *.py requirements.* script.sh onnx /opt/{{component_name}}/
 
 RUN apt update && \
     xargs apt install -y --no-install-recommends < requirements.sys  && \
