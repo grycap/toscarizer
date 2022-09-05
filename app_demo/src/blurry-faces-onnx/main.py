@@ -123,7 +123,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("-i", "--input", required=True, help="path to input video")
     parser.add_argument("-o", "--output", help="path to output directory")
-    parser.add_argument("-y", "--onnx_file", default="/opt/blurry-faces/onnx/version-RFB-640.onnx", help="complete path to tge ONNX model")
+    parser.add_argument("-y", "--onnx_file", default="onnx/version-RFB-640.onnx", help="complete path to tge ONNX model")
     parser.add_argument("-t", "--threshold", type=float, default=0.7, help="threshold when applying non-max suppression")
     parser.add_argument('--visualize_count', default=False, action='store_true', help="whether to visualize the count of the detected faces on the image")
     args = vars(parser.parse_args())

@@ -28,8 +28,9 @@ def generate_dockerfiles(app_dir, components, resources):
         dockerfiles[component] = {}
         for partition in partitions["partitions"]:
             dockerfiles[component][partition] = []
-            dockerfile_path = "%s/aisprint/designs/%s/%s/Dockerfile" % (app_dir, component, partition)
-            dockerfile = dockerfile_tpl.replace("{{component_name}}", "%s_%s" % (component, partition))
+            dockerfile_dir = "%s/aisprint/designs/%s/%s" % (app_dir, component, partition)
+            dockerfile_path = "%s/Dockerfile" % dockerfile_dir
+            dockerfile = dockerfile_tpl.replace("{{component_name}}", component)
             with open(dockerfile_path, 'w+') as f:
                 f.write(dockerfile)
             if partition == "base":
@@ -42,6 +43,9 @@ def generate_dockerfiles(app_dir, components, resources):
 
             for platform in resources[part_name]["platforms"]:
                 dockerfiles[component][partition].append(("linux/%s" % platform, dockerfile_path))
+
+            # Copy the script that is generic
+            shutil.copy(SCRIPT_TEMPLATE, dockerfile_dir)
 
     return dockerfiles
 
@@ -71,8 +75,6 @@ def build_and_push(registry, registry_folder, dockerfiles, username, password, p
                 image = "%s/%s/%s:latest" % (registry, registry_folder, name)
                 if build:
                     build_dir = os.path.dirname(dockerfile)
-                    # Copy the script that is generic
-                    shutil.copy(SCRIPT_TEMPLATE, build_dir)
                     dclient.images.build(path=build_dir, tag=image, pull=True, platform=platform)
 
                 # Pushing new image
@@ -81,7 +83,7 @@ def build_and_push(registry, registry_folder, dockerfiles, username, password, p
                     for line in dclient.images.push(image, stream=True, decode=True):
                         if 'error' in line:
                             raise Exception("Error pushing image: %s" % line['errorDetail']['message'])
-            os.unlink(dockerfile)
+            #os.unlink(dockerfile)
 
     return res
 
