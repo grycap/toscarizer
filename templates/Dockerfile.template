@@ -5,7 +5,8 @@ RUN mkdir /opt/{{component_name}}
 
 WORKDIR /opt/{{component_name}}
 
-COPY *.py requirements.* script.sh onnx /opt/{{component_name}}/
+COPY *.py requirements.* script.sh /opt/{{component_name}}/
+COPY onnx*/ /opt/{{component_name}}/onnx/
 
 RUN apt update && \
     xargs apt install -y --no-install-recommends < requirements.sys  && \
