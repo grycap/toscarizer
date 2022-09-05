@@ -39,7 +39,7 @@ def parse_resources(resource_file, deployments_files):
 
         cls = {}
         for _, nd in resources["System"]["NetworkDomains"].items():
-            if not nd["subNetworkDomains"]:
+            if "ComputationalLayers" in nd:
                 for cl_name, cl in nd["ComputationalLayers"].items():
                     cls[cl["number"]] = {"name": cl_name, "resources": {}}
                     for res in list(cl["Resources"].values()):
