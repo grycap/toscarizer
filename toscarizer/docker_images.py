@@ -11,14 +11,6 @@ DOCKERFILE_TEMPLATE = "templates/Dockerfile.template"
 SCRIPT_TEMPLATE = "templates/script.sh"
 
 
-def _print_docker_logs(logs):
-    for log in logs:
-        if 'stream' in log:
-            print(str(log['stream']).strip())
-        else:
-            print.log(str(log).strip())
-
-
 def get_part_x_name(part_name):
     """Replaces first num of partition with an X"""
     ini = part_name.find("_partition")
@@ -87,12 +79,8 @@ def build_and_push(registry, registry_folder, dockerfiles, username, password, p
                 if build:
                     print("Building image: %s ..." % name)
                     build_dir = os.path.dirname(dockerfile)
-                    try:
-                        dclient.images.build(path=build_dir, tag=image, pull=True, platform=platform)
-                    except docker.errors.BuildError as ex:
-                        print("Error building image:")
-                        _print_docker_logs(list(ex.build_log))
-                        raise ex
+                    dclient.images.build(path=build_dir, tag=image, pull=True, platform=platform)
+
                 # Pushing new image
                 res[component][partition].append(image)
                 if push:
