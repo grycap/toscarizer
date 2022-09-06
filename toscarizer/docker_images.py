@@ -11,6 +11,14 @@ DOCKERFILE_TEMPLATE = "templates/Dockerfile.template"
 SCRIPT_TEMPLATE = "templates/script.sh"
 
 
+def _print_docker_logs(logs):
+    for log in logs:
+        if 'stream' in log:
+            print(str(log['stream']).strip())
+        else:
+            print.log(str(log).strip())
+
+
 def get_part_x_name(part_name):
     """Replaces first num of partition with an X"""
     ini = part_name.find("_partition")
@@ -28,8 +36,12 @@ def generate_dockerfiles(app_dir, components, resources):
         dockerfiles[component] = {}
         for partition in partitions["partitions"]:
             dockerfiles[component][partition] = []
-            dockerfile_path = "%s/aisprint/designs/%s/%s/Dockerfile" % (app_dir, component, partition)
-            dockerfile = dockerfile_tpl.replace("{{component_name}}", "%s_%s" % (component, partition))
+            dockerfile_dir = "%s/aisprint/designs/%s/%s" % (app_dir, component, partition)
+            # Create onnx dir if it does not exist
+            if not os.path.exists("%s/onnx" % dockerfile_dir):
+                os.mkdir("%s/onnx" % dockerfile_dir)
+            dockerfile_path = "%s/Dockerfile" % dockerfile_dir
+            dockerfile = dockerfile_tpl.replace("{{component_name}}", component)
             with open(dockerfile_path, 'w+') as f:
                 f.write(dockerfile)
             if partition == "base":
@@ -42,6 +54,9 @@ def generate_dockerfiles(app_dir, components, resources):
 
             for platform in resources[part_name]["platforms"]:
                 dockerfiles[component][partition].append(("linux/%s" % platform, dockerfile_path))
+
+            # Copy the script that is generic
+            shutil.copy(SCRIPT_TEMPLATE, dockerfile_dir)
 
     return dockerfiles
 
@@ -70,18 +85,22 @@ def build_and_push(registry, registry_folder, dockerfiles, username, password, p
                     registry_folder = registry_folder[1:]
                 image = "%s/%s/%s:latest" % (registry, registry_folder, name)
                 if build:
+                    print("Building image: %s ..." % name)
                     build_dir = os.path.dirname(dockerfile)
-                    # Copy the script that is generic
-                    shutil.copy(SCRIPT_TEMPLATE, build_dir)
-                    dclient.images.build(path=build_dir, tag=image, pull=True, platform=platform)
-
+                    try:
+                        dclient.images.build(path=build_dir, tag=image, pull=True, platform=platform)
+                    except docker.errors.BuildError as ex:
+                        print("Error building image:")
+                        _print_docker_logs(list(ex.build_log))
+                        raise ex
                 # Pushing new image
                 res[component][partition].append(image)
                 if push:
+                    print("Pusing image: %s ..." % name)
                     for line in dclient.images.push(image, stream=True, decode=True):
                         if 'error' in line:
                             raise Exception("Error pushing image: %s" % line['errorDetail']['message'])
-            os.unlink(dockerfile)
+            #os.unlink(dockerfile)
 
     return res
 

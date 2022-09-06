@@ -5,11 +5,19 @@ RUN mkdir /opt/{{component_name}}
 
 WORKDIR /opt/{{component_name}}
 
-COPY *.py requirements.* script.sh onnx /opt/{{component_name}}/
+# Copy requirements files
+COPY requirements.* /opt/{{component_name}}/
 
-RUN apt update && \
+# Instal system requirements first
+RUN touch requirements.sys && \
+    apt update && \
     xargs apt install -y --no-install-recommends < requirements.sys  && \
     apt-get autoremove -y && apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* && rm -rf ~/.cache/
 
+# Update pip and install python requirements
 RUN pip install --upgrade pip
 RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy application and onnx models
+COPY *.py script.sh /opt/{{component_name}}/
+COPY onnx/ /opt/{{component_name}}/onnx/
