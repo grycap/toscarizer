@@ -1,4 +1,3 @@
-from email.policy import default
 import click
 import yaml
 import sys
@@ -77,14 +76,21 @@ def tosca(application_dir, base, optimal):
         print("--base or --optimal options must be set.")
         sys.exit(1)
 
+    with open("%s/%s" % (application_dir, CONTAINERS_FILE), 'r') as f:
+        containers = yaml.safe_load(f)
+
     if base:
-        resources_file = "%s/%s" % (application_dir, RESOURCES_FILE)
+        dag = parse_dag("%s/%s" % (application_dir, BASE_DAG_FILE))
         deployments_file = "%s/%s" % (application_dir, DEPLOYMENTS_FILE)
+        resources = parse_resources("%s/%s" % (application_dir, RESOURCES_FILE), "%s/%s" % (application_dir, DEPLOYMENTS_FILE))
+        resources_file = "%s/%s" % (application_dir, RESOURCES_FILE)
     else:
+        dag = parse_dag("%s/%s" % (application_dir, OPTIMAL_DAG_FILE))
         deployments_file = "%s/%s" % (application_dir, RESOURCES_COMPLETE_FILE)
+        resources = parse_resources("%s/%s" % (application_dir, RESOURCES_COMPLETE_FILE), "%s/%s" % (application_dir, RESOURCES_COMPLETE_FILE))
         resources_file = "%s/%s" % (application_dir, RESOURCES_COMPLETE_FILE)
 
-    toscas = gen_tosca_yamls(resources_file, deployments_file, "%s/%s" % (application_dir, PHYSICAL_NODES_FILE))
+    toscas = gen_tosca_yamls(dag, containers, resources, resources_file, deployments_file, "%s/%s" % (application_dir, PHYSICAL_NODES_FILE))
     for cl, tosca in toscas.items():
         if optimal:
             tosca_file = "%s/aisprint/deployments/optimal_deployment/im/%s.yaml" % (application_dir, cl)

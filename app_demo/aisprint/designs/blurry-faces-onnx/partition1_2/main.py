@@ -29,7 +29,7 @@ def main(args):
     # --------------
 
     # load and preprocess image
-    orig_image = cv2.imread(input)
+    orig_image = cv2.imread(args['input'])
     image = cv2.cvtColor(orig_image, cv2.COLOR_BGR2RGB)
     # image = cv2.resize(image, (320, 240))
     image = cv2.resize(image, (640, 480))
@@ -44,6 +44,7 @@ def main(args):
     input_dict = {input_name: image}
 
     # To be forwarded
+    input_dict['orig_image'] = orig_image
     input_dict['threshold'] = args['threshold']
     input_dict['classes'] = args['classes']
     input_dict['visualize_count'] = args['visualize_count']
@@ -53,7 +54,7 @@ def main(args):
     # Load and Inference
     # ------------------
 
-    return_dict = load_and_inference(args['onnx_file'], input_dict)
+    return_dict, result = load_and_inference(args['onnx_file'], input_dict)
 
     # ------------------
 
@@ -61,14 +62,13 @@ def main(args):
     # ---------------
     
     # Result
-    confidences, boxes = return_dict
+    confidences, boxes = result
 
     # Forwarded
     orig_image = return_dict['orig_image']
     threshold = return_dict['threshold']
     classes = return_dict['classes']
     visualize_count = return_dict['visualize_count']
-    output = return_dict['output']
 
     # post process (NMS)
     boxes, labels, probs = postprocess(
@@ -135,7 +135,6 @@ if __name__ == '__main__':
 
     print("SCRIPT: Analyzing file '{}', saving the outputimages in '{}'".format(args['input'], args['output'])) 
 
-    # subprocess.run(['ffmpeg', '-i', '"$INPUT_FILE_PATH"', '-vf', 'fps=12/60', '"$OUTPUT_SUBFOLDER/img%d.jpg"'])
     subprocess.run(['ffmpeg', '-i', '{}'.format(orig_input), '-vf', 'fps=12/60', '{}/img%d.jpg'.format(orig_output)])
 
     frames = next(os.walk(os.path.join(orig_output)))[2]

@@ -95,7 +95,7 @@ def postprocess(width, height, confidences, boxes, prob_threshold, iou_threshold
     picked_box_probs[:, 3] *= height
     return picked_box_probs[:, :4].astype(np.int32), np.array(picked_labels), picked_box_probs[:, 4]
 
-def blur_boxes(image, boxes):
+def blur_boxes(image, boxes, factor=3):
     """
     Argument:
     image -- the image that will be edited as a matrix
@@ -111,11 +111,12 @@ def blur_boxes(image, boxes):
 
         # crop the image due to the current box
         sub = image[y1:y2, x1:x2]
-
+        
         # apply GaussianBlur on cropped area
         blur = cv2.blur(sub, (10, 10))
 
         # paste blurred image on the original image
         image[y1:y2, x1:x2] = blur
+
 
     return image

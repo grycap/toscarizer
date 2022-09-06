@@ -134,7 +134,7 @@ if __name__ == '__main__':
 	ap = argparse.ArgumentParser()
 	ap.add_argument("-i", "--input", required=True, help="path to input image")
 	ap.add_argument("-o", "--output",help="path to output folder")
-	ap.add_argument("-y", "--yolo", default="/opt/mask-detector/cfg", help="base path to YOLO cfg directory")
+	ap.add_argument("-y", "--yolo", default="cfg", help="base path to YOLO cfg directory")
 	ap.add_argument("-c", "--confidence", type=float, default=0.2, help="minimum probability to filter weak detections")
 	ap.add_argument("-t", "--threshold", type=float, default=0.1, help="threshold when applying non-max suppression")
 	args = vars(ap.parse_args())

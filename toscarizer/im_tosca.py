@@ -4,6 +4,7 @@ import random
 import string
 
 from toscarizer.utils import RESOURCES_FILE
+from toscarizer.fdl import get_image_url
 
 TOSCA_TEMPLATE = "templates/oscar.yaml"
 WN_TOSCA_TEMPLATE = "templates/oscar_wn.yaml"
@@ -28,25 +29,22 @@ def merge_templates(template, new_template):
     return template
 
 
-def find_compute_layer(resources, component):
+def find_compute_layer(resources, component_name, components):
+    component = None
+    for c in list(components.values()):
+        if c["name"] == component_name:
+            component = c
+            break
+    if not component:
+        raise Exception("No component named %s found." % component_name)
     layer_num = component.get("executionLayer")
     if not layer_num:
         layer_num = component["candidateExecutionLayers"][0]
     for nd in list(resources["System"]["NetworkDomains"].values()):
         if "ComputationalLayers" in nd:
-            for _, cl in nd["ComputationalLayers"].items():
+            for cl_name, cl in nd["ComputationalLayers"].items():
                 if cl.get("number") == layer_num:
-                    return cl
-    return None
-
-
-def find_resource_by_name(compute_layer, cont):
-    res_name = cont.get("selectedExecutionResource")
-    if not res_name:
-        res_name = cont["candidateExecutionResources"][0]
-    for res in list(compute_layer["Resources"].values()):
-        if res.get("name") == res_name:
-            return res
+                    return cl_name
     return None
 
 
@@ -91,127 +89,187 @@ def get_physical_resource_data(comp_layer, res, phys_file, node_type, value, ind
     return None
 
 
-def gen_tosca_yamls(resource_file, deployments_file, phys_file):
+def gen_tosca_yamls(dag, containers, resources, resources_file, deployments_file, phys_file):
+    components_done = []
+
+    with open(deployments_file, 'r') as f:
+        deployments = yaml.safe_load(f)
+        if "System" in deployments:
+            deployments = deployments["System"]
+    with open(resources_file, 'r') as f:
+        full_resouces = yaml.safe_load(f)
+
+    phys_nodes = {}
+    if phys_file:
+        with open(phys_file, 'r') as f:
+            phys_nodes = yaml.safe_load(f)
+
+    # First generate the OSCAR cluster per each Computational Layer
+    oscar_clusters = {}
+    for nd in list(full_resouces["System"]["NetworkDomains"].values()):
+        if "ComputationalLayers" in nd:
+            for cl_name, cl in nd["ComputationalLayers"].items():
+                oscar_clusters[cl_name] = gen_tosca_cluster(cl , phys_nodes)
+
+    # Now create the OSCAR services and merge in the correct OSCAR cluster
+    for component, next_items in dag.adj.items():
+        # Add the node
+        if component not in components_done:
+            oscar_service = get_service(component, None, resources, containers)
+            cl_name = find_compute_layer(full_resouces, component, deployments["Components"])
+            if not cl_name:
+                raise Exception("No compute layer found for component." % component.get("name"))
+            oscar_clusters[cl_name] = merge_templates(oscar_clusters[cl_name], oscar_service)
+            components_done.append(component)
+
+        # Add the neighbours of this node
+        for next_component in next_items:
+            if next_component not in components_done:
+                oscar_service = get_service(next_component, component, resources, containers)
+                cl_name = find_compute_layer(full_resouces, component, deployments["Components"])
+                if not cl_name:
+                    raise Exception("No compute layer found for component." % component.get("name"))
+                oscar_clusters[cl_name] = merge_templates(oscar_clusters[cl_name], oscar_service)
+                components_done.append(next_component)
+
+    return oscar_clusters
+
+def get_service(component, previous, resources, containers):
+    """Generate the OSCAR service TOSCA."""
+    if not previous:
+        input_path = "%s/input" % component
+    else:
+        input_path = "%s/output" % previous
+    service = {
+        "type": "tosca.nodes.aisprint.FaaS.Function",
+        "requirements": [
+            {"host": "oscar"},
+            {"dependency": "dns_reg"}
+        ],
+        "properties": {
+            "name": component,
+            "image": get_image_url(component, resources, containers),
+            "script": "%s_script.sh" % component,
+            "input": [{
+                "storage_provider": "minio",
+                "path": input_path
+            }],
+            "output": [{
+                "storage_provider": "minio",
+                "path": "%s/output" % component
+            }],
+            "memory": "%sMi" % resources.get(component, {}).get("memory", 512),
+            "cpu": resources.get(component, {}).get("cpu", "1")
+        }
+    }
+    return {"topology_template": {"node_templates": {"oscar_service_%s" % component: service}}}
+
+def gen_tosca_cluster(compute_layer, phys_nodes):
     with open(TOSCA_TEMPLATE, 'r') as f:
         tosca_tpl = yaml.safe_load(f)
 
     with open(WN_TOSCA_TEMPLATE, 'r') as f:
         wn_tosca_tpl = yaml.safe_load(f)
 
-    tosca_res = {}
-    phys_nodes = {}
-    res = None
-    try:
-        with open(resource_file, 'r') as f:
-            resources = yaml.safe_load(f)
-        with open(deployments_file, 'r') as f:
-            deployments = yaml.safe_load(f)
+    # Default empty TOSCA
+    tosca_res = {
+        "tosca_definitions_version": "tosca_simple_yaml_1_0",
+        "imports": [
+            {"ec3_custom_types": "https://raw.githubusercontent.com/grycap/ec3/tosca/tosca/custom_types.yaml"}
+        ],
+        "topology_template": {}
+    }
 
-        if "System" in deployments:
-            deployments = deployments["System"]
+    if compute_layer["type"] in  ["Virtual", "PhysicalAlreadyProvisioned"]:
+        tosca_comp = copy.deepcopy(tosca_tpl)
 
-        if phys_file:
-            with open(phys_file, 'r') as f:
-                phys_nodes = yaml.safe_load(f)
+        tosca_comp["topology_template"]["inputs"]["cluster_name"]["default"] = gen_oscar_name()
+        tosca_comp["topology_template"]["inputs"]["domain_name"]["default"] = "im.grycap.net"
+        tosca_comp["topology_template"]["inputs"]["admin_token"]["default"] = get_random_string(16)
+        tosca_comp["topology_template"]["inputs"]["oscar_password"]["default"] = get_random_string(16)
+        tosca_comp["topology_template"]["inputs"]["minio_password"]["default"] = get_random_string(16)
+        tosca_comp["topology_template"]["inputs"]["fe_os_image"]["default"] = None
 
-        for _, component in deployments["Components"].items():
-            tosca_comp = copy.deepcopy(tosca_tpl)
-            compute_layer = find_compute_layer(resources, component)
-            if not compute_layer:
-                raise Exception("No compute layer found for component." % component.get("name"))
+        # Add SSH info for the Front-End node
+        if compute_layer["type"] == "PhysicalToBeProvisioned":
+            if not phys_nodes:
+                raise Exception("Computational layer of type PhysicalToBeProvisioned, but Physical Data File not exists.")
+            # Add nets to enable to set IP of the nodes
+            tosca_comp = add_nets(tosca_comp)
+            pub_ip = get_physical_resource_data(compute_layer, res, phys_nodes, "fe_node", "public_ip")
+            priv_ip = get_physical_resource_data(compute_layer, res, phys_nodes, "fe_node", "private_ip")
+            tosca_comp = set_ip_details(tosca_comp, "front", "pub_network", pub_ip, 1)
+            tosca_comp = set_ip_details(tosca_comp, "front", "priv_network", priv_ip, 0)
+            ssh_user = get_physical_resource_data(compute_layer, res, phys_nodes, "fe_node", "ssh_user")
+            ssh_key = get_physical_resource_data(compute_layer, res, phys_nodes, "fe_node", "ssh_key")
+            set_node_credentials(tosca_comp["topology_template"]["node_templates"]["front"], ssh_user, ssh_key)
 
-            if compute_layer["type"] != "NativeCloudFunction":
-                tosca_comp["topology_template"]["inputs"]["cluster_name"]["default"] = gen_oscar_name()
-                tosca_comp["topology_template"]["inputs"]["domain_name"]["default"] = "im.grycap.net"
-                tosca_comp["topology_template"]["inputs"]["admin_token"]["default"] = get_random_string(16)
-                tosca_comp["topology_template"]["inputs"]["oscar_password"]["default"] = get_random_string(16)
-                tosca_comp["topology_template"]["inputs"]["minio_password"]["default"] = get_random_string(16)
-                tosca_comp["topology_template"]["inputs"]["fe_os_image"]["default"] = None
-                for cont_id, cont in component["Containers"].items():
-                    res = find_resource_by_name(compute_layer, cont)
-                    if not res:
-                        raise Exception("Not resource found for a container in component %s." % component.get("name"))
-                    tosca_wn = copy.deepcopy(wn_tosca_tpl)
-                    wn_name = "%s_%s" % (component["name"], cont_id)
+        for res_id, res in compute_layer["Resources"].items():
+            tosca_wn = copy.deepcopy(wn_tosca_tpl)
+            wn_name = res_id
 
-                    wn_node = tosca_wn["topology_template"]["node_templates"].pop("wn_node")
-                    wn_node["requirements"][0]["host"] = "wn_%s" % wn_name
+            wn_node = tosca_wn["topology_template"]["node_templates"].pop("wn_node")
+            wn_node["requirements"][0]["host"] = "wn_%s" % wn_name
 
-                    wn = tosca_wn["topology_template"]["node_templates"].pop("wn")
-                    wn["capabilities"]["scalable"]["properties"]["count"] = res.get("totalNodes")
-                    wn["capabilities"]["host"]["properties"]["mem_size"] = "%s MB" % res.get("memorySize")
-                    wn["capabilities"]["host"]["properties"]["preemtible_instance"] = res.get("onSpot", False)
+            wn = tosca_wn["topology_template"]["node_templates"].pop("wn")
+            wn["capabilities"]["scalable"]["properties"]["count"] = res.get("totalNodes")
+            wn["capabilities"]["host"]["properties"]["mem_size"] = "%s MB" % res.get("memorySize")
+            wn["capabilities"]["host"]["properties"]["preemtible_instance"] = res.get("onSpot", False)
 
-                    wn["capabilities"]["os"]["properties"]["distribution"] = res.get("operatingSystemDistribution")
-                    wn["capabilities"]["os"]["properties"]["version"] = res.get("operatingSystemVersion")
-                    wn["capabilities"]["os"]["properties"]["image"] = res.get("operatingSystemImageId")
+            wn["capabilities"]["os"]["properties"]["distribution"] = res.get("operatingSystemDistribution")
+            wn["capabilities"]["os"]["properties"]["version"] = res.get("operatingSystemVersion")
+            wn["capabilities"]["os"]["properties"]["image"] = res.get("operatingSystemImageId")
 
-                    # For the FE set the image of the first WN
-                    if tosca_comp["topology_template"]["inputs"]["fe_os_image"]["default"] is None:
-                        tosca_comp["topology_template"]["inputs"]["fe_os_image"]["default"] = res.get("operatingSystemImageId")
+            # For the FE set the image of the first WN
+            if tosca_comp["topology_template"]["inputs"]["fe_os_image"]["default"] is None:
+                tosca_comp["topology_template"]["inputs"]["fe_os_image"]["default"] = res.get("operatingSystemImageId")
 
-                    cores = 0
-                    sgx = False
-                    for proc in list(res["processors"].values()):
-                        cores += proc.get("computingUnits", 0)
-                        if proc.get("SGXFlag"):
-                            sgx = True
+            cores = 0
+            sgx = False
+            for proc in list(res["processors"].values()):
+                cores += proc.get("computingUnits", 0)
+                if proc.get("SGXFlag"):
+                    sgx = True
 
-                    gpus = 0
-                    gpu_arch = None
-                    for acc in list(res.get("accelerators", {}).values()):
-                        for proc in list(acc["processors"].values()):
-                            if proc.get("type") == "GPU":
-                                gpus += proc.get("computingUnits", 0)
-                                gpu_arch = proc.get("architecture")
+            gpus = 0
+            gpu_arch = None
+            for acc in list(res.get("accelerators", {}).values()):
+                for proc in list(acc["processors"].values()):
+                    if proc.get("type") == "GPU":
+                        gpus += proc.get("computingUnits", 0)
+                        gpu_arch = proc.get("architecture")
 
+            wn["capabilities"]["host"]["properties"]["num_cpus"] = cores
+            wn["capabilities"]["host"]["properties"]["sgx"] = sgx
+            if gpus:
+                wn["capabilities"]["host"]["properties"]["num_gpus"] = gpus
+                if gpu_arch:
+                    # We asume this format: gpu_model = vendor model
+                    gpu_arch_parts = gpu_arch.split()
+                    if len(gpu_arch_parts) != 2:
+                        raise Exception("GPU architecture must be with format: VENDOR MODEL")
+                    wn["capabilities"]["host"]["properties"]["gpu_vendor"] = gpu_arch_parts[0]
+                    wn["capabilities"]["host"]["properties"]["gpu_model"] = gpu_arch_parts[1]
 
-                    wn["capabilities"]["host"]["properties"]["num_cpus"] = cores
-                    wn["capabilities"]["host"]["properties"]["sgx"] = sgx
-                    if gpus:
-                        wn["capabilities"]["host"]["properties"]["num_gpus"] = gpus
-                        if gpu_arch:
-                            # We asume this format: gpu_model = vendor model
-                            gpu_arch_parts = gpu_arch.split()
-                            if len(gpu_arch_parts) != 2:
-                                raise Exception("GPU architecture must be with format: VENDOR MODEL")
-                            wn["capabilities"]["host"]["properties"]["gpu_vendor"] = gpu_arch_parts[0]
-                            wn["capabilities"]["host"]["properties"]["gpu_model"] = gpu_arch_parts[1]
-
-                    if compute_layer["type"] == "PhysicalAlreadyProvisioned":
-                        # as each wn will have different ip, we have to create 
-                        # one node per wn to reach totalNodes
-                        wn["capabilities"]["scalable"]["properties"]["count"] = 1
-                        for num in range(0, res.get("totalNodes")):
-                            ssh_user = get_physical_resource_data(compute_layer, res, phys_nodes, "wns", "ssh_user", num)
-                            ssh_key = get_physical_resource_data(compute_layer, res, phys_nodes, "wns", "ssh_key", num)
-                            set_node_credentials(wn, ssh_user, ssh_key)
-
-                            wn_ip = get_physical_resource_data(compute_layer, res, phys_nodes, "wns", "private_ip", num)
-                            tosca_comp = set_ip_details(tosca_comp, "wn_%s_%s" % (wn_name, num+1), "priv_network", wn_ip, 0)
-                            tosca_wn["topology_template"]["node_templates"]["wn_node_%s_%s" % (wn_name, num+1)] = copy.deepcopy(wn_node)
-                            tosca_wn["topology_template"]["node_templates"]["wn_%s_%s" % (wn_name, num+1)] = copy.deepcopy(wn)
-                            tosca_res[component["name"]] = merge_templates(tosca_comp, tosca_wn)
-                    else:
-                        tosca_wn["topology_template"]["node_templates"]["wn_node_%s" % wn_name] = wn_node
-                        tosca_wn["topology_template"]["node_templates"]["wn_%s" % wn_name] = wn
-
-                        tosca_res[component["name"]] = merge_templates(tosca_comp, tosca_wn)
-
-            if compute_layer["type"] == "PhysicalAlreadyProvisioned":
+            if compute_layer["type"] == "PhysicalToBeProvisioned":
+                # as each wn will have different ip, we have to create 
+                # one node per wn to reach totalNodes
+                wn["capabilities"]["scalable"]["properties"]["count"] = 1
                 if not phys_nodes:
-                    raise Exception("Computational layer of type PhysicalAlreadyProvisioned, but Physical Data File not exists.")
-                # Add nets to enable to set IP of the nodes
-                tosca_comp = add_nets(tosca_comp)
-                pub_ip = get_physical_resource_data(compute_layer, res, phys_nodes, "fe_node", "public_ip")
-                priv_ip = get_physical_resource_data(compute_layer, res, phys_nodes, "fe_node", "private_ip")
-                tosca_comp = set_ip_details(tosca_comp, "front", "pub_network", pub_ip, 1)
-                tosca_comp = set_ip_details(tosca_comp, "front", "priv_network", priv_ip, 0)
-                ssh_user = get_physical_resource_data(compute_layer, res, phys_nodes, "fe_node", "ssh_user")
-                ssh_key = get_physical_resource_data(compute_layer, res, phys_nodes, "fe_node", "ssh_key")
-                set_node_credentials(tosca_comp["topology_template"]["node_templates"]["front"], ssh_user, ssh_key)
+                    raise Exception("Computational layer of type PhysicalToBeProvisioned, but Physical Data File not exists.")
+                for num in range(0, res.get("totalNodes")):
+                    ssh_user = get_physical_resource_data(compute_layer, res, phys_nodes, "wns", "ssh_user", num)
+                    ssh_key = get_physical_resource_data(compute_layer, res, phys_nodes, "wns", "ssh_key", num)
+                    set_node_credentials(wn, ssh_user, ssh_key)
 
-    except Exception as ex:
-        print("Error reading resources file: %s" % ex)
+                    wn_ip = get_physical_resource_data(compute_layer, res, phys_nodes, "wns", "private_ip", num)
+                    tosca_comp = set_ip_details(tosca_comp, "wn_%s_%s" % (wn_name, num+1), "priv_network", wn_ip, 0)
+                    tosca_wn["topology_template"]["node_templates"]["wn_node_%s_%s" % (wn_name, num+1)] = copy.deepcopy(wn_node)
+                    tosca_wn["topology_template"]["node_templates"]["wn_%s_%s" % (wn_name, num+1)] = copy.deepcopy(wn)
+                    tosca_res = merge_templates(tosca_comp, tosca_wn)
+            elif compute_layer["type"] == "Virtual":
+                tosca_wn["topology_template"]["node_templates"]["wn_node_%s" % wn_name] = wn_node
+                tosca_wn["topology_template"]["node_templates"]["wn_%s" % wn_name] = wn
+                tosca_res= merge_templates(tosca_comp, tosca_wn)
 
     return tosca_res
