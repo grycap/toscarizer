@@ -138,7 +138,7 @@ def get_service(component, next_items, prev_items, resources, containers, oscar_
             "script": "script.sh",
             "input": [{
                 "storage_provider": "minio",
-                "path": "%s/input" % component if not prev_items else "%s/intermediate" % component
+                "path": "%s/input" % component if not prev_items else "%s/intermediate" % prev_items[0]  # assume only one prev
             }],
             "output": [
                 {
