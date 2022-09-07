@@ -155,7 +155,7 @@ def get_service(component, previous, resources, containers, comp_oscar_cluster, 
                     component : {
                         "endpoint": "https://minio.%s.%s" % (prev_oscar_cluster["topology_template"]["inputs"]["cluster_name"],
                                                              prev_oscar_cluster["topology_template"]["inputs"]["domain_name"]),
-                        "veryfy": True,
+                        "verify": True,
                         "access_key": "minio",
                         "secret_key": prev_oscar_cluster["topology_template"]["inputs"]["minio_password"]
                     }
@@ -165,7 +165,7 @@ def get_service(component, previous, resources, containers, comp_oscar_cluster, 
                 storage_providers["minio"] = {
                     component : {
                         "endpoint": prev_oscar_cluster["topology_template"]["inputs"]["minio_endpoint_%s" % cl_name]["default"],
-                        "veryfy": True,
+                        "verify": True,
                         "access_key": prev_oscar_cluster["topology_template"]["inputs"]["minio_ak_%s" % cl_name]["default"],
                         "secret_key": prev_oscar_cluster["topology_template"]["inputs"]["minio_sk_%s" % cl_name]["default"],
                     }
@@ -175,7 +175,7 @@ def get_service(component, previous, resources, containers, comp_oscar_cluster, 
         "properties": {
             "name": component,
             "image": get_image_url(component, resources, containers),
-            "script": "%s_script.sh" % component,
+            "script": "script.sh",
             "input": [{
                 "storage_provider": storage_provider,
                 "path": input_path
