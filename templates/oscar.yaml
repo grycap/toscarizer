@@ -80,6 +80,7 @@ topology_template:
       type: tosca.nodes.indigo.KubernetesSecretRegistry
       properties:
         name: gitlabpolimi
+        namespace: oscar-svc
         server: registry.gitlab.polimi.it
         username: user
         password: pass
