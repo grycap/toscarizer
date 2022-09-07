@@ -76,6 +76,16 @@ topology_template:
       requirements:
         - host: front
 
+    gitlab_polimi_secret:
+      type: tosca.nodes.indigo.KubernetesSecretRegistry
+      properties:
+        name: gitlab_polimi
+        server: registry.gitlab.polimi.it
+        username: user
+        password: pass
+      requirements:
+        - host: lrms_front_end
+
     oscar:
       type: tosca.nodes.indigo.OSCAR
       properties:
