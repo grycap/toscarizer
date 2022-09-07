@@ -196,7 +196,7 @@ def get_service(component, previous, resources, containers, comp_oscar_cluster, 
         ]
 
     if storage_providers:
-        service["storage_providers"] = storage_providers
+        service["properties"]["storage_providers"] = storage_providers
 
     res = {
             "topology_template":
@@ -329,8 +329,11 @@ def gen_tosca_cluster(compute_layer_name, compute_layer, phys_nodes):
         minio_ak = get_physical_resource_data(compute_layer, res, phys_nodes, "minio", "access_key")
         minio_sk = get_physical_resource_data(compute_layer, res, phys_nodes, "minio", "secret_key")
 
-        tosca_res["topology_template"]["inputs"]["minio_endpoint_%s" % compute_layer_name] = {"default": minio_endpoint}
-        tosca_res["topology_template"]["inputs"]["minio_ak_%s" % compute_layer_name] = {"default": minio_ak}
-        tosca_res["topology_template"]["inputs"]["minio_sk_%s" % compute_layer_name] = {"default": minio_sk}
+        tosca_res["topology_template"]["inputs"]["minio_endpoint_%s" % compute_layer_name] = {"default": minio_endpoint,
+                                                                                              "type": "string"}
+        tosca_res["topology_template"]["inputs"]["minio_ak_%s" % compute_layer_name] = {"default": minio_ak,
+                                                                                        "type": "string"}
+        tosca_res["topology_template"]["inputs"]["minio_sk_%s" % compute_layer_name] = {"default": minio_sk,
+                                                                                        "type": "string"}
 
     return tosca_res
