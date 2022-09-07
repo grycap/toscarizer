@@ -90,8 +90,6 @@ def get_physical_resource_data(comp_layer, res, phys_file, node_type, value, ind
 
 
 def gen_tosca_yamls(dag, containers, resources, resources_file, deployments_file, phys_file):
-    components_done = []
-
     with open(deployments_file, 'r') as f:
         deployments = yaml.safe_load(f)
         if "System" in deployments:
@@ -113,63 +111,25 @@ def gen_tosca_yamls(dag, containers, resources, resources_file, deployments_file
 
     # Now create the OSCAR services and merge in the correct OSCAR cluster
     oscar_clusters_per_component = {}
+    cl_names_per_component = {}
+    for component in dag.nodes():
+        # First find the Component cluster
+        cl_name = find_compute_layer(full_resouces, component, deployments["Components"])
+        if not cl_name:
+            raise Exception("No compute layer found for component." % component.get("name"))
+        oscar_clusters_per_component[component] = oscar_clusters[cl_name]
+        cl_names_per_component[component] = cl_name
+
     for component, next_items in dag.adj.items():
         # Add the node
-        if component not in components_done:
-            cl_name = find_compute_layer(full_resouces, component, deployments["Components"])
-            if not cl_name:
-                raise Exception("No compute layer found for component." % component.get("name"))
-            oscar_service = get_service(component, None, resources, containers, oscar_clusters[cl_name], None, None)
-            oscar_clusters_per_component[component] = merge_templates(oscar_clusters[cl_name], oscar_service)
-            components_done.append(component)
-
-        prev_cl_name = cl_name
-        # Add the neighbours of this node
-        for next_component in next_items:
-            if next_component not in components_done:
-                cl_name = find_compute_layer(full_resouces, next_component, deployments["Components"])
-                if not cl_name:
-                    raise Exception("No compute layer found for component." % component.get("name"))
-                oscar_service = get_service(next_component, component, resources, containers, oscar_clusters[cl_name], oscar_clusters_per_component[component], prev_cl_name)
-                oscar_clusters_per_component[next_component] = merge_templates(oscar_clusters[cl_name], oscar_service)
-                components_done.append(next_component)
+        oscar_service = get_service(component, next_items, list(dag.predecessors(component)), resources,
+                                    containers, oscar_clusters_per_component, cl_names_per_component)
+        oscar_clusters_per_component[component] = merge_templates(oscar_clusters_per_component[component], oscar_service)
 
     return oscar_clusters_per_component
 
-def get_service(component, previous, resources, containers, comp_oscar_cluster, prev_oscar_cluster, cl_name):
+def get_service(component, next_items, prev_items, resources, containers, oscar_clusters, cl_names):
     """Generate the OSCAR service TOSCA."""
-    storage_providers = {}
-    storage_provider = "minio"
-    if not previous:
-        input_path = "%s/input" % component
-    else:
-        if comp_oscar_cluster == prev_oscar_cluster:
-            input_path = "%s/output" % previous
-        else:
-            # We are in a different cluster we need to add the storage provider
-            input_path = "%s/output" % previous
-            storage_provider = "minio.%s" % component
-            if len(prev_oscar_cluster["topology_template"]["node_templates"]) > 1:
-                # It is a IM deployed cluster
-                storage_providers["minio"] = {
-                    component : {
-                        "endpoint": "https://minio.%s.%s" % (prev_oscar_cluster["topology_template"]["inputs"]["cluster_name"],
-                                                             prev_oscar_cluster["topology_template"]["inputs"]["domain_name"]),
-                        "verify": True,
-                        "access_key": "minio",
-                        "secret_key": prev_oscar_cluster["topology_template"]["inputs"]["minio_password"]
-                    }
-                }
-            else:
-                # It is an already existing OSCAR cluster
-                storage_providers["minio"] = {
-                    component : {
-                        "endpoint": prev_oscar_cluster["topology_template"]["inputs"]["minio_endpoint_%s" % cl_name]["default"],
-                        "verify": True,
-                        "access_key": prev_oscar_cluster["topology_template"]["inputs"]["minio_ak_%s" % cl_name]["default"],
-                        "secret_key": prev_oscar_cluster["topology_template"]["inputs"]["minio_sk_%s" % cl_name]["default"],
-                    }
-                }
     service = {
         "type": "tosca.nodes.aisprint.FaaS.Function",
         "properties": {
@@ -177,19 +137,53 @@ def get_service(component, previous, resources, containers, comp_oscar_cluster, 
             "image": get_image_url(component, resources, containers),
             "script": "script.sh",
             "input": [{
-                "storage_provider": storage_provider,
-                "path": input_path
-            }],
-            "output": [{
                 "storage_provider": "minio",
-                "path": "%s/output" % component
+                "path": "%s/input" % component if not prev_items else "%s/intermediate" % component
             }],
+            "output": [
+                {
+                    "storage_provider": "minio",
+                    "path": "%s/output" % component if not next_items else "%s/intermediate" % component
+                }
+            ],
             "memory": "%sMi" % resources.get(component, {}).get("memory", 512),
             "cpu": resources.get(component, {}).get("cpu", "1")
         }
     }
 
-    if len(comp_oscar_cluster["topology_template"]["node_templates"]) > 1:
+    storage_providers = {}
+
+    for next_comp in next_items:
+        if oscar_clusters[component] != oscar_clusters[next_comp]:
+            if len(oscar_clusters[next_comp]["topology_template"]["node_templates"]) > 1:
+                # It is a IM deployed cluster
+                storage_providers["minio"] = {
+                    next_comp : {
+                        "endpoint": "https://minio.%s.%s" % (oscar_clusters[next_comp]["topology_template"]["inputs"]["cluster_name"]["default"],
+                                                             oscar_clusters[next_comp]["topology_template"]["inputs"]["domain_name"]["default"]),
+                        "verify": True,
+                        "access_key": "minio",
+                        "secret_key": oscar_clusters[next_comp]["topology_template"]["inputs"]["minio_password"]["default"]
+                    }
+                }
+            else:
+                cl_name = cl_names[next_comp]
+                # It is an already existing OSCAR cluster
+                storage_providers["minio"] = {
+                    next_comp : {
+                        "endpoint": oscar_clusters[next_comp]["topology_template"]["inputs"]["minio_endpoint_%s" % cl_name]["default"],
+                        "verify": True,
+                        "access_key": oscar_clusters[next_comp]["topology_template"]["inputs"]["minio_ak_%s" % cl_name]["default"],
+                        "secret_key": oscar_clusters[next_comp]["topology_template"]["inputs"]["minio_sk_%s" % cl_name]["default"],
+                    }
+                }
+
+            service["properties"]["output"].append({
+                "storage_provider": "minio.%s" % next_comp,
+                "path": "%s/intermediate" % next_comp
+            })
+
+    if len(oscar_clusters[component]["topology_template"]["node_templates"]) > 1:
         service["requirements"] = [
             {"host": "oscar"},
             {"dependency": "dns_reg"}
