@@ -1,5 +1,3 @@
-from operator import contains
-import yaml
 from toscarizer.utils import RESOURCES_COMPLETE_FILE, BASE_DAG_FILE, parse_dag, parse_resources
 
 

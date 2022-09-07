@@ -1,2 +1,3 @@
 id = one; type = OpenNebula; host = server:2633; username = user; password = pass
+id = oscar1; type = OSCAR; host= https://graspi.im.grycap.net; username = user; password = pass
 type = InfrastructureManager; username = user; password = pass
