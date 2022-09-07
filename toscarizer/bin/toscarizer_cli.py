@@ -98,7 +98,7 @@ def tosca(application_dir, base, optimal):
             tosca_file = "%s/aisprint/deployments/base/im/%s.yaml" % (application_dir, cl)
         with open(tosca_file, 'w+') as f:
             yaml.safe_dump(tosca, f, indent=2)
-        print("DONE. TOSCA file %s has been generated for Computational Layer: %s." % (tosca_file, cl))
+        print("DONE. TOSCA file %s has been generated for Component: %s." % (tosca_file, cl))
 
 
 @click.command()

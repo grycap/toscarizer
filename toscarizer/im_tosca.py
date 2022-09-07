@@ -109,49 +109,75 @@ def gen_tosca_yamls(dag, containers, resources, resources_file, deployments_file
     for nd in list(full_resouces["System"]["NetworkDomains"].values()):
         if "ComputationalLayers" in nd:
             for cl_name, cl in nd["ComputationalLayers"].items():
-                oscar_clusters[cl_name] = gen_tosca_cluster(cl , phys_nodes)
+                oscar_clusters[cl_name] = gen_tosca_cluster(cl_name, cl , phys_nodes)
 
     # Now create the OSCAR services and merge in the correct OSCAR cluster
+    oscar_clusters_per_component = {}
     for component, next_items in dag.adj.items():
         # Add the node
         if component not in components_done:
-            oscar_service = get_service(component, None, resources, containers)
             cl_name = find_compute_layer(full_resouces, component, deployments["Components"])
             if not cl_name:
                 raise Exception("No compute layer found for component." % component.get("name"))
-            oscar_clusters[cl_name] = merge_templates(oscar_clusters[cl_name], oscar_service)
+            oscar_service = get_service(component, None, resources, containers, oscar_clusters[cl_name], None, None)
+            oscar_clusters_per_component[component] = merge_templates(oscar_clusters[cl_name], oscar_service)
             components_done.append(component)
 
+        prev_cl_name = cl_name
         # Add the neighbours of this node
         for next_component in next_items:
             if next_component not in components_done:
-                oscar_service = get_service(next_component, component, resources, containers)
-                cl_name = find_compute_layer(full_resouces, component, deployments["Components"])
+                cl_name = find_compute_layer(full_resouces, next_component, deployments["Components"])
                 if not cl_name:
                     raise Exception("No compute layer found for component." % component.get("name"))
-                oscar_clusters[cl_name] = merge_templates(oscar_clusters[cl_name], oscar_service)
+                oscar_service = get_service(next_component, component, resources, containers, oscar_clusters[cl_name], oscar_clusters_per_component[component], prev_cl_name)
+                oscar_clusters_per_component[next_component] = merge_templates(oscar_clusters[cl_name], oscar_service)
                 components_done.append(next_component)
 
-    return oscar_clusters
+    return oscar_clusters_per_component
 
-def get_service(component, previous, resources, containers):
+def get_service(component, previous, resources, containers, comp_oscar_cluster, prev_oscar_cluster, cl_name):
     """Generate the OSCAR service TOSCA."""
+    storage_providers = {}
+    storage_provider = "minio"
     if not previous:
         input_path = "%s/input" % component
     else:
-        input_path = "%s/output" % previous
+        if comp_oscar_cluster == prev_oscar_cluster:
+            input_path = "%s/output" % previous
+        else:
+            # We are in a different cluster we need to add the storage provider
+            input_path = "%s/output" % previous
+            storage_provider = "minio.%s" % component
+            if len(prev_oscar_cluster["topology_template"]["node_templates"]) > 1:
+                # It is a IM deployed cluster
+                storage_providers["minio"] = {
+                    component : {
+                        "endpoint": "https://%s.%s" % (prev_oscar_cluster["topology_template"]["inputs"]["cluster_name"],
+                                                       prev_oscar_cluster["topology_template"]["inputs"]["domain_name"]),
+                        "veryfy": True,
+                        "access_key": "minio",
+                        "secret_key": prev_oscar_cluster["topology_template"]["inputs"]["oscar_password"]
+                    }
+                }
+            else:
+                # It is an already existing OSCAR cluster
+                storage_providers["minio"] = {
+                    component : {
+                        "endpoint": prev_oscar_cluster["topology_template"]["inputs"]["minio_endpoint_%s" % cl_name]["default"],
+                        "veryfy": True,
+                        "access_key": prev_oscar_cluster["topology_template"]["inputs"]["minio_ak_%s" % cl_name]["default"],
+                        "secret_key": prev_oscar_cluster["topology_template"]["inputs"]["minio_sk_%s" % cl_name]["default"],
+                    }
+                }
     service = {
         "type": "tosca.nodes.aisprint.FaaS.Function",
-        "requirements": [
-            {"host": "oscar"},
-            {"dependency": "dns_reg"}
-        ],
         "properties": {
             "name": component,
             "image": get_image_url(component, resources, containers),
             "script": "%s_script.sh" % component,
             "input": [{
-                "storage_provider": "minio",
+                "storage_provider": storage_provider,
                 "path": input_path
             }],
             "output": [{
@@ -162,9 +188,30 @@ def get_service(component, previous, resources, containers):
             "cpu": resources.get(component, {}).get("cpu", "1")
         }
     }
-    return {"topology_template": {"node_templates": {"oscar_service_%s" % component: service}}}
 
-def gen_tosca_cluster(compute_layer, phys_nodes):
+    if len(comp_oscar_cluster["topology_template"]["node_templates"]) > 1:
+        service["requirements"] = [
+            {"host": "oscar"},
+            {"dependency": "dns_reg"}
+        ]
+
+    if storage_providers:
+        service["storage_providers"] = storage_providers
+
+    res = {
+            "topology_template":
+            {
+                "node_templates": {"oscar_service_%s" % component: service},
+                "outputs" : {
+                    "oscar_service_url": {"value": { "get_attribute": [ "oscar_service_%s" % component, "endpoint" ] }},
+                    "oscar_service_cred": {"value": { "get_attribute": [ "oscar_service_%s" % component, "credential"] }}
+                }
+            }
+    }
+
+    return res
+
+def gen_tosca_cluster(compute_layer_name, compute_layer, phys_nodes):
     with open(TOSCA_TEMPLATE, 'r') as f:
         tosca_tpl = yaml.safe_load(f)
 
@@ -177,10 +224,12 @@ def gen_tosca_cluster(compute_layer, phys_nodes):
         "imports": [
             {"ec3_custom_types": "https://raw.githubusercontent.com/grycap/ec3/tosca/tosca/custom_types.yaml"}
         ],
-        "topology_template": {}
+        "topology_template": {
+            "node_templates": {}
+        }
     }
 
-    if compute_layer["type"] in  ["Virtual", "PhysicalAlreadyProvisioned"]:
+    if compute_layer["type"] in  ["Virtual", "PhysicalToBeProvisioned"]:
         tosca_comp = copy.deepcopy(tosca_tpl)
 
         tosca_comp["topology_template"]["inputs"]["cluster_name"]["default"] = gen_oscar_name()
@@ -270,6 +319,18 @@ def gen_tosca_cluster(compute_layer, phys_nodes):
             elif compute_layer["type"] == "Virtual":
                 tosca_wn["topology_template"]["node_templates"]["wn_node_%s" % wn_name] = wn_node
                 tosca_wn["topology_template"]["node_templates"]["wn_%s" % wn_name] = wn
-                tosca_res= merge_templates(tosca_comp, tosca_wn)
+                tosca_res = merge_templates(tosca_comp, tosca_wn)
+    elif compute_layer["type"] == "PhysicalAlreadyProvisioned":
+        tosca_res["topology_template"]["inputs"] = {}
+
+        # TODO: Check this as it should be only one resource in this case
+        res = list(compute_layer["Resources"].values())[0]
+        minio_endpoint = get_physical_resource_data(compute_layer, res, phys_nodes, "minio", "endpoint")
+        minio_ak = get_physical_resource_data(compute_layer, res, phys_nodes, "minio", "access_key")
+        minio_sk = get_physical_resource_data(compute_layer, res, phys_nodes, "minio", "secret_key")
+
+        tosca_res["topology_template"]["inputs"]["minio_endpoint_%s" % compute_layer_name] = {"default": minio_endpoint}
+        tosca_res["topology_template"]["inputs"]["minio_ak_%s" % compute_layer_name] = {"default": minio_ak}
+        tosca_res["topology_template"]["inputs"]["minio_sk_%s" % compute_layer_name] = {"default": minio_sk}
 
     return tosca_res
