@@ -163,7 +163,8 @@ def get_service(component, next_items, prev_items, resources, containers, oscar_
                                                              oscar_clusters[next_comp]["topology_template"]["inputs"]["domain_name"]["default"]),
                         "verify": True,
                         "access_key": "minio",
-                        "secret_key": oscar_clusters[next_comp]["topology_template"]["inputs"]["minio_password"]["default"]
+                        "secret_key": oscar_clusters[next_comp]["topology_template"]["inputs"]["minio_password"]["default"],
+                        "region": "us-east-1"
                     }
                 }
             else:
@@ -175,6 +176,7 @@ def get_service(component, next_items, prev_items, resources, containers, oscar_
                         "verify": True,
                         "access_key": oscar_clusters[next_comp]["topology_template"]["inputs"]["minio_ak_%s" % cl_name]["default"],
                         "secret_key": oscar_clusters[next_comp]["topology_template"]["inputs"]["minio_sk_%s" % cl_name]["default"],
+                        "region": "us-east-1"
                     }
                 }
 
