@@ -79,7 +79,7 @@ topology_template:
     gitlab_polimi_secret:
       type: tosca.nodes.indigo.KubernetesSecretRegistry
       properties:
-        name: gitlab_polimi
+        name: gitlabpolimi
         server: registry.gitlab.polimi.it
         username: user
         password: pass

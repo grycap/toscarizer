@@ -148,7 +148,7 @@ def get_service(component, next_items, prev_items, resources, containers, oscar_
             ],
             "memory": "%sMi" % resources.get(component, {}).get("memory", 512),
             "cpu": resources.get(component, {}).get("cpu", "1"),
-            "image_pull_secrets": ["gitlab_polimi"]
+            "image_pull_secrets": ["gitlabpolimi"]
         }
     }
 
