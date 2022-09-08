@@ -86,6 +86,7 @@ topology_template:
         password: pass
       requirements:
         - host: lrms_front_end
+        - dependency: oscar
 
     oscar:
       type: tosca.nodes.indigo.OSCAR
