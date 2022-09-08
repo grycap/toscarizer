@@ -148,9 +148,21 @@ def get_service(component, next_items, prev_items, resources, containers, oscar_
             ],
             "memory": "%sMi" % resources.get(component, {}).get("memory", 512),
             "cpu": resources.get(component, {}).get("cpu", "1"),
-            "image_pull_secrets": ["gitlabpolimi"]
+            "image_pull_secrets": ["gitlabpolimi"],
+            "environment": {
+                "COMPONENT_NAME": component
+            }
         }
     }
+
+    if len(oscar_clusters[component]["topology_template"]["node_templates"]) > 1:
+        # It is a IM deployed cluster
+        # Use the minio url as we alredy have it
+        service["properties"]["environment"]["KCI"] = "https://minio.%s.%s" % (oscar_clusters[component]["topology_template"]["inputs"]["cluster_name"]["default"],
+                                                                               oscar_clusters[component]["topology_template"]["inputs"]["domain_name"]["default"])
+    else:
+        # It is an already existing OSCAR cluster
+        service["properties"]["environment"]["KCI"] = oscar_clusters[component]["topology_template"]["inputs"]["minio_endpoint_%s" % cl_name]["default"]
 
     storage_providers = {}
 

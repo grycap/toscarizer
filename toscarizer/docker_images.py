@@ -29,9 +29,6 @@ def generate_dockerfiles(app_dir, components, resources):
         for partition in partitions["partitions"]:
             dockerfiles[component][partition] = []
             dockerfile_dir = "%s/aisprint/designs/%s/%s" % (app_dir, component, partition)
-            # Create onnx dir if it does not exist
-            if not os.path.exists("%s/onnx" % dockerfile_dir):
-                os.mkdir("%s/onnx" % dockerfile_dir)
             dockerfile_path = "%s/Dockerfile" % dockerfile_dir
             dockerfile = dockerfile_tpl.replace("{{component_name}}", component)
             with open(dockerfile_path, 'w+') as f:
