@@ -19,5 +19,4 @@ RUN pip install --upgrade pip
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application and onnx models
-COPY *.py script.sh /opt/{{component_name}}/
-COPY onnx/ /opt/{{component_name}}/onnx/
+COPY . /opt/{{component_name}}/
