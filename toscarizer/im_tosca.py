@@ -162,7 +162,7 @@ def get_service(component, next_items, prev_items, resources, containers, oscar_
                                                                                oscar_clusters[component]["topology_template"]["inputs"]["domain_name"]["default"])
     else:
         # It is an already existing OSCAR cluster
-        service["properties"]["environment"]["KCI"] = oscar_clusters[component]["topology_template"]["inputs"]["minio_endpoint_%s" % cl_name]["default"]
+        service["properties"]["environment"]["KCI"] = oscar_clusters[component]["topology_template"]["inputs"]["minio_endpoint_%s" % cl_names[component]]["default"]
 
     storage_providers = {}
 
