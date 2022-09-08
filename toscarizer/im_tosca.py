@@ -135,7 +135,7 @@ def get_service(component, next_items, prev_items, resources, containers, oscar_
         "properties": {
             "name": component,
             "image": get_image_url(component, resources, containers),
-            "script": "script.sh",
+            "script": "/opt/%s/script.sh" % component,
             "input": [{
                 "storage_provider": "minio",
                 "path": "%s/input" % component if not prev_items else "%s/intermediate" % prev_items[0]  # assume only one prev
@@ -148,7 +148,7 @@ def get_service(component, next_items, prev_items, resources, containers, oscar_
             ],
             "memory": "%sMi" % resources.get(component, {}).get("memory", 512),
             "cpu": resources.get(component, {}).get("cpu", "1"),
-            "image_pull_secrets": ["gitlab_polimi"]
+            "image_pull_secrets": ["gitlabpolimi"]
         }
     }
 

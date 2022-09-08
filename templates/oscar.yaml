@@ -79,12 +79,14 @@ topology_template:
     gitlab_polimi_secret:
       type: tosca.nodes.indigo.KubernetesSecretRegistry
       properties:
-        name: gitlab_polimi
+        name: gitlabpolimi
+        namespace: oscar-svc
         server: registry.gitlab.polimi.it
         username: user
         password: pass
       requirements:
         - host: lrms_front_end
+        - dependency: oscar
 
     oscar:
       type: tosca.nodes.indigo.OSCAR
