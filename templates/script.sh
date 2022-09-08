@@ -5,7 +5,7 @@ FILE_NAME="$(basename "$INPUT_FILE_PATH" | cut -f 1 -d '.')"
 if [[ $FILE_NAME == aisprint-* ]]
 then
 	OUTPUT_FILE="$TMP_OUTPUT_DIR/$FILE_NAME"
-    UUID="${FILE_NAME#"aisprint-"}"
+    UUID="${FILE_NAME:9:36}"
 else
     UUID=$(uuidgen) 
 	OUTPUT_FILE="$TMP_OUTPUT_DIR/aisprint-$UUID"

@@ -12,6 +12,14 @@ from toscarizer.fdl import generate_fdl
 from toscarizer.docker_images import generate_dockerfiles, build_and_push, generate_containers
 from toscarizer.im_tosca import gen_tosca_yamls
 
+try:
+    # To avoid annoying InsecureRequestWarning messages in some Connectors
+    import requests.packages
+    from requests.packages.urllib3.exceptions import InsecureRequestWarning
+    requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
+except ImportError:
+    pass
+
 
 @click.group()
 def toscarizer_cli():
