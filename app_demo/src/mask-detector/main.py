@@ -133,7 +133,7 @@ if __name__ == '__main__':
 	# construct the argument parser and parse the arguments
 	ap = argparse.ArgumentParser()
 	ap.add_argument("-i", "--input", required=True, help="path to input image")
-	ap.add_argument("-o", "--output",help="path to output folder")
+	ap.add_argument("-o", "--output",help="path to output file")
 	ap.add_argument("-y", "--yolo", default="cfg", help="base path to YOLO cfg directory")
 	ap.add_argument("-c", "--confidence", type=float, default=0.2, help="minimum probability to filter weak detections")
 	ap.add_argument("-t", "--threshold", type=float, default=0.1, help="threshold when applying non-max suppression")
@@ -154,6 +154,8 @@ if __name__ == '__main__':
 	args['weightsPath'] = weightsPath
 	args['configPath'] = configPath
 	
-	args['output'] = os.path.join(args['output'], os.path.basename(args['input'])) 
+	output_ext = os.path.splitext(args['output'])[1]
+	if not output_ext:
+		args['output'] = "%s.jpg" % args['output'] 
 
 	main(args)
