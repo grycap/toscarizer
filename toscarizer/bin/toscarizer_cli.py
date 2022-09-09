@@ -45,26 +45,25 @@ def fdl(application_dir, base, optimal):
         print("--base or --optimal options must be set.")
         sys.exit(1)
 
-    with open("%s/%s" % (application_dir, CONTAINERS_FILE), 'r') as f:
-        containers = yaml.safe_load(f)
+    if optimal:
+        tosca_dir = "%s/aisprint/deployments/optimal_deployment/im" % application_dir
+    else:
+        tosca_dir = "%s/aisprint/deployments/base/im" % application_dir
 
-    if base:
-        resources = parse_resources("%s/%s" % (application_dir, RESOURCES_FILE), "%s/%s" % (application_dir, DEPLOYMENTS_FILE))
-        dag = parse_dag("%s/%s" % (application_dir, BASE_DAG_FILE))
-        fdl = generate_fdl(dag, resources, containers)
-        fdl_file = "%s/aisprint/deployments/base/oscar/fdl.yaml" % application_dir
-        with open(fdl_file, 'w+') as f:
-            yaml.safe_dump(fdl, f, indent=2)
-        print("DONE. FDL file %s has been generated." % fdl_file)
+    tosca_files = glob.glob("%s/*.yaml" % tosca_dir)
+    if not tosca_files:
+        print("No TOSCA files. Please perform the tosca operation first.")
+        sys.exit(-1)
+    fdl = generate_fdl(tosca_files)
 
     if optimal:
-        resources = parse_resources("%s/%s" % (application_dir, RESOURCES_COMPLETE_FILE), "%s/%s" % (application_dir, RESOURCES_COMPLETE_FILE))
-        dag = parse_dag("%s/%s" % (application_dir, OPTIMAL_DAG_FILE))
-        fdl = generate_fdl(dag, resources, containers)
         fdl_file = "%s/aisprint/deployments/optimal_deployment/oscar/fdl.yaml" % application_dir
-        with open(fdl_file, 'w+') as f:
-            yaml.safe_dump(fdl, f, indent=2)
-        print("DONE. FDL file %s has been generated." % fdl_file)
+    else:
+        fdl_file = "%s/aisprint/deployments/base/oscar/fdl.yaml" % application_dir
+
+    with open(fdl_file, 'w+') as f:
+        yaml.safe_dump(fdl, f, indent=2)
+    print("DONE. FDL file %s has been generated." % fdl_file)
 
 
 @click.command()

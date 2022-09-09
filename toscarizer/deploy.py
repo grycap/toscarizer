@@ -39,7 +39,7 @@ def get_state(inf_id, auth_data, verify):
         return False, str(ex)
 
 def deploy(tosca_files, auth_data, im_url, verify, dag, delay=10, max_time=900):
-    res = {}
+
 
     if dag:
         components_deployed = {}
