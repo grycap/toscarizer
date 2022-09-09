@@ -18,6 +18,9 @@ toscarizer --help
 
 ### Step3: Build and push the container images needed by each component of the application
 
+In case that any of the images will run on an ARM platform the machine where this command is run, must support multiarch docker builds.
+See how to configure it [here](https://www.docker.com/blog/multi-arch-build-and-images-the-simple-way/).
+
 ```sh
 toscarizer docker --registry registry.gitlab.polimi.it --registry_folder /ai-sprint --username user --password pass --application_dir app
 ```
