@@ -149,7 +149,7 @@ def get_service(component, next_items, prev_items, resources, containers, oscar_
             "memory": "%sMi" % resources.get(component, {}).get("memory", 512),
             "cpu": resources.get(component, {}).get("cpu", "1"),
             "image_pull_secrets": ["gitlabpolimi"],
-            "environment": {
+            "env_variables": {
                 "COMPONENT_NAME": component
             }
         }
@@ -158,11 +158,11 @@ def get_service(component, next_items, prev_items, resources, containers, oscar_
     if len(oscar_clusters[component]["topology_template"]["node_templates"]) > 1:
         # It is a IM deployed cluster
         # Use the minio url as we alredy have it
-        service["properties"]["environment"]["KCI"] = "https://minio.%s.%s" % (oscar_clusters[component]["topology_template"]["inputs"]["cluster_name"]["default"],
+        service["properties"]["env_variables"]["KCI"] = "https://minio.%s.%s" % (oscar_clusters[component]["topology_template"]["inputs"]["cluster_name"]["default"],
                                                                                oscar_clusters[component]["topology_template"]["inputs"]["domain_name"]["default"])
     else:
         # It is an already existing OSCAR cluster
-        service["properties"]["environment"]["KCI"] = oscar_clusters[component]["topology_template"]["inputs"]["minio_endpoint_%s" % cl_names[component]]["default"]
+        service["properties"]["env_variables"]["KCI"] = oscar_clusters[component]["topology_template"]["inputs"]["minio_endpoint_%s" % cl_names[component]]["default"]
 
     storage_providers = {}
 
@@ -174,7 +174,7 @@ def get_service(component, next_items, prev_items, resources, containers, oscar_
                     next_comp : {
                         "endpoint": "https://minio.%s.%s" % (oscar_clusters[next_comp]["topology_template"]["inputs"]["cluster_name"]["default"],
                                                              oscar_clusters[next_comp]["topology_template"]["inputs"]["domain_name"]["default"]),
-                        "verify": True,
+#                        "verify": True,
                         "access_key": "minio",
                         "secret_key": oscar_clusters[next_comp]["topology_template"]["inputs"]["minio_password"]["default"],
                         "region": "us-east-1"
@@ -186,7 +186,7 @@ def get_service(component, next_items, prev_items, resources, containers, oscar_
                 storage_providers["minio"] = {
                     next_comp : {
                         "endpoint": oscar_clusters[next_comp]["topology_template"]["inputs"]["minio_endpoint_%s" % cl_name]["default"],
-                        "verify": True,
+#                        "verify": True,
                         "access_key": oscar_clusters[next_comp]["topology_template"]["inputs"]["minio_ak_%s" % cl_name]["default"],
                         "secret_key": oscar_clusters[next_comp]["topology_template"]["inputs"]["minio_sk_%s" % cl_name]["default"],
                         "region": "us-east-1"
