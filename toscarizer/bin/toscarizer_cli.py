@@ -1,7 +1,6 @@
 import click
 import yaml
 import sys
-import requests
 import os.path
 import glob
 
@@ -11,14 +10,7 @@ from toscarizer.utils import DEPLOYMENTS_FILE, parse_dag, parse_resources, RESOU
 from toscarizer.fdl import generate_fdl
 from toscarizer.docker_images import generate_dockerfiles, build_and_push, generate_containers
 from toscarizer.im_tosca import gen_tosca_yamls
-
-try:
-    # To avoid annoying InsecureRequestWarning messages in some Connectors
-    import requests.packages
-    from requests.packages.urllib3.exceptions import InsecureRequestWarning
-    requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
-except ImportError:
-    pass
+from toscarizer.deploy import deploy as deploy_tosca
 
 
 @click.group()
@@ -53,26 +45,25 @@ def fdl(application_dir, base, optimal):
         print("--base or --optimal options must be set.")
         sys.exit(1)
 
-    with open("%s/%s" % (application_dir, CONTAINERS_FILE), 'r') as f:
-        containers = yaml.safe_load(f)
+    if optimal:
+        tosca_dir = "%s/aisprint/deployments/optimal_deployment/im" % application_dir
+    else:
+        tosca_dir = "%s/aisprint/deployments/base/im" % application_dir
 
-    if base:
-        resources = parse_resources("%s/%s" % (application_dir, RESOURCES_FILE), "%s/%s" % (application_dir, DEPLOYMENTS_FILE))
-        dag = parse_dag("%s/%s" % (application_dir, BASE_DAG_FILE))
-        fdl = generate_fdl(dag, resources, containers)
-        fdl_file = "%s/aisprint/deployments/base/oscar/fdl.yaml" % application_dir
-        with open(fdl_file, 'w+') as f:
-            yaml.safe_dump(fdl, f, indent=2)
-        print("DONE. FDL file %s has been generated." % fdl_file)
+    tosca_files = glob.glob("%s/*.yaml" % tosca_dir)
+    if not tosca_files:
+        print("No TOSCA files. Please perform the tosca operation first.")
+        sys.exit(-1)
+    fdl = generate_fdl(tosca_files)
 
     if optimal:
-        resources = parse_resources("%s/%s" % (application_dir, RESOURCES_COMPLETE_FILE), "%s/%s" % (application_dir, RESOURCES_COMPLETE_FILE))
-        dag = parse_dag("%s/%s" % (application_dir, OPTIMAL_DAG_FILE))
-        fdl = generate_fdl(dag, resources, containers)
         fdl_file = "%s/aisprint/deployments/optimal_deployment/oscar/fdl.yaml" % application_dir
-        with open(fdl_file, 'w+') as f:
-            yaml.safe_dump(fdl, f, indent=2)
-        print("DONE. FDL file %s has been generated." % fdl_file)
+    else:
+        fdl_file = "%s/aisprint/deployments/base/oscar/fdl.yaml" % application_dir
+
+    with open(fdl_file, 'w+') as f:
+        yaml.safe_dump(fdl, f, indent=2)
+    print("DONE. FDL file %s has been generated." % fdl_file)
 
 
 @click.command()
@@ -119,6 +110,7 @@ def tosca(application_dir, base, optimal):
 @click.option('--tosca_file', multiple=True, required=False)
 def deploy(im_url, im_auth, verify, application_dir, base, optimal, tosca_file):
 
+    dag = None
     if application_dir:
         if not base and not optimal:
             print("--base or --optimal options must be set.")
@@ -128,8 +120,10 @@ def deploy(im_url, im_auth, verify, application_dir, base, optimal, tosca_file):
 
         if optimal:
             tosca_dir = "%s/aisprint/deployments/optimal_deployment/im" % application_dir
+            dag = parse_dag("%s/%s" % (application_dir, OPTIMAL_DAG_FILE))
         else:
             tosca_dir = "%s/aisprint/deployments/base/im" % application_dir
+            dag = parse_dag("%s/%s" % (application_dir, BASE_DAG_FILE))
         tosca_file = glob.glob("%s/*.yaml" % tosca_dir)
 
     elif not tosca_file:
@@ -146,22 +140,7 @@ def deploy(im_url, im_auth, verify, application_dir, base, optimal, tosca_file):
     with open(im_auth, 'r') as f:
         auth_data = f.read().replace("\n", "\\n")
 
-    headers = {"Authorization": auth_data}
-    headers["Content-Type"] = "text/yaml"
-    url = "%s/infrastructures" % im_url
-    res = {}
-
-    for file in tosca_file:
-        with open(file, 'r') as f:
-            tosca_data = f.read()
-        resp = requests.request("POST", url, verify=verify, headers=headers, data=tosca_data)
-        success = resp.status_code == 200
-        res[file] = {}
-        if success:
-            res[file]["infId"] = resp.text
-        else:
-            res[file]["error"] = resp.text
-
+    res = deploy_tosca(tosca_file, auth_data, im_url, verify, dag)
     print(yaml.safe_dump(res, indent=2))
 
 

@@ -4,10 +4,10 @@ import random
 import string
 
 from toscarizer.utils import RESOURCES_FILE
-from toscarizer.fdl import get_image_url
 
 TOSCA_TEMPLATE = "templates/oscar.yaml"
 WN_TOSCA_TEMPLATE = "templates/oscar_wn.yaml"
+
 
 def get_random_string(length):
     # choose from all lowercase letter
@@ -15,9 +15,21 @@ def get_random_string(length):
     result_str = ''.join(random.choice(letters) for i in range(length))
     return result_str
 
+
 def gen_oscar_name():
     # TODO: https://github.com/grycap/im-dashboard/blob/master/app/utils.py#L435
     return "oscar-cluster-%s" % get_random_string(8)
+
+
+def get_image_url(component, resources, containers):
+    arch = "amd64"
+    if "arm64" in resources[component]["platforms"]:
+        arch = "arm64"
+    for images in list(containers["components"].values()):
+        for image in images["docker_images"]:
+            if "/%s_%s" % (component, arch) in image or "/%s_base_%s" % (component, arch) in image:
+                return image
+    return None
 
 
 def merge_templates(template, new_template):
