@@ -15,4 +15,4 @@ echo "SCRIPT: Processing file '$INPUT_FILE_PATH', saving the output in '$OUTPUT_
 echo "UUID: $UUID"
 # In case of partitions
 # python main.py -i "$INPUT_FILE_PATH" -o "$TMP_OUTPUT_DIR" -x "$INTERMEDIATE"
-python main.py -i "$INPUT_FILE_PATH" -o "$OUTPUT_FILE"
+UUID=$UUID python main.py -i "$INPUT_FILE_PATH" -o "$OUTPUT_FILE"
