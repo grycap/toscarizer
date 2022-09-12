@@ -9,7 +9,7 @@ setup(
     python_requires='>=3.7',
     packages=["toscarizer", "toscarizer.bin"],
     package_dir={"toscarizer": "toscarizer",
-                 "toscarizer.bin": "toscarizer/bin  "},
+                 "toscarizer.bin": "toscarizer/bin"},
     install_requires=['PyYAML', 'networkx', 'docker', 'requests'],
     entry_points={
         'console_scripts': [
