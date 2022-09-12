@@ -162,7 +162,9 @@ def get_service(component, next_items, prev_items, resources, containers, oscar_
             "cpu": resources.get(component, {}).get("cpu", "1"),
             "image_pull_secrets": ["gitlabpolimi"],
             "env_variables": {
-                "COMPONENT_NAME": component
+                "COMPONENT_NAME": component,
+                "MONIT_HOST": "ai-sprint-%s-app-telegraf" % component,
+                "MONIT_PORT": "8094"
             }
         }
     }
