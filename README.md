@@ -27,6 +27,13 @@ toscarizer docker --registry registry.gitlab.polimi.it --registry_folder /ai-spr
 
 ### Step4: Generate the corresponding TOSCA YAML files
 
+The tosca command uses the file ``templates\oscar.yaml` to generate the TOSCA file for the OSCAR clusters.
+In this files there are some secret values that have not been uploaded to the repo: AK and SK, that corresponds
+to the AWS Access Key and Secret Key needed to create the DNS entries in the Route53 AWS service, and a
+token to access the Polimi registry to download the app images. In first case you need them contact the authors to get
+a set of valid values. In the second case you use your own Gitlab credentials.
+
+
 Generate the TOSCA IM input files for the base case:
 
 ```sh
