@@ -2,11 +2,13 @@ import yaml
 import copy
 import random
 import string
+import os.path
 
 from toscarizer.utils import RESOURCES_FILE
 
-TOSCA_TEMPLATE = "templates/oscar.yaml"
-WN_TOSCA_TEMPLATE = "templates/oscar_wn.yaml"
+TEMPLATES_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "templates")
+TOSCA_TEMPLATE = os.path.join(TEMPLATES_PATH, 'oscar.yaml')
+WN_TOSCA_TEMPLATE = os.path.join(TEMPLATES_PATH, 'oscar_wn.yaml')
 
 
 def get_random_string(length):
