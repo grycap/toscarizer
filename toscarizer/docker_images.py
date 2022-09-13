@@ -7,8 +7,9 @@ import shutil
 from toscarizer.utils import ANNOTATIONS_FILE, CONTAINERS_FILE, RESOURCES_FILE, COMPONENT_FILE, parse_resources
 
 
-DOCKERFILE_TEMPLATE = "templates/Dockerfile.template"
-SCRIPT_TEMPLATE = "templates/script.sh"
+TEMPLATES_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "templates")
+DOCKERFILE_TEMPLATE = os.path.join(TEMPLATES_PATH, 'Dockerfile.template')
+SCRIPT_TEMPLATE = os.path.join(TEMPLATES_PATH, 'script.sh')
 
 
 def get_part_x_name(part_name):
