@@ -183,6 +183,14 @@ def get_service(component, next_items, prev_items, resources, containers, oscar_
 
     storage_providers = {}
 
+    # We assume that there must be only one prev task
+    if prev_items:
+        if oscar_clusters[component] == oscar_clusters[prev_items[0]]:
+            service["properties"]["input"][0] = {
+                "storage_provider": "minio",
+                "path": "%s/intermediate" % prev_items[0]
+            }
+
     for next_comp in next_items:
         if oscar_clusters[component] != oscar_clusters[next_comp]:
             if len(oscar_clusters[next_comp]["topology_template"]["node_templates"]) > 1:
