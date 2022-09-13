@@ -71,3 +71,17 @@ toscarizer deploy --im_url http://someim.com --im_auth auth.dat --tosca_file som
 ```
 
 It will return in the standard output a YAML formatted output with the name of each yaml file with the infrastructure ID generated or the error message returned.
+
+### Step6: Delete infrastructures
+
+To delete the infrastructures generated for the base case use:
+
+```sh
+toscarizer delete --application_dir app --base
+```
+
+To delete the infrastructures generated for the optimal case use:
+
+```sh
+toscarizer delete --application_dir app --optimal
+```

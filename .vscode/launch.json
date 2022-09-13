@@ -16,9 +16,10 @@
             //"args": ["fdl", "--optimal", "--application_dir", "app2"]
             //"args": ["tosca", "--base", "--application_dir", "app2"]
             //"args": ["tosca", "--optimal", "--application_dir", "app2"]
-            "args": ["deploy", "--im_auth", "app2/im/auth.dat", "--tosca_file", "app2/aisprint/deployments/optimal_deployment/im/mask-detector-onnx.yaml"]
+            //"args": ["deploy", "--im_auth", "app2/im/auth.dat", "--tosca_file", "app2/aisprint/deployments/optimal_deployment/im/mask-detector-onnx.yaml"]
             //"args": ["deploy", "--optimal", "--application_dir", "app2"]
             //"args": ["deploy", "--base", "--application_dir", "app2"]
+            "args": ["delete", "--base", "--application_dir", "/tmp/ai-sprint-design/app_demo"]
         }
     ]
 }
