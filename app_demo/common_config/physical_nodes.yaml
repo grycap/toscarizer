@@ -8,6 +8,8 @@ ComputationalLayers:
                endpoint: https://minio.graspi.im.grycap.net
                access_key: minio
                secret_key: minio123
+            oscar:
+               name: oscar-test
 
    computationalLayer2:
       number: 2

@@ -24,12 +24,19 @@ def get_oscar_service_json(properties):
 def generate_fdl(tosca_files):
     fdl = {"functions": {"oscar": []}}
 
+    done = []
     for tosca_file in tosca_files:
         with open(tosca_file) as f:
             tosca = yaml.safe_load(f)
+            oscar_name = None
+            if "oscar_name" in tosca["topology_template"]["inputs"]:
+                oscar_name = tosca["topology_template"]["inputs"]["oscar_name"]["default"]
             for node_name, node in tosca["topology_template"]["node_templates"].items():
                 if node["type"] == "tosca.nodes.aisprint.FaaS.Function":
                     service = get_oscar_service_json(node["properties"])
-                    fdl["functions"]["oscar"].append({node_name: service})
+                    if service["name"] not in done:
+                        cluster_name = oscar_name if oscar_name else node_name
+                        fdl["functions"]["oscar"].append({cluster_name: service})
+                        done.append(service["name"])
 
     return fdl
