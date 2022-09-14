@@ -1,7 +1,7 @@
 import click
 import yaml
 import sys
-import os.path
+import os
 import glob
 
 sys.path.append(".")
@@ -169,7 +169,9 @@ def delete(im_auth, verify, application_dir, base, optimal):
     with open(im_infras_path, 'r') as f:
         im_infras = yaml.safe_load(f)
 
-    destroy(im_infras, auth_data, verify)
+    success = destroy(im_infras, auth_data, verify)
+    if success:
+        os.unlink(im_infras_path)
 
 
 toscarizer_cli.add_command(docker)

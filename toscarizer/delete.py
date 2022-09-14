@@ -10,6 +10,7 @@ except ImportError:
 
 def destroy(im_infras, auth_data, verify):
     headers = {"Authorization": auth_data}
+    all_ok = True
     for component, value in im_infras.items():
         inf_id = value[0]
         if inf_id.startswith("http"):
@@ -26,3 +27,6 @@ def destroy(im_infras, auth_data, verify):
                 print("Infrastructure successfully deleted.")
             else:
                 print("Error deleting infrastructure: %s." % msg)
+                all_ok = False
+
+    return all_ok
