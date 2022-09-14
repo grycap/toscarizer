@@ -29,8 +29,12 @@ def generate_fdl(tosca_files):
         with open(tosca_file) as f:
             tosca = yaml.safe_load(f)
             oscar_name = None
+            # Name in already deployed cluster
             if "oscar_name" in tosca["topology_template"]["inputs"]:
                 oscar_name = tosca["topology_template"]["inputs"]["oscar_name"]["default"]
+            # Name in IM generated cluster
+            elif "cluster_name" in tosca["topology_template"]["inputs"]:
+                oscar_name = tosca["topology_template"]["inputs"]["cluster_name"]["default"]
             for node_name, node in tosca["topology_template"]["node_templates"].items():
                 if node["type"] == "tosca.nodes.aisprint.FaaS.Function":
                     service = get_oscar_service_json(node["properties"])

@@ -153,12 +153,12 @@ def get_service(component, next_items, prev_items, resources, containers, oscar_
             "script": "/opt/%s/script.sh" % component,
             "input": [{
                 "storage_provider": "minio",
-                "path": "%s/input" % component if not prev_items else "%s/intermediate" % component
+                "path": "%s/input" % component
             }],
             "output": [
                 {
                     "storage_provider": "minio",
-                    "path": "%s/output" % component if not next_items else "%s/intermediate" % component
+                    "path": "%s/output" % component
                 }
             ],
             "memory": "%sMi" % resources.get(component, {}).get("memory", 512),
@@ -183,44 +183,52 @@ def get_service(component, next_items, prev_items, resources, containers, oscar_
 
     storage_providers = {}
 
-    # We assume that there must be only one prev task
-    if prev_items:
-        if oscar_clusters[component] == oscar_clusters[prev_items[0]]:
-            service["properties"]["input"][0] = {
-                "storage_provider": "minio",
-                "path": "%s/intermediate" % prev_items[0]
-            }
+    # Add inputs (All must be in the local cluster)
+    for prev_item in prev_items:
+        service["properties"]["input"].append({
+            "storage_provider": "minio",
+            "path": "%s/output" % prev_item
+        })
 
+    # Add outputs (check if they are in the same or in other OSCAR cluster)
     for next_comp in next_items:
         if oscar_clusters[component] != oscar_clusters[next_comp]:
+            cluster_name = None
+            repeated = False
             if len(oscar_clusters[next_comp]["topology_template"]["node_templates"]) > 1:
                 # It is a IM deployed cluster
-                storage_providers["minio"] = {
-                    next_comp : {
-                        "endpoint": "https://minio.%s.%s" % (oscar_clusters[next_comp]["topology_template"]["inputs"]["cluster_name"]["default"],
-                                                             oscar_clusters[next_comp]["topology_template"]["inputs"]["domain_name"]["default"]),
-#                        "verify": True,
-                        "access_key": "minio",
-                        "secret_key": oscar_clusters[next_comp]["topology_template"]["inputs"]["minio_password"]["default"],
-                        "region": "us-east-1"
+                cluster_name = oscar_clusters[next_comp]["topology_template"]["inputs"]["cluster_name"]["default"]
+                if cluster_name in storage_providers:
+                    repeated = True
+                else:
+                    storage_providers[cluster_name] = {
+                            "endpoint": "https://minio.%s.%s" % (oscar_clusters[next_comp]["topology_template"]["inputs"]["cluster_name"]["default"],
+                                                                 oscar_clusters[next_comp]["topology_template"]["inputs"]["domain_name"]["default"]),
+                            # "verify": True,
+                            "access_key": "minio",
+                            "secret_key": oscar_clusters[next_comp]["topology_template"]["inputs"]["minio_password"]["default"],
+                            "region": "us-east-1"
                     }
-                }
             else:
                 # It is an already existing OSCAR cluster
-                storage_providers["minio"] = {
-                    next_comp : {
-                        "endpoint": oscar_clusters[next_comp]["topology_template"]["inputs"]["minio_endpoint"]["default"],
-#                        "verify": True,
-                        "access_key": oscar_clusters[next_comp]["topology_template"]["inputs"]["minio_ak"]["default"],
-                        "secret_key": oscar_clusters[next_comp]["topology_template"]["inputs"]["minio_sk"]["default"],
-                        "region": "us-east-1"
+                cluster_name = oscar_clusters[next_comp]["topology_template"]["inputs"]["oscar_name"]["default"]
+                if cluster_name in storage_providers:
+                    repeated = True
+                else:
+                    storage_providers[cluster_name] = {
+                            "endpoint": oscar_clusters[next_comp]["topology_template"]["inputs"]["minio_endpoint"]["default"],
+                            # "verify": True,
+                            "access_key": oscar_clusters[next_comp]["topology_template"]["inputs"]["minio_ak"]["default"],
+                            "secret_key": oscar_clusters[next_comp]["topology_template"]["inputs"]["minio_sk"]["default"],
+                            "region": "us-east-1"
                     }
-                }
 
-            service["properties"]["output"].append({
-                "storage_provider": "minio.%s" % next_comp,
-                "path": "%s/intermediate" % next_comp
-            })
+            # avoid adding the same output again
+            if not repeated:
+                service["properties"]["output"].append({
+                    "storage_provider": "minio.%s" % cluster_name,
+                    "path": "%s/output" % component
+                })
 
     if len(oscar_clusters[component]["topology_template"]["node_templates"]) > 1:
         service["requirements"] = [
@@ -229,7 +237,7 @@ def get_service(component, next_items, prev_items, resources, containers, oscar_
         ]
 
     if storage_providers:
-        service["properties"]["storage_providers"] = storage_providers
+        service["properties"]["storage_providers"] = {"minio": storage_providers}
 
     res = {
             "topology_template":
@@ -363,13 +371,8 @@ def gen_tosca_cluster(compute_layer_name, compute_layer, phys_nodes):
         minio_sk = get_physical_resource_data(compute_layer, res, phys_nodes, "minio", "secret_key")
         oscar_name = get_physical_resource_data(compute_layer, res, phys_nodes, "oscar", "name")
 
-        tosca_res["topology_template"]["inputs"]["minio_endpoint"] = {"default": minio_endpoint,
-                                                                                              "type": "string"}
-        tosca_res["topology_template"]["inputs"]["minio_ak"] = {"default": minio_ak,
-                                                                                        "type": "string"}
-        tosca_res["topology_template"]["inputs"]["minio_sk"] = {"default": minio_sk,
-                                                                                        "type": "string"}
-        if oscar_name:
-            tosca_res["topology_template"]["inputs"]["oscar_name"] = {"default": oscar_name,
-                                                                       "type": "string"}
+        tosca_res["topology_template"]["inputs"]["minio_endpoint"] = {"default": minio_endpoint, "type": "string"}
+        tosca_res["topology_template"]["inputs"]["minio_ak"] = {"default": minio_ak, "type": "string"}
+        tosca_res["topology_template"]["inputs"]["minio_sk"] = {"default": minio_sk, "type": "string"}
+        tosca_res["topology_template"]["inputs"]["oscar_name"] = {"default": oscar_name, "type": "string"}
     return tosca_res
