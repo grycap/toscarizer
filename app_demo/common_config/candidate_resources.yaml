@@ -37,7 +37,7 @@ System:
          computationalLayer2:
             name: Private cloud Layer
             number: 2
-            type: PhysicalAlreadyProvisioned
+            type: Virtual
             Resources: 
                resource1:
                   name: VM1
@@ -50,7 +50,7 @@ System:
                   operatingSystemDistribution: Ubuntu
                   operatingSystemType: Linux
                   operatingSystemVersion: 22.04
-                  operatingSystemImageId: ost://horsemem.i3m.upv.es/c99bc2af-76dd-498f-ba6f-36889db66856XXXX
+                  operatingSystemImageId: one://ramses.i3m.upv.es/1396
                   secureBoot: False
                   measuredBoot: False
                   onSpot: False
@@ -84,7 +84,7 @@ System:
                   operatingSystemDistribution: Ubuntu
                   operatingSystemType: Linux
                   operatingSystemVersion: 20.04
-                  operatingSystemImageId: ost://horsemem.i3m.upv.es/c99bc2af-76dd-498f-ba6f-36889db66856 
+                  operatingSystemImageId: one://ramses.i3m.upv.es/1396
                   secureBoot: False
                   measuredBoot: False
                   onSpot: False

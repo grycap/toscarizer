@@ -11,12 +11,3 @@ ComputationalLayers:
             oscar:
                name: oscar-test
 
-   computationalLayer2:
-      number: 2
-      Resources: 
-         resource1:
-            name: VM1
-            minio:
-               endpoint: https://minio.some.com
-               access_key: minio
-               secret_key: minio123
