@@ -6,9 +6,10 @@ import cv2
 import os
 
 from aisprint.annotations import component_name, exec_time, device_constraints, security
+from aisprint.monitoring import report_metric
 
 @component_name(name='mask-detector')
-@exec_time(local_time_thr=10, global_time_thr=40, prev_components=['blurry-faces-onnx'])
+@exec_time(local_time_thr=10)
 @device_constraints(ram=1024, vram=2048, use_gpu_for=['dnn'])
 @security(trustedExecution=False, networkShield=False, filesystemShield=False)
 def main(args):
@@ -91,6 +92,14 @@ def main(args):
 	text = "Status:"
 	cv2.putText(image,text, (W-300, int(border_size-50)), cv2.FONT_HERSHEY_SIMPLEX,0.8,border_text_color, 2)
 	ratio=nomask_count/(mask_count+nomask_count)
+
+	# Report metric for monitoring
+	# - metric name: 'masks'
+	# - 3 fields: 'no_masks_count', 'masks_count', 'ratio'
+	metric_dict = {'no_masks_count': nomask_count,
+	  			   'masks_count': mask_count,
+				   'ratio': ratio}
+	report_metric('masks', metric_dict)
 
 	if ratio>=0.1 and nomask_count>=3:
 		text = "Danger !"
