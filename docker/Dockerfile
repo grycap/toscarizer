@@ -8,6 +8,7 @@ RUN git clone https://gitlab.polimi.it/ai-sprint/ai-sprint-design.git && \
     cd ai-sprint-design && \
     pip install --no-cache-dir -r docker/requirements.txt && \
     pip install --no-cache-dir -r docker/requirements-oscarp.txt && \
+    pip install --no-cache-dir -r docker/requirements-space4ai.txt && \
     pip install . && \
     cd ..  && \
     rm -rf ai-sprint-design
