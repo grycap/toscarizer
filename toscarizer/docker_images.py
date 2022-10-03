@@ -81,7 +81,8 @@ def build_and_push(registry, registry_folder, dockerfiles, username, password, p
 
                 # Pushing new image
                 res[component][partition].append(image)
-                if push:
+                if False:
+                #if push:
                     print("Pushing image: %s ..." % name)
                     for line in dclient.images.push(image, stream=True, decode=True):
                         if 'error' in line:
