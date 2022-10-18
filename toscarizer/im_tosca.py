@@ -274,7 +274,7 @@ def gen_tosca_cluster(compute_layer_name, compute_layer, phys_nodes):
         tosca_comp = copy.deepcopy(tosca_tpl)
 
         tosca_comp["topology_template"]["inputs"]["cluster_name"]["default"] = gen_oscar_name()
-        tosca_comp["topology_template"]["inputs"]["domain_name"]["default"] = "im.grycap.net"
+        #tosca_comp["topology_template"]["inputs"]["domain_name"]["default"] = "im.grycap.net"
         tosca_comp["topology_template"]["inputs"]["admin_token"]["default"] = get_random_string(16)
         tosca_comp["topology_template"]["inputs"]["oscar_password"]["default"] = get_random_string(16)
         tosca_comp["topology_template"]["inputs"]["minio_password"]["default"] = get_random_string(16)
