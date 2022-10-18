@@ -148,7 +148,7 @@ def get_service(component, next_items, prev_items, resources, containers, oscar_
     service = {
         "type": "tosca.nodes.aisprint.FaaS.Function",
         "properties": {
-            "name": component,
+            "name": component.replace("_", "-"),
             "image": get_image_url(component, resources, containers),
             "script": "/opt/%s/script.sh" % component,
             "input": [{
