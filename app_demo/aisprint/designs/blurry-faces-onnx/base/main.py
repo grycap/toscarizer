@@ -135,13 +135,16 @@ if __name__ == '__main__':
 
     print("SCRIPT: Analyzing file '{}', saving the outputimages in '{}'".format(args['input'], args['output'])) 
 
-    subprocess.run(['ffmpeg', '-i', '{}'.format(orig_input), '-vf', 'fps=12/60', '{}/img%d.jpg'.format(orig_output)])
+    output_dir = os.path.dirname(orig_output)
+    output_prefix = os.path.splitext(os.path.basename(orig_output))[0]
+    output_name = os.path.join(output_dir, "{}-%d.jpg".format(output_prefix))
+    subprocess.run(['ffmpeg', '-i', '{}'.format(orig_input), '-vf', 'fps=12/60', output_name])
 
-    frames = next(os.walk(os.path.join(orig_output)))[2]
+    frames = next(os.walk(os.path.join(output_dir)))[2]
     frames = [frame for frame in frames if '.jpg' in frame]
 
     for frame in frames:
-        args['input'] = os.path.join(orig_output, frame)
-        args['output'] = os.path.join(orig_output, frame)
+        args['input'] = os.path.join(output_dir, frame)
+        args['output'] = os.path.join(output_dir, frame)
 
         main(args)
