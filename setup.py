@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='toscarizer',
-    version='0.1',
+    version='0.2',
     author='Miguel Caballer',
     long_description='TOSCARIZER',
     url='https://gitlab.polimi.it/grycap/toscarizer',
