@@ -1,6 +1,6 @@
 FROM python:3.8
 LABEL maintainer="Miguel Caballer <micafer1@upv.es>"
-LABEL version="0.1"
+LABEL version="0.2"
 LABEL description="Container image to AI-Sprint design & TOSCARIZER tools."
 
 # Install AI-Sprint Design:

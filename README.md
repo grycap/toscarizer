@@ -18,7 +18,8 @@ toscarizer --help
 
 ### Step3: Build and push the container images needed by each component of the application
 
-In case that any of the images will run on an ARM platform the machine where this command is run, must support multiarch docker builds.
+This step requires `docker` installed. See how to install it [here](https://docs.docker.com/engine/install/).
+In case that any of the images will run on an ARM platform, support multiarch docker builds must be installed also.
 See how to configure it [here](https://docs.docker.com/desktop/multi-arch/).
 
 ```sh
