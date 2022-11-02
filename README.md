@@ -33,7 +33,6 @@ to the AWS Access Key and Secret Key needed to create the DNS entries in the Rou
 token to access the Polimi registry to download the app images. In first case you need them contact the authors to get
 a set of valid values. In the second case you use your own Gitlab credentials.
 
-
 Generate the TOSCA IM input files for the base case:
 
 ```sh
@@ -62,7 +61,7 @@ To deploy the TOSCA files generated for the optimal case use:
 toscarizer deploy --application_dir app --optimal
 ```
 
-In both cases it assumes that the [IM authentication file](https://imdocs.readthedocs.io/en/latest/client.html#auth-file) is located at path ``app/im/auth.dat``. It will use the EGI IM instance (<https://im.egi.eu/im/>).
+In both cases it assumes that the [IM authentication file](https://imdocs.readthedocs.io/en/latest/client.html#auth-file) is located at path ``app/im/auth.dat``. It will use the EGI IM instance (<https://im.egi.eu/im/>). The auth file must contain not only the InfrastructureManager and the cloud provider selected, but also the AWS credentials (EC2 type) to manage the DNS domain names (contact us in case of doubts).
 
 But you can also specify the URL of another IM endpoint, an specific IM authentication file, and even the set of TOSCA files to deploy.
 
