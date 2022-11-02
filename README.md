@@ -10,6 +10,14 @@ cd toscarizer
 python3 -m pip install . 
 ```
 
+#### Docker image
+
+A docker image is available with TOSCARIZER and AI-SPRINT Desing tools:
+`registry.gitlab.polimi.it/ai-sprint/toscarizer/toscarizer`
+
+But TOSCARIZER requires docker to build and push the application images
+so it must be installed to enable the full operation of the tool.
+
 ### Step2: Try --help
 
 ```sh
@@ -32,13 +40,8 @@ toscarizer docker --registry registry.gitlab.polimi.it \
 
 ### Step4: Generate the corresponding TOSCA YAML files
 
-The tosca command uses the file ``templates\oscar.yaml`` to generate the TOSCA
-file for the OSCAR clusters. In this files there are some secret values that
-have not been uploaded to the repo: AK and SK, that corresponds to the AWS
-Access Key and Secret Key needed to create the DNS entries in the Route53 AWS
-service, and a token to access the Polimi registry to download the app images.
-In first case you need them contact the authors to get a set of valid values.
-In the second case you use your own Gitlab credentials.
+The `tosca` command uses the file ``templates\oscar.yaml`` to generate the TOSCA
+file for the OSCAR clusters.
 
 Generate the TOSCA IM input files for the base case:
 
@@ -75,8 +78,11 @@ toscarizer deploy --application_dir app --optimal
 In both cases it assumes that the [IM authentication file](https://imdocs.readthedocs.io/en/latest/client.html#auth-file)
 is located at path ``app/im/auth.dat``. It will use the EGI IM instance (<https://im.egi.eu/im/>).
 The auth file must contain not only the InfrastructureManager and the cloud provider
-selected, but also the AWS credentials (EC2 type) to manage the DNS domain names
-(contact us in case of doubts).
+selected, but also some AWS credentials (EC2 type) to manage the DNS domain names
+used in the OSCAR TOSCA template. In case of using the default domain value
+`im.grycap.net` you should contact the authors to get a set of valid
+credentials. Otherwise you can change the `domain` input value in the
+`oscar.yaml` template and then use your own credentials.
 
 But you can also specify the URL of another IM endpoint, an specific IM
 authentication file, and even the set of TOSCA files to deploy.
