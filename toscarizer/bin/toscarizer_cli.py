@@ -34,7 +34,7 @@ def docker(application_dir, username, password, registry, registry_folder, dry_r
     docker_images = build_and_push(registry, registry_folder, dockerfiles, username, password, not dry_run, not dry_run)
     print("Docker images generated and pushed to the registry.")
     generate_containers(docker_images, "%s/%s" % (application_dir, CONTAINERS_FILE))
-    print("DONE. %s file created with new image URLs." % CONTAINERS_FILE)
+    print("DONE. %s/%s file created with new image URLs." % (application_dir, CONTAINERS_FILE))
 
 
 @click.command()

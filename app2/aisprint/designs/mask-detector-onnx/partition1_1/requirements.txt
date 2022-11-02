@@ -1,4 +1,0 @@
-numpy
-opencv-python
-onnx==1.11.0
-onnxruntime==1.11.1
