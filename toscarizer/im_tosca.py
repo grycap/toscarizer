@@ -124,7 +124,7 @@ def gen_tosca_yamls(dag, containers, resources, resources_file, deployments_file
     for nd in list(full_resouces["System"]["NetworkDomains"].values()):
         if "ComputationalLayers" in nd:
             for cl_name, cl in nd["ComputationalLayers"].items():
-                oscar_clusters[cl_name] = gen_tosca_cluster(cl_name, cl , phys_nodes)
+                oscar_clusters[cl_name] = gen_tosca_cluster(cl , phys_nodes)
 
     # Now create the OSCAR services and merge in the correct OSCAR cluster
     oscar_clusters_per_component = {}
@@ -153,12 +153,12 @@ def get_service(component, next_items, prev_items, resources, containers, oscar_
             "script": "/opt/%s/script.sh" % component,
             "input": [{
                 "storage_provider": "minio",
-                "path": "%s/input" % component
+                "path": "%s/input" % component.replace("_", "-")
             }],
             "output": [
                 {
                     "storage_provider": "minio",
-                    "path": "%s/output" % component
+                    "path": "%s/output" % component.replace("_", "-")
                 }
             ],
             "memory": "%sMi" % resources.get(component, {}).get("memory", 512),
@@ -187,7 +187,7 @@ def get_service(component, next_items, prev_items, resources, containers, oscar_
     for prev_item in prev_items:
         service["properties"]["input"].append({
             "storage_provider": "minio",
-            "path": "%s/output" % prev_item
+            "path": "%s/output" % prev_item.replace("_", "-")
         })
 
     # Add outputs (check if they are in the same or in other OSCAR cluster)
@@ -227,7 +227,7 @@ def get_service(component, next_items, prev_items, resources, containers, oscar_
             if not repeated:
                 service["properties"]["output"].append({
                     "storage_provider": "minio.%s" % cluster_name,
-                    "path": "%s/output" % component
+                    "path": "%s/output" % component.replace("_", "-")
                 })
 
     if len(oscar_clusters[component]["topology_template"]["node_templates"]) > 1:
@@ -252,7 +252,7 @@ def get_service(component, next_items, prev_items, resources, containers, oscar_
 
     return res
 
-def gen_tosca_cluster(compute_layer_name, compute_layer, phys_nodes):
+def gen_tosca_cluster(compute_layer, phys_nodes):
     with open(TOSCA_TEMPLATE, 'r') as f:
         tosca_tpl = yaml.safe_load(f)
 
@@ -274,7 +274,6 @@ def gen_tosca_cluster(compute_layer_name, compute_layer, phys_nodes):
         tosca_comp = copy.deepcopy(tosca_tpl)
 
         tosca_comp["topology_template"]["inputs"]["cluster_name"]["default"] = gen_oscar_name()
-        #tosca_comp["topology_template"]["inputs"]["domain_name"]["default"] = "im.grycap.net"
         tosca_comp["topology_template"]["inputs"]["admin_token"]["default"] = get_random_string(16)
         tosca_comp["topology_template"]["inputs"]["oscar_password"]["default"] = get_random_string(16)
         tosca_comp["topology_template"]["inputs"]["minio_password"]["default"] = get_random_string(16)
