@@ -1,0 +1,57 @@
+imports:
+- ec3_custom_types: https://raw.githubusercontent.com/grycap/ec3/tosca/tosca/custom_types.yaml
+topology_template:
+  inputs:
+    minio_ak:
+      default: minio
+      type: string
+    minio_endpoint:
+      default: https://minio.graspi.im.grycap.net
+      type: string
+    minio_sk:
+      default: minio123
+      type: string
+    oscar_name:
+      default: oscar-test
+      type: string
+  node_templates:
+    oscar_service_blurry-faces-onnx:
+      properties:
+        cpu: 0.9
+        env_variables:
+          COMPONENT_NAME: blurry-faces-onnx
+          KCI: https://minio.graspi.im.grycap.net
+          MONIT_HOST: ai-sprint-blurry-faces-onnx-app-telegraf
+          MONIT_PORT: '8094'
+        image: docker.io/micafer/blurry-faces-onnx_base_arm64:latest
+        input:
+        - path: blurry-faces-onnx/input
+          storage_provider: minio
+        memory: 2048Mi
+        name: blurry-faces-onnx
+        output:
+        - path: blurry-faces-onnx/output
+          storage_provider: minio
+        - path: blurry-faces-onnx/output
+          storage_provider: minio.oscar-cluster-fixed
+        script: /opt/blurry-faces-onnx/script.sh
+        storage_providers:
+          minio:
+            oscar-cluster-fixed:
+              access_key: minio
+              endpoint: https://minio.oscar-cluster-fixed.im.grycap.net
+              region: us-east-1
+              secret_key: fixed
+      type: tosca.nodes.aisprint.FaaS.Function
+  outputs:
+    oscar_service_cred:
+      value:
+        get_attribute:
+        - oscar_service_blurry-faces-onnx
+        - credential
+    oscar_service_url:
+      value:
+        get_attribute:
+        - oscar_service_blurry-faces-onnx
+        - endpoint
+tosca_definitions_version: tosca_simple_yaml_1_0

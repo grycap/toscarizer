@@ -1,0 +1,49 @@
+functions:
+  oscar:
+  - oscar-cluster-fixed:
+      cpu: '0.9'
+      environment:
+        Variables:
+          COMPONENT_NAME: mask-detector
+          KCI: https://minio.oscar-cluster-fixed.im.grycap.net
+          MONIT_HOST: ai-sprint-mask-detector-app-telegraf
+          MONIT_PORT: '8094'
+      image: docker.io/micafer/mask-detector_base_amd64:latest
+      input:
+      - path: mask-detector/input
+        storage_provider: minio
+      - path: blurry-faces-onnx/output
+        storage_provider: minio
+      memory: 4096Mi
+      name: mask-detector
+      output:
+      - path: mask-detector/output
+        storage_provider: minio
+      script: /opt/mask-detector/script.sh
+  - oscar-test:
+      cpu: '0.9'
+      environment:
+        Variables:
+          COMPONENT_NAME: blurry-faces-onnx
+          KCI: https://minio.graspi.im.grycap.net
+          MONIT_HOST: ai-sprint-blurry-faces-onnx-app-telegraf
+          MONIT_PORT: '8094'
+      image: docker.io/micafer/blurry-faces-onnx_base_arm64:latest
+      input:
+      - path: blurry-faces-onnx/input
+        storage_provider: minio
+      memory: 2048Mi
+      name: blurry-faces-onnx
+      output:
+      - path: blurry-faces-onnx/output
+        storage_provider: minio
+      - path: blurry-faces-onnx/output
+        storage_provider: minio.oscar-cluster-fixed
+      script: /opt/blurry-faces-onnx/script.sh
+      storage_providers:
+        minio:
+          oscar-cluster-fixed:
+            access_key: minio
+            endpoint: https://minio.oscar-cluster-fixed.im.grycap.net
+            region: us-east-1
+            secret_key: fixed

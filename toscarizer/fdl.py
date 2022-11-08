@@ -1,6 +1,5 @@
 import yaml
-import json
-from toscarizer.utils import RESOURCES_COMPLETE_FILE, BASE_DAG_FILE, parse_dag, parse_resources
+
 
 def get_oscar_service_json(properties):
     """Get the OSCAR service json"""
@@ -10,7 +9,7 @@ def get_oscar_service_json(properties):
         if value not in [None, [], {}]:
             if prop in ['name', 'script', 'alpine', 'input', 'output', 'storage_providers', 'image', 'memory']:
                 res[prop] = value
-            elif prop== 'cpu':
+            elif prop == 'cpu':
                 res['cpu'] = "%g" % value
             elif prop == 'env_variables':
                 res['environment'] = {'Variables': value}
@@ -20,6 +19,7 @@ def get_oscar_service_json(properties):
                 res['image_pull_secrets'] = value
 
     return res
+
 
 def generate_fdl(tosca_files):
     fdl = {"functions": {"oscar": []}}

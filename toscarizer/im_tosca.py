@@ -4,7 +4,6 @@ import random
 import string
 import os.path
 
-from toscarizer.utils import RESOURCES_FILE
 
 TEMPLATES_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "templates")
 TOSCA_TEMPLATE = os.path.join(TEMPLATES_PATH, 'oscar.yaml')
@@ -124,7 +123,7 @@ def gen_tosca_yamls(dag, containers, resources, resources_file, deployments_file
     for nd in list(full_resouces["System"]["NetworkDomains"].values()):
         if "ComputationalLayers" in nd:
             for cl_name, cl in nd["ComputationalLayers"].items():
-                oscar_clusters[cl_name] = gen_tosca_cluster(cl , phys_nodes)
+                oscar_clusters[cl_name] = gen_tosca_cluster(cl, phys_nodes)
 
     # Now create the OSCAR services and merge in the correct OSCAR cluster
     oscar_clusters_per_component = {}
@@ -139,9 +138,11 @@ def gen_tosca_yamls(dag, containers, resources, resources_file, deployments_file
         # Add the node
         oscar_service = get_service(component, next_items, list(dag.predecessors(component)), resources,
                                     containers, oscar_clusters_per_component)
-        oscar_clusters_per_component[component] = merge_templates(oscar_clusters_per_component[component], oscar_service)
+        oscar_clusters_per_component[component] = merge_templates(oscar_clusters_per_component[component],
+                                                                  oscar_service)
 
     return oscar_clusters_per_component
+
 
 def get_service(component, next_items, prev_items, resources, containers, oscar_clusters):
     """Generate the OSCAR service TOSCA."""
@@ -163,7 +164,6 @@ def get_service(component, next_items, prev_items, resources, containers, oscar_
             ],
             "memory": "%sMi" % resources.get(component, {}).get("memory", 512),
             "cpu": resources.get(component, {}).get("cpu", "1"),
-#            "image_pull_secrets": ["gitlabpolimi"],
             "env_variables": {
                 "COMPONENT_NAME": component,
                 "MONIT_HOST": "ai-sprint-%s-app-telegraf" % component,
@@ -172,14 +172,16 @@ def get_service(component, next_items, prev_items, resources, containers, oscar_
         }
     }
 
+    cluster_inputs = oscar_clusters[component]["topology_template"]["inputs"]
     if len(oscar_clusters[component]["topology_template"]["node_templates"]) > 1:
         # It is a IM deployed cluster
         # Use the minio url as we alredy have it
-        service["properties"]["env_variables"]["KCI"] = "https://minio.%s.%s" % (oscar_clusters[component]["topology_template"]["inputs"]["cluster_name"]["default"],
-                                                                               oscar_clusters[component]["topology_template"]["inputs"]["domain_name"]["default"])
+        service["properties"]["env_variables"]["KCI"] = \
+            "https://minio.%s.%s" % (cluster_inputs["cluster_name"]["default"],
+                                     cluster_inputs["domain_name"]["default"])
     else:
         # It is an already existing OSCAR cluster
-        service["properties"]["env_variables"]["KCI"] = oscar_clusters[component]["topology_template"]["inputs"]["minio_endpoint"]["default"]
+        service["properties"]["env_variables"]["KCI"] = cluster_inputs["minio_endpoint"]["default"]
 
     storage_providers = {}
 
@@ -193,34 +195,31 @@ def get_service(component, next_items, prev_items, resources, containers, oscar_
     # Add outputs (check if they are in the same or in other OSCAR cluster)
     for next_comp in next_items:
         if oscar_clusters[component] != oscar_clusters[next_comp]:
-            cluster_name = None
+            cluster_inputs = oscar_clusters[next_comp]["topology_template"]["inputs"]
+            cluster_name = cluster_inputs["cluster_name"]["default"]
             repeated = False
+            if cluster_name in storage_providers:
+                repeated = True
             if len(oscar_clusters[next_comp]["topology_template"]["node_templates"]) > 1:
                 # It is a IM deployed cluster
-                cluster_name = oscar_clusters[next_comp]["topology_template"]["inputs"]["cluster_name"]["default"]
-                if cluster_name in storage_providers:
-                    repeated = True
-                else:
+                if not repeated:
                     storage_providers[cluster_name] = {
-                            "endpoint": "https://minio.%s.%s" % (oscar_clusters[next_comp]["topology_template"]["inputs"]["cluster_name"]["default"],
-                                                                 oscar_clusters[next_comp]["topology_template"]["inputs"]["domain_name"]["default"]),
+                            "endpoint": "https://minio.%s.%s" % (cluster_inputs["cluster_name"]["default"],
+                                                                 cluster_inputs["domain_name"]["default"]),
                             # "verify": True,
                             "access_key": "minio",
-                            "secret_key": oscar_clusters[next_comp]["topology_template"]["inputs"]["minio_password"]["default"],
+                            "secret_key": cluster_inputs["minio_password"]["default"],
                             "region": "us-east-1"
                     }
             else:
                 # It is an already existing OSCAR cluster
-                cluster_name = oscar_clusters[next_comp]["topology_template"]["inputs"]["oscar_name"]["default"]
-                if cluster_name in storage_providers:
-                    repeated = True
-                else:
+                if not repeated:
                     storage_providers[cluster_name] = {
-                            "endpoint": oscar_clusters[next_comp]["topology_template"]["inputs"]["minio_endpoint"]["default"],
-                            # "verify": True,
-                            "access_key": oscar_clusters[next_comp]["topology_template"]["inputs"]["minio_ak"]["default"],
-                            "secret_key": oscar_clusters[next_comp]["topology_template"]["inputs"]["minio_sk"]["default"],
-                            "region": "us-east-1"
+                        "endpoint": cluster_inputs["minio_endpoint"]["default"],
+                        # "verify": True,
+                        "access_key": cluster_inputs["minio_ak"]["default"],
+                        "secret_key": cluster_inputs["minio_sk"]["default"],
+                        "region": "us-east-1"
                     }
 
             # avoid adding the same output again
@@ -243,14 +242,17 @@ def get_service(component, next_items, prev_items, resources, containers, oscar_
             "topology_template":
             {
                 "node_templates": {"oscar_service_%s" % component: service},
-                "outputs" : {
-                    "oscar_service_url": {"value": { "get_attribute": [ "oscar_service_%s" % component, "endpoint" ] }},
-                    "oscar_service_cred": {"value": { "get_attribute": [ "oscar_service_%s" % component, "credential"] }}
+                "outputs": {
+                    "oscar_service_url": {"value": {"get_attribute": ["oscar_service_%s" % component,
+                                                                      "endpoint"]}},
+                    "oscar_service_cred": {"value": {"get_attribute": ["oscar_service_%s" % component,
+                                                                       "credential"]}}
                 }
             }
     }
 
     return res
+
 
 def gen_tosca_cluster(compute_layer, phys_nodes):
     with open(TOSCA_TEMPLATE, 'r') as f:
@@ -270,7 +272,7 @@ def gen_tosca_cluster(compute_layer, phys_nodes):
         }
     }
 
-    if compute_layer["type"] in  ["Virtual", "PhysicalToBeProvisioned"]:
+    if compute_layer["type"] in ["Virtual", "PhysicalToBeProvisioned"]:
         tosca_comp = copy.deepcopy(tosca_tpl)
 
         tosca_comp["topology_template"]["inputs"]["cluster_name"]["default"] = gen_oscar_name()
@@ -282,7 +284,8 @@ def gen_tosca_cluster(compute_layer, phys_nodes):
         # Add SSH info for the Front-End node
         if compute_layer["type"] == "PhysicalToBeProvisioned":
             if not phys_nodes:
-                raise Exception("Computational layer of type PhysicalToBeProvisioned, but Physical Data File not exists.")
+                raise Exception("Computational layer of type PhysicalToBeProvisioned, "
+                                "but Physical Data File not exists.")
             # Add nets to enable to set IP of the nodes
             tosca_comp = add_nets(tosca_comp)
             pub_ip = get_physical_resource_data(compute_layer, res, phys_nodes, "fe_node", "public_ip")
@@ -341,11 +344,12 @@ def gen_tosca_cluster(compute_layer, phys_nodes):
                     wn["capabilities"]["host"]["properties"]["gpu_model"] = gpu_arch_parts[1]
 
             if compute_layer["type"] == "PhysicalToBeProvisioned":
-                # as each wn will have different ip, we have to create 
+                # as each wn will have different ip, we have to create
                 # one node per wn to reach totalNodes
                 wn["capabilities"]["scalable"]["properties"]["count"] = 1
                 if not phys_nodes:
-                    raise Exception("Computational layer of type PhysicalToBeProvisioned, but Physical Data File not exists.")
+                    raise Exception("Computational layer of type PhysicalToBeProvisioned,"
+                                    " but Physical Data File not exists.")
                 for num in range(0, res.get("totalNodes")):
                     ssh_user = get_physical_resource_data(compute_layer, res, phys_nodes, "wns", "ssh_user", num)
                     ssh_key = get_physical_resource_data(compute_layer, res, phys_nodes, "wns", "ssh_key", num)
@@ -353,8 +357,10 @@ def gen_tosca_cluster(compute_layer, phys_nodes):
 
                     wn_ip = get_physical_resource_data(compute_layer, res, phys_nodes, "wns", "private_ip", num)
                     tosca_comp = set_ip_details(tosca_comp, "wn_%s_%s" % (wn_name, num+1), "priv_network", wn_ip, 0)
-                    tosca_wn["topology_template"]["node_templates"]["wn_node_%s_%s" % (wn_name, num+1)] = copy.deepcopy(wn_node)
-                    tosca_wn["topology_template"]["node_templates"]["wn_%s_%s" % (wn_name, num+1)] = copy.deepcopy(wn)
+                    tosca_wn["topology_template"]["node_templates"]["wn_node_%s_%s" % (wn_name, num+1)] = \
+                        copy.deepcopy(wn_node)
+                    tosca_wn["topology_template"]["node_templates"]["wn_%s_%s" % (wn_name, num+1)] = \
+                        copy.deepcopy(wn)
                     tosca_res = merge_templates(tosca_comp, tosca_wn)
             elif compute_layer["type"] == "Virtual":
                 tosca_wn["topology_template"]["node_templates"]["wn_node_%s" % wn_name] = wn_node

@@ -1,6 +1,5 @@
 import requests
 import time
-from toscarizer.utils import RESOURCES_COMPLETE_FILE, BASE_DAG_FILE, parse_dag, parse_resources
 
 try:
     # To avoid annoying InsecureRequestWarning messages in some Connectors
@@ -10,6 +9,7 @@ try:
 except ImportError:
     pass
 
+
 def launch(tosca_file, im_url, auth_data, verify):
     headers = {"Authorization": auth_data}
     headers["Content-Type"] = "text/yaml"
@@ -18,18 +18,19 @@ def launch(tosca_file, im_url, auth_data, verify):
     try:
         with open(tosca_file, 'r') as f:
             tosca_data = f.read()
-        resp = requests.request("POST", url, verify=verify, headers=headers, data=tosca_data)
+        resp = requests.post(url, verify=verify, headers=headers, data=tosca_data)
 
         success = resp.status_code == 200
         return success, resp.text
     except Exception as ex:
         return False, str(ex)
 
+
 def get_state(inf_id, auth_data, verify):
     headers = {"Authorization": auth_data}
     headers["Content-Type"] = "application/json"
     try:
-        resp = requests.request("GET", "%s/state" % inf_id, verify=verify, headers=headers)
+        resp = requests.get("%s/state" % inf_id, verify=verify, headers=headers)
         success = resp.status_code == 200
         if success:
             return success, resp.json()["state"]["state"]
@@ -38,8 +39,8 @@ def get_state(inf_id, auth_data, verify):
     except Exception as ex:
         return False, str(ex)
 
-def deploy(tosca_files, auth_data, im_url, verify, dag, delay=10, max_time=900):
 
+def deploy(tosca_files, auth_data, im_url, verify, dag, delay=10, max_time=900):
 
     if dag:
         components_deployed = {}
@@ -84,7 +85,7 @@ def deploy(tosca_files, auth_data, im_url, verify, dag, delay=10, max_time=900):
                         success, state = get_state(inf_id, auth_data, verify)
                         if success:
                             components_deployed[component] = inf_id, state
-            
+
             end = True
             for component in dag.nodes():
                 if component in components_deployed:
