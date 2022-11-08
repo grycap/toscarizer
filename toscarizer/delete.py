@@ -8,6 +8,7 @@ try:
 except ImportError:
     pass
 
+
 def destroy(im_infras, auth_data, verify):
     headers = {"Authorization": auth_data}
     all_ok = True

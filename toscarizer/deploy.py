@@ -10,6 +10,7 @@ try:
 except ImportError:
     pass
 
+
 def launch(tosca_file, im_url, auth_data, verify):
     headers = {"Authorization": auth_data}
     headers["Content-Type"] = "text/yaml"
@@ -25,6 +26,7 @@ def launch(tosca_file, im_url, auth_data, verify):
     except Exception as ex:
         return False, str(ex)
 
+
 def get_state(inf_id, auth_data, verify):
     headers = {"Authorization": auth_data}
     headers["Content-Type"] = "application/json"
@@ -38,8 +40,8 @@ def get_state(inf_id, auth_data, verify):
     except Exception as ex:
         return False, str(ex)
 
-def deploy(tosca_files, auth_data, im_url, verify, dag, delay=10, max_time=900):
 
+def deploy(tosca_files, auth_data, im_url, verify, dag, delay=10, max_time=900):
 
     if dag:
         components_deployed = {}
@@ -84,7 +86,7 @@ def deploy(tosca_files, auth_data, im_url, verify, dag, delay=10, max_time=900):
                         success, state = get_state(inf_id, auth_data, verify)
                         if success:
                             components_deployed[component] = inf_id, state
-            
+
             end = True
             for component in dag.nodes():
                 if component in components_deployed:

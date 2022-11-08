@@ -49,7 +49,7 @@ def parse_resources(resource_file, deployments_files):
                         else:
                             for proc in (res.get("processors", {}).values()):
                                 cls[cl["number"]]["resources"][res["name"]]["arch"] = proc["architecture"]
-                        
+
                         if cls[cl["number"]]["resources"][res["name"]]["arch"] not in ["arm64", "amd64"]:
                             raise Exception("Invalid architecture specified. Valid values: arm64 or amd64.")
 
@@ -63,7 +63,8 @@ def parse_resources(resource_file, deployments_files):
             elif "executionLayer" in elem:
                 layers = [cls[elem["executionLayer"]]]
             else:
-                raise Exception("Error: no candidateExecutionLayers nor executionLayer defined in Component: %s" % cname)
+                raise Exception("Error: no candidateExecutionLayers nor "
+                                "executionLayer defined in Component: %s" % cname)
 
             platforms = []
             for l in layers:

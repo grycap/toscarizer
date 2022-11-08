@@ -6,7 +6,16 @@ import glob
 
 sys.path.append(".")
 
-from toscarizer.utils import DEPLOYMENTS_FILE, parse_dag, parse_resources, RESOURCES_FILE, COMPONENT_FILE, CONTAINERS_FILE, RESOURCES_COMPLETE_FILE, BASE_DAG_FILE, OPTIMAL_DAG_FILE, PHYSICAL_NODES_FILE
+from toscarizer.utils import (DEPLOYMENTS_FILE,
+                              RESOURCES_FILE,
+                              COMPONENT_FILE,
+                              CONTAINERS_FILE,
+                              RESOURCES_COMPLETE_FILE,
+                              BASE_DAG_FILE,
+                              OPTIMAL_DAG_FILE,
+                              PHYSICAL_NODES_FILE,
+                              parse_dag,
+                              parse_resources)
 from toscarizer.fdl import generate_fdl
 from toscarizer.docker_images import generate_dockerfiles, build_and_push, generate_containers
 from toscarizer.im_tosca import gen_tosca_yamls
@@ -27,11 +36,13 @@ def toscarizer_cli():
 @click.option("--registry_folder", help="Registry folder to push the generated docker images.", type=str, default="/")
 @click.option("--dry-run", help="Registry to push the generated docker images.", default=False, is_flag=True)
 def docker(application_dir, username, password, registry, registry_folder, dry_run):
-    resources = parse_resources("%s/%s" % (application_dir, RESOURCES_FILE), "%s/%s" % (application_dir, DEPLOYMENTS_FILE))
+    resources = parse_resources("%s/%s" % (application_dir, RESOURCES_FILE),
+                                "%s/%s" % (application_dir, DEPLOYMENTS_FILE))
     with open("%s/%s" % (application_dir, COMPONENT_FILE), 'r') as f:
         components = yaml.safe_load(f)
     dockerfiles = generate_dockerfiles(application_dir, components, resources)
-    docker_images = build_and_push(registry, registry_folder, dockerfiles, username, password, not dry_run, not dry_run)
+    docker_images = build_and_push(registry, registry_folder, dockerfiles,
+                                   username, password, not dry_run, not dry_run)
     print("Docker images generated and pushed to the registry.")
     generate_containers(docker_images, "%s/%s" % (application_dir, CONTAINERS_FILE))
     print("DONE. %s/%s file created with new image URLs." % (application_dir, CONTAINERS_FILE))
@@ -82,15 +93,18 @@ def tosca(application_dir, base, optimal):
     if base:
         dag = parse_dag("%s/%s" % (application_dir, BASE_DAG_FILE))
         deployments_file = "%s/%s" % (application_dir, DEPLOYMENTS_FILE)
-        resources = parse_resources("%s/%s" % (application_dir, RESOURCES_FILE), "%s/%s" % (application_dir, DEPLOYMENTS_FILE))
+        resources = parse_resources("%s/%s" % (application_dir, RESOURCES_FILE),
+                                    "%s/%s" % (application_dir, DEPLOYMENTS_FILE))
         resources_file = "%s/%s" % (application_dir, RESOURCES_FILE)
     else:
         dag = parse_dag("%s/%s" % (application_dir, OPTIMAL_DAG_FILE))
         deployments_file = "%s/%s" % (application_dir, RESOURCES_COMPLETE_FILE)
-        resources = parse_resources("%s/%s" % (application_dir, RESOURCES_COMPLETE_FILE), "%s/%s" % (application_dir, RESOURCES_COMPLETE_FILE))
+        resources = parse_resources("%s/%s" % (application_dir, RESOURCES_COMPLETE_FILE),
+                                    "%s/%s" % (application_dir, RESOURCES_COMPLETE_FILE))
         resources_file = "%s/%s" % (application_dir, RESOURCES_COMPLETE_FILE)
 
-    toscas = gen_tosca_yamls(dag, containers, resources, resources_file, deployments_file, "%s/%s" % (application_dir, PHYSICAL_NODES_FILE))
+    toscas = gen_tosca_yamls(dag, containers, resources, resources_file, deployments_file,
+                             "%s/%s" % (application_dir, PHYSICAL_NODES_FILE))
     for cl, tosca in toscas.items():
         if optimal:
             tosca_file = "%s/aisprint/deployments/optimal_deployment/im/%s.yaml" % (application_dir, cl)
@@ -130,7 +144,6 @@ def deploy(im_url, im_auth, verify, application_dir, base, optimal, tosca_file):
     elif not tosca_file:
         print("--application_dir or --tosca_file options must be set.")
         sys.exit(1)
-
 
     if not im_auth and application_dir:
         im_auth = "%s/im/auth.dat" % application_dir

@@ -4,9 +4,6 @@ import os
 import shutil
 
 
-from toscarizer.utils import ANNOTATIONS_FILE, CONTAINERS_FILE, RESOURCES_FILE, COMPONENT_FILE, parse_resources
-
-
 TEMPLATES_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "templates")
 DOCKERFILE_TEMPLATE = os.path.join(TEMPLATES_PATH, 'Dockerfile.template')
 SCRIPT_TEMPLATE = os.path.join(TEMPLATES_PATH, 'script.sh')
@@ -86,7 +83,8 @@ def build_and_push(registry, registry_folder, dockerfiles, username, password, p
                     for line in dclient.images.push(image, stream=True, decode=True):
                         if 'error' in line:
                             raise Exception("Error pushing image: %s" % line['errorDetail']['message'])
-            #os.unlink(dockerfile)
+            if build:
+                os.unlink(dockerfile)
 
     return res
 
