@@ -1,6 +1,5 @@
 import requests
 import time
-from toscarizer.utils import RESOURCES_COMPLETE_FILE, BASE_DAG_FILE, parse_dag, parse_resources
 
 try:
     # To avoid annoying InsecureRequestWarning messages in some Connectors
@@ -19,7 +18,7 @@ def launch(tosca_file, im_url, auth_data, verify):
     try:
         with open(tosca_file, 'r') as f:
             tosca_data = f.read()
-        resp = requests.request("POST", url, verify=verify, headers=headers, data=tosca_data)
+        resp = requests.post(url, verify=verify, headers=headers, data=tosca_data)
 
         success = resp.status_code == 200
         return success, resp.text
@@ -31,7 +30,7 @@ def get_state(inf_id, auth_data, verify):
     headers = {"Authorization": auth_data}
     headers["Content-Type"] = "application/json"
     try:
-        resp = requests.request("GET", "%s/state" % inf_id, verify=verify, headers=headers)
+        resp = requests.get("%s/state" % inf_id, verify=verify, headers=headers)
         success = resp.status_code == 200
         if success:
             return success, resp.json()["state"]["state"]
