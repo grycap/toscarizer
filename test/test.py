@@ -84,13 +84,16 @@ class TestToscarizer(unittest.TestCase):
         self.assertEqual(result.exit_code, 0)
 
         os.unlink(os.path.join(application_dir, 'aisprint/designs/containers.yaml'))
-        c1 = open(os.path.join(application_dir, "aisprint/deployments/base/im/blurry-faces-onnx.yaml")).read()
-        c2 = open(os.path.join(application_dir, "aisprint/deployments/base/im/mask-detector.yaml")).read()
-        c1_exp = open(os.path.join(tests_path, "blurry-faces-onnx.yaml")).read()
-        c2_exp = open(os.path.join(tests_path, "mask-detector.yaml")).read()
+        c1 = open(os.path.join(application_dir, "aisprint/deployments/optimal_deployment/im/blurry-faces-onnx_partition1_1.yaml")).read()
+        c2 = open(os.path.join(application_dir, "aisprint/deployments/optimal_deployment/im/blurry-faces-onnx_partition1_2.yaml")).read()
+        c3 = open(os.path.join(application_dir, "aisprint/deployments/optimal_deployment/im/mask-detector.yaml")).read()
+        c1_exp = open(os.path.join(tests_path, "blurry-faces-onnx_partition1_1.yaml")).read()
+        c2_exp = open(os.path.join(tests_path, "blurry-faces-onnx_partition1_2.yaml")).read()
+        c3_exp = open(os.path.join(tests_path, "mask-detector-optimal.yaml")).read()
 
         self.assertEqual(c1, c1_exp)
         self.assertEqual(c2, c2_exp)
+        self.assertEqual(c3, c3_exp)
 
     def test_20_fdl(self):
         application_dir = os.path.join(tests_path, "../app_demo")
@@ -111,7 +114,7 @@ class TestToscarizer(unittest.TestCase):
 
         fdl = open(os.path.join(application_dir, "aisprint/deployments/optimal_deployment/oscar/fdl.yaml")).read()
         os.unlink(os.path.join(application_dir, "aisprint/deployments/optimal_deployment/oscar/fdl.yaml"))
-        fdl_exp = open(os.path.join(tests_path, "fdl.yaml")).read()
+        fdl_exp = open(os.path.join(tests_path, "fdl_optimal.yaml")).read()
 
         self.assertEqual(fdl, fdl_exp)
 
@@ -125,7 +128,16 @@ class TestToscarizer(unittest.TestCase):
         create_im2 = MagicMock()
         create_im2.status_code = 200
         create_im2.text = "https://im/inf_id2"
-        post.side_effect = [create_im, create_im2 ]
+        create_im3 = MagicMock()
+        create_im3.status_code = 200
+        create_im3.text = "https://im/inf_id3"
+        create_im4 = MagicMock()
+        create_im4.status_code = 200
+        create_im4.text = "https://im/inf_id4"
+        create_im5 = MagicMock()
+        create_im5.status_code = 200
+        create_im5.text = "https://im/inf_id5"
+        post.side_effect = [create_im, create_im2, create_im3, create_im4, create_im5]
         get_state = MagicMock()
         get_state.status_code = 200
         get_state.json.return_value = {"state": {"state": "configured"}}
@@ -146,6 +158,25 @@ class TestToscarizer(unittest.TestCase):
         self.assertIn("COMPONENT_NAME: mask-detector", post.call_args_list[0][1]["data"])
         self.assertIn("COMPONENT_NAME: blurry-faces-onnx", post.call_args_list[1][1]["data"])
 
+
+        application_dir = os.path.join(tests_path, "../app_demo")
+        runner = CliRunner()
+        result = runner.invoke(toscarizer_cli, ['deploy', '--application_dir', application_dir, "--optimal",])
+        self.assertEqual(result.exit_code, 0)
+
+        os.unlink(os.path.join(application_dir, "aisprint/deployments/optimal_deployment/im/blurry-faces-onnx_partition1_1.yaml"))
+        os.unlink(os.path.join(application_dir, "aisprint/deployments/optimal_deployment/im/blurry-faces-onnx_partition1_2.yaml"))
+        os.unlink(os.path.join(application_dir, "aisprint/deployments/optimal_deployment/im/mask-detector.yaml"))
+
+        infras = open(os.path.join(application_dir, "aisprint/deployments/optimal_deployment/im/infras.yaml")).read()
+        self.assertEqual(infras, ("blurry-faces-onnx_partition1_1:\n- https://im/inf_id5\n- configured\n"
+                                  "blurry-faces-onnx_partition1_2:\n- https://im/inf_id4\n- configured\n"
+                                  "mask-detector:\n- https://im/inf_id3\n- configured\n"))
+
+        self.assertIn("COMPONENT_NAME: mask-detector", post.call_args_list[2][1]["data"])
+        self.assertIn("COMPONENT_NAME: blurry-faces-onnx_partition1_2", post.call_args_list[3][1]["data"])
+        self.assertIn("COMPONENT_NAME: blurry-faces-onnx_partition1_1", post.call_args_list[4][1]["data"])
+
     @patch('requests.delete')
     def test_40_delete(self, delete):
         delete_resp = MagicMock()
@@ -159,6 +190,12 @@ class TestToscarizer(unittest.TestCase):
         self.assertEqual(result.exit_code, 0)
         self.assertEqual(delete.call_args_list[0][0][0], 'https://im/inf_id2')
         self.assertEqual(delete.call_args_list[1][0][0], 'https://im/inf_id1')
+
+        result = runner.invoke(toscarizer_cli, ['delete', '--application_dir', application_dir, "--optimal",])
+        self.assertEqual(result.exit_code, 0)
+        self.assertEqual(delete.call_args_list[2][0][0], 'https://im/inf_id5')
+        self.assertEqual(delete.call_args_list[3][0][0], 'https://im/inf_id4')
+        self.assertEqual(delete.call_args_list[4][0][0], 'https://im/inf_id3')
 
 
 if __name__ == "__main__":
