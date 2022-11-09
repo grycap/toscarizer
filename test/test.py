@@ -66,8 +66,21 @@ class TestToscarizer(unittest.TestCase):
     def test_10_tosca(self, random_string):
         random_string.return_value = "fixed"
         application_dir = os.path.join(tests_path, "../app_demo")
+        # Test base case
         runner = CliRunner()
-        result = runner.invoke(toscarizer_cli, ['tosca', '--application_dir', application_dir, "--base",])
+        result = runner.invoke(toscarizer_cli, ['tosca', '--application_dir', application_dir, "--base"])
+        self.assertEqual(result.exit_code, 0)
+
+        c1 = open(os.path.join(application_dir, "aisprint/deployments/base/im/blurry-faces-onnx.yaml")).read()
+        c2 = open(os.path.join(application_dir, "aisprint/deployments/base/im/mask-detector.yaml")).read()
+        c1_exp = open(os.path.join(tests_path, "blurry-faces-onnx.yaml")).read()
+        c2_exp = open(os.path.join(tests_path, "mask-detector.yaml")).read()
+
+        self.assertEqual(c1, c1_exp)
+        self.assertEqual(c2, c2_exp)
+
+        # Test optimal case
+        result = runner.invoke(toscarizer_cli, ['tosca', '--application_dir', application_dir, "--optimal"])
         self.assertEqual(result.exit_code, 0)
 
         os.unlink(os.path.join(application_dir, 'aisprint/designs/containers.yaml'))
@@ -81,14 +94,25 @@ class TestToscarizer(unittest.TestCase):
 
     def test_20_fdl(self):
         application_dir = os.path.join(tests_path, "../app_demo")
+        # Test base case
         runner = CliRunner()
-        result = runner.invoke(toscarizer_cli, ['fdl', '--application_dir', application_dir, "--base",])
+        result = runner.invoke(toscarizer_cli, ['fdl', '--application_dir', application_dir, "--base"])
+        self.assertEqual(result.exit_code, 0)
 
         fdl = open(os.path.join(application_dir, "aisprint/deployments/base/oscar/fdl.yaml")).read()
         os.unlink(os.path.join(application_dir, "aisprint/deployments/base/oscar/fdl.yaml"))
         fdl_exp = open(os.path.join(tests_path, "fdl.yaml")).read()
 
+        self.assertEqual(fdl, fdl_exp)
+
+        # Test optimal case
+        result = runner.invoke(toscarizer_cli, ['fdl', '--application_dir', application_dir, "--optimal"])
         self.assertEqual(result.exit_code, 0)
+
+        fdl = open(os.path.join(application_dir, "aisprint/deployments/optimal_deployment/oscar/fdl.yaml")).read()
+        os.unlink(os.path.join(application_dir, "aisprint/deployments/optimal_deployment/oscar/fdl.yaml"))
+        fdl_exp = open(os.path.join(tests_path, "fdl.yaml")).read()
+
         self.assertEqual(fdl, fdl_exp)
 
     @patch('requests.get')
@@ -110,6 +134,7 @@ class TestToscarizer(unittest.TestCase):
         application_dir = os.path.join(tests_path, "../app_demo")
         runner = CliRunner()
         result = runner.invoke(toscarizer_cli, ['deploy', '--application_dir', application_dir, "--base",])
+        self.assertEqual(result.exit_code, 0)
 
         os.unlink(os.path.join(application_dir, "aisprint/deployments/base/im/blurry-faces-onnx.yaml"))
         os.unlink(os.path.join(application_dir, "aisprint/deployments/base/im/mask-detector.yaml"))
@@ -120,7 +145,6 @@ class TestToscarizer(unittest.TestCase):
 
         self.assertIn("COMPONENT_NAME: mask-detector", post.call_args_list[0][1]["data"])
         self.assertIn("COMPONENT_NAME: blurry-faces-onnx", post.call_args_list[1][1]["data"])
-        self.assertEqual(result.exit_code, 0)
 
     @patch('requests.delete')
     def test_40_delete(self, delete):
