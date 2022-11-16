@@ -84,7 +84,7 @@ topology_template:
         powermanager_plugin: im
       requirements:
       - lrms: lrms_front_end
-      - wn: wn_node
+      - wn: wn_node_resource1
       type: tosca.nodes.ec3.ElasticCluster
     front:
       capabilities:

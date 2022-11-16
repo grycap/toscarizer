@@ -378,6 +378,10 @@ def gen_tosca_cluster(compute_layer, phys_nodes, elastic, auth_data):
                 tosca_wn["topology_template"]["node_templates"]["wn_node_%s" % wn_name] = wn_node
                 tosca_wn["topology_template"]["node_templates"]["wn_%s" % wn_name] = wn
                 tosca_res = merge_templates(tosca_comp, tosca_wn)
+                if elastic:
+                    tosca_comp["topology_template"]["node_templates"]["elastic_cluster_front_end"] \
+                        ["requirements"][1]["wn"] = "wn_node_%s" % wn_name
+
     elif compute_layer["type"] == "PhysicalAlreadyProvisioned":
         tosca_res["topology_template"]["inputs"] = {}
 
