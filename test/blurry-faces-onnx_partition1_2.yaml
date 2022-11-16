@@ -4,13 +4,13 @@ imports:
 topology_template:
   inputs:
     admin_token:
-      default: fixed
+      default: fixed18
       type: string
     cert_user_email:
       default: jhondoe@server.com
       type: string
     cluster_name:
-      default: oscar-cluster-fixed
+      default: oscar-cluster-fixed17
       type: string
     domain_name:
       default: im.grycap.net
@@ -30,10 +30,10 @@ topology_template:
       required: true
       type: integer
     minio_password:
-      default: fixed
+      default: fixed20
       type: string
     oscar_password:
-      default: fixed
+      default: fixed19
       type: string
     storage_size:
       default: 100 GB
@@ -156,7 +156,7 @@ topology_template:
         cpu: 0.9
         env_variables:
           COMPONENT_NAME: blurry-faces-onnx_partition1_2
-          KCI: https://minio.oscar-cluster-fixed.im.grycap.net
+          KCI: https://minio.oscar-cluster-fixed17.im.grycap.net
           MONIT_HOST: ai-sprint-blurry-faces-onnx_partition1_2-app-telegraf
           MONIT_PORT: '8094'
         image: docker.io/micafer/blurry-faces-onnx_partition1_2_amd64:latest
@@ -171,15 +171,15 @@ topology_template:
         - path: blurry-faces-onnx-partition1-2/output
           storage_provider: minio
         - path: blurry-faces-onnx-partition1-2/output
-          storage_provider: minio.oscar-cluster-fixed
+          storage_provider: minio.oscar-cluster-fixed21
         script: /opt/blurry-faces-onnx_partition1_2/script.sh
         storage_providers:
           minio:
-            oscar-cluster-fixed:
+            oscar-cluster-fixed21:
               access_key: minio
-              endpoint: https://minio.oscar-cluster-fixed.im.grycap.net
+              endpoint: https://minio.oscar-cluster-fixed21.im.grycap.net
               region: us-east-1
-              secret_key: fixed
+              secret_key: fixed24
       requirements:
       - host: oscar
       type: tosca.nodes.aisprint.FaaS.Function

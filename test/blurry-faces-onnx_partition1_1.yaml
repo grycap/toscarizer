@@ -33,15 +33,15 @@ topology_template:
         - path: blurry-faces-onnx-partition1-1/output
           storage_provider: minio
         - path: blurry-faces-onnx-partition1-1/output
-          storage_provider: minio.oscar-cluster-fixed
+          storage_provider: minio.oscar-cluster-fixed17
         script: /opt/blurry-faces-onnx_partition1_1/script.sh
         storage_providers:
           minio:
-            oscar-cluster-fixed:
+            oscar-cluster-fixed17:
               access_key: minio
-              endpoint: https://minio.oscar-cluster-fixed.im.grycap.net
+              endpoint: https://minio.oscar-cluster-fixed17.im.grycap.net
               region: us-east-1
-              secret_key: fixed
+              secret_key: fixed20
       type: tosca.nodes.aisprint.FaaS.Function
   outputs:
     oscar_service_cred:

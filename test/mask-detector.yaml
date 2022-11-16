@@ -4,13 +4,13 @@ imports:
 topology_template:
   inputs:
     admin_token:
-      default: fixed
+      default: fixed10
       type: string
     cert_user_email:
       default: jhondoe@server.com
       type: string
     cluster_name:
-      default: oscar-cluster-fixed
+      default: oscar-cluster-fixed1
       type: string
     domain_name:
       default: im.grycap.net
@@ -30,10 +30,10 @@ topology_template:
       required: true
       type: integer
     minio_password:
-      default: fixed
+      default: fixed4
       type: string
     oscar_password:
-      default: fixed
+      default: fixed11
       type: string
     storage_size:
       default: 100 GB
@@ -156,7 +156,7 @@ topology_template:
         cpu: 0.9
         env_variables:
           COMPONENT_NAME: mask-detector
-          KCI: https://minio.oscar-cluster-fixed.im.grycap.net
+          KCI: https://minio.oscar-cluster-fixed1.im.grycap.net
           MONIT_HOST: ai-sprint-mask-detector-app-telegraf
           MONIT_PORT: '8094'
         image: docker.io/micafer/mask-detector_base_amd64:latest
