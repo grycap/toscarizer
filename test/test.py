@@ -177,8 +177,40 @@ class TestToscarizer(unittest.TestCase):
         self.assertIn("COMPONENT_NAME: blurry-faces-onnx_partition1_2", post.call_args_list[3][1]["data"])
         self.assertIn("COMPONENT_NAME: blurry-faces-onnx_partition1_1", post.call_args_list[4][1]["data"])
 
+    @patch('requests.get')
+    @patch('builtins.print')
+    def test_40_outputs(self, mock_print, get):
+        resp = MagicMock()
+        resp.status_code = 200
+        resp.json.return_value = {"outputs": {"out1": "value1"}}
+        get.return_value = resp
+
+        application_dir = os.path.join(tests_path, "../app_demo")
+        runner = CliRunner()
+        
+        result = runner.invoke(toscarizer_cli, ['outputs', '--application_dir', application_dir, "--base",])
+        self.assertEqual(result.exit_code, 0)
+        self.assertEqual(get.call_args_list[0][0][0], 'https://im/inf_id2/outputs')
+        self.assertEqual(get.call_args_list[1][0][0], 'https://im/inf_id1/outputs')
+        self.assertEqual(mock_print.call_args_list[0][0][0], ('blurry-faces-onnx:\n'
+                                                              '  out1: value1\n'
+                                                              'mask-detector:\n'
+                                                              '  out1: value1\n'))
+
+        result = runner.invoke(toscarizer_cli, ['outputs', '--application_dir', application_dir, "--optimal",])
+        self.assertEqual(result.exit_code, 0)
+        self.assertEqual(get.call_args_list[2][0][0], 'https://im/inf_id5/outputs')
+        self.assertEqual(get.call_args_list[3][0][0], 'https://im/inf_id4/outputs')
+        self.assertEqual(get.call_args_list[4][0][0], 'https://im/inf_id3/outputs')
+        self.assertEqual(mock_print.call_args_list[1][0][0], ('blurry-faces-onnx_partition1_1:\n'
+                                                              '  out1: value1\n'
+                                                              'blurry-faces-onnx_partition1_2:\n'
+                                                              '  out1: value1\n'
+                                                              'mask-detector:\n'
+                                                              '  out1: value1\n'))
+
     @patch('requests.delete')
-    def test_40_delete(self, delete):
+    def test_50_delete(self, delete):
         delete_resp = MagicMock()
         delete_resp.status_code = 200
         delete_resp.text = ""
@@ -196,7 +228,6 @@ class TestToscarizer(unittest.TestCase):
         self.assertEqual(delete.call_args_list[2][0][0], 'https://im/inf_id5')
         self.assertEqual(delete.call_args_list[3][0][0], 'https://im/inf_id4')
         self.assertEqual(delete.call_args_list[4][0][0], 'https://im/inf_id3')
-
 
 if __name__ == "__main__":
     unittest.main()

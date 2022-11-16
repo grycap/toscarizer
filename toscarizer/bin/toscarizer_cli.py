@@ -21,7 +21,9 @@ from toscarizer.docker_images import generate_dockerfiles, build_and_push, gener
 from toscarizer.im_tosca import gen_tosca_yamls
 from toscarizer.deploy import deploy as deploy_tosca
 from toscarizer.delete import destroy
+from toscarizer.outputs import get_outputs
 
+yaml.Dumper.ignore_aliases = lambda *args : True
 
 @click.group()
 def toscarizer_cli():
@@ -187,11 +189,36 @@ def delete(im_auth, verify, application_dir, base, optimal):
         os.unlink(im_infras_path)
 
 
+@click.command()
+@click.option('--im_auth', required=False)
+@click.option('--verify', required=False, default=False)
+@click.option("--application_dir", help="Path to the AI-SPRINT application.", default=None)
+@click.option('--base', is_flag=True, help="Generates base TOSCA file for base case", default=False)
+@click.option('--optimal', is_flag=True, help="Generates the optimal TOSCA file", default=False)
+def outputs(im_auth, verify, application_dir, base, optimal):
+    im_auth = "%s/im/auth.dat" % application_dir
+
+    with open(im_auth, 'r') as f:
+        auth_data = f.read().replace("\n", "\\n")
+
+    if optimal:
+        im_infras_path = "%s/aisprint/deployments/optimal_deployment/im/infras.yaml" % application_dir
+    else:
+        im_infras_path = "%s/aisprint/deployments/base/im/infras.yaml" % application_dir
+
+    with open(im_infras_path, 'r') as f:
+        im_infras = yaml.safe_load(f)
+
+    outputs = get_outputs(im_infras, auth_data, verify)
+    print(yaml.dump(outputs), indent=2)
+
+
 toscarizer_cli.add_command(docker)
 toscarizer_cli.add_command(fdl)
 toscarizer_cli.add_command(tosca)
 toscarizer_cli.add_command(deploy)
 toscarizer_cli.add_command(delete)
+toscarizer_cli.add_command(outputs)
 
 if __name__ == '__main__':
     toscarizer_cli()
