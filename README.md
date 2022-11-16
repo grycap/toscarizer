@@ -63,6 +63,8 @@ an example of the format.
 
 It has also the option to prepare the OSCAR clusters to be elastic,
 use the `--elastic` option setting the maximum number of nodes to set.
+This option has a limitation: the WNs of the cluster must have the same
+features.
 
 ```sh
 toscarizer tosca --application_dir app --optimal --elastic 10

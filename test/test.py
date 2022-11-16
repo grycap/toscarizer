@@ -132,6 +132,7 @@ class TestToscarizer(unittest.TestCase):
         os.unlink(os.path.join(application_dir, "aisprint/deployments/optimal_deployment/oscar/fdl.yaml"))
         fdl_exp = open(os.path.join(tests_path, "fdl_optimal.yaml")).read()
 
+        self.maxDiff = None
         self.assertEqual(fdl, fdl_exp)
 
     @patch('requests.get')
@@ -244,6 +245,7 @@ class TestToscarizer(unittest.TestCase):
         self.assertEqual(delete.call_args_list[2][0][0], 'https://im/inf_id5')
         self.assertEqual(delete.call_args_list[3][0][0], 'https://im/inf_id4')
         self.assertEqual(delete.call_args_list[4][0][0], 'https://im/inf_id3')
+
 
 if __name__ == "__main__":
     unittest.main()

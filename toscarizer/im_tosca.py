@@ -258,7 +258,7 @@ def get_service(component, next_items, prev_items, resources, containers, oscar_
 def gen_tosca_cluster(compute_layer, phys_nodes, elastic, auth_data):
     with open(TOSCA_TEMPLATE, 'r') as f:
         tosca_tpl = yaml.safe_load(f)
-    
+
     if elastic:
         with open(ELASTIC_TOSCA_TEMPLATE, 'r') as f:
             elastic_tosca_tpl = yaml.safe_load(f)
@@ -285,7 +285,8 @@ def gen_tosca_cluster(compute_layer, phys_nodes, elastic, auth_data):
         if elastic:
             tosca_comp["topology_template"]["node_templates"].update(elastic_tosca_tpl)
             tosca_comp["topology_template"]["inputs"]["max_wn_num"]["default"] = elastic
-            tosca_comp["topology_template"]["node_templates"]["elastic_cluster_front_end"]["properties"]["im_auth"] = auth_data
+            ec_fe = tosca_comp["topology_template"]["node_templates"]["elastic_cluster_front_end"]
+            ec_fe["properties"]["im_auth"] = auth_data
 
         tosca_comp["topology_template"]["inputs"]["cluster_name"]["default"] = gen_oscar_name()
         tosca_comp["topology_template"]["inputs"]["admin_token"]["default"] = get_random_string(16)
@@ -379,8 +380,7 @@ def gen_tosca_cluster(compute_layer, phys_nodes, elastic, auth_data):
                 tosca_wn["topology_template"]["node_templates"]["wn_%s" % wn_name] = wn
                 tosca_res = merge_templates(tosca_comp, tosca_wn)
                 if elastic:
-                    tosca_comp["topology_template"]["node_templates"]["elastic_cluster_front_end"] \
-                        ["requirements"][1]["wn"] = "wn_node_%s" % wn_name
+                    ec_fe["requirements"][1]["wn"] = "wn_node_%s" % wn_name
 
     elif compute_layer["type"] == "PhysicalAlreadyProvisioned":
         tosca_res["topology_template"]["inputs"] = {}

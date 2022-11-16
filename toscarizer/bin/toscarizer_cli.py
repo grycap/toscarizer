@@ -23,7 +23,8 @@ from toscarizer.deploy import deploy as deploy_tosca
 from toscarizer.delete import destroy
 from toscarizer.outputs import get_outputs
 
-yaml.Dumper.ignore_aliases = lambda *args : True
+yaml.Dumper.ignore_aliases = lambda *args: True
+
 
 @click.group()
 def toscarizer_cli():
@@ -84,7 +85,7 @@ def fdl(application_dir, base, optimal):
 @click.option("--application_dir", help="Path to the AI-SPRINT application.", default=None)
 @click.option('--base', is_flag=True, help="Generates base TOSCA file for base case", default=False)
 @click.option('--optimal', is_flag=True, help="Generates the optimal TOSCA file", default=False)
-@click.option('--elastic', help="Set to deploy the OSCAR cluster as elastic, setting the max number of nodes.", default=0)
+@click.option('--elastic', help="Set max number of nodes to deploy the OSCAR cluster as elastic.", default=0)
 @click.option('--im_auth', required=False)
 def tosca(application_dir, base, optimal, elastic, im_auth):
     if not base and not optimal:
