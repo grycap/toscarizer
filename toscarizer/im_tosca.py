@@ -233,8 +233,7 @@ def get_service(component, next_items, prev_items, resources, containers, oscar_
 
     if len(oscar_clusters[component]["topology_template"]["node_templates"]) > 1:
         service["requirements"] = [
-            {"host": "oscar"},
-            {"dependency": "dns_reg"}
+            {"host": "oscar"}
         ]
 
     if storage_providers:

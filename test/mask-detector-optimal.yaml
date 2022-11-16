@@ -173,7 +173,6 @@ topology_template:
         script: /opt/mask-detector/script.sh
       requirements:
       - host: oscar
-      - dependency: dns_reg
       type: tosca.nodes.aisprint.FaaS.Function
     wn_node_resource1:
       properties:
