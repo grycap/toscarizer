@@ -1,0 +1,37 @@
+topology_template:
+  
+  node_templates:
+
+    wn_node:
+      type: tosca.nodes.indigo.LRMS.WorkerNode.Kubernetes
+      properties:
+        front_end_ip: { get_attribute: [ front, private_address, 0 ] }
+        version: 1.23.6
+      capabilities:
+        wn:
+          properties:
+            max_instances: { get_input: max_wn_num }
+            min_instances: 0
+      requirements:
+        - host: wn
+
+    wn:
+      type: tosca.nodes.indigo.Compute
+      capabilities:
+        scalable:
+          properties:
+            count: 1
+        host:
+          properties:
+            num_cpus: 2
+            mem_size: 4 GB
+            sgx: false
+            preemtible_instance: false
+            num_gpus: 0
+        os:
+          properties:
+            distribution: ubuntu
+            type: linux
+            version: 20.04
+            image: empty
+

@@ -84,10 +84,22 @@ def fdl(application_dir, base, optimal):
 @click.option("--application_dir", help="Path to the AI-SPRINT application.", default=None)
 @click.option('--base', is_flag=True, help="Generates base TOSCA file for base case", default=False)
 @click.option('--optimal', is_flag=True, help="Generates the optimal TOSCA file", default=False)
-def tosca(application_dir, base, optimal):
+@click.option('--elastic', help="Set to deploy the OSCAR cluster as elastic, setting the max number of nodes.", default=0)
+@click.option('--im_auth', required=False)
+def tosca(application_dir, base, optimal, elastic, im_auth):
     if not base and not optimal:
         print("--base or --optimal options must be set.")
         sys.exit(1)
+
+    auth_data = None
+    if elastic:
+        if not im_auth and application_dir:
+            im_auth = "%s/im/auth.dat" % application_dir
+        if not os.path.isfile(im_auth):
+            print("IM auth data does not exit." % im_auth)
+            sys.exit(-1)
+        with open(im_auth, 'r') as f:
+            auth_data = f.read().replace("\n", "\\n")
 
     with open("%s/%s" % (application_dir, CONTAINERS_FILE), 'r') as f:
         containers = yaml.safe_load(f)
@@ -106,7 +118,7 @@ def tosca(application_dir, base, optimal):
         resources_file = "%s/%s" % (application_dir, RESOURCES_COMPLETE_FILE)
 
     toscas = gen_tosca_yamls(dag, containers, resources, resources_file, deployments_file,
-                             "%s/%s" % (application_dir, PHYSICAL_NODES_FILE))
+                             "%s/%s" % (application_dir, PHYSICAL_NODES_FILE), elastic, auth_data)
     for cl, tosca in toscas.items():
         if optimal:
             tosca_file = "%s/aisprint/deployments/optimal_deployment/im/%s.yaml" % (application_dir, cl)

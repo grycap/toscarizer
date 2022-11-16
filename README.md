@@ -40,7 +40,7 @@ toscarizer docker --registry registry.gitlab.polimi.it \
 
 ### Step4: Generate the corresponding TOSCA YAML files
 
-The `tosca` command uses the file ``templates\oscar.yaml`` to generate the TOSCA
+The `tosca` command uses the files ``templates\*.yaml`` to generate the TOSCA
 file for the OSCAR clusters.
 
 Generate the TOSCA IM input files for the base case:
@@ -55,11 +55,22 @@ Generate the TOSCA IM input files for the optimal case:
 toscarizer tosca --application_dir app --optimal
 ```
 
-In both cases if some resources are of type ``PhysicalAlreadyProvisioned`` an
+In all cases if some resources are of type ``PhysicalAlreadyProvisioned`` an
 extra file with the needed information to connect with this resources (IP, and
 SSH auth data or MinIO service info) is needed. It is expected in the app
 common_config directory with name ``physical_nodes.yaml``. See [here](app2/common_config/physical_nodes.yaml)
 an example of the format.
+
+It has also the option to prepare the OSCAR clusters to be elastic,
+use the `--elastic` option setting the maximum number of nodes to set.
+
+```sh
+toscarizer tosca --application_dir app --optimal --elastic 10
+```
+
+In the elastic cases it needs the [IM authentication file](https://imdocs.readthedocs.io/en/latest/client.html#auth-file).
+The default location is ``app/im/auth.dat`` or you can set another one using
+`--im_auth` option.
 
 ### Step5: Deploy TOSCA YAML files
 

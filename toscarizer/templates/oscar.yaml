@@ -41,6 +41,12 @@ topology_template:
       type: string
       default: im.grycap.net
   
+    max_wn_num:
+      type: integer
+      description: Maximum Number of WNs in the OSCAR cluster
+      default: 1
+      required: yes
+
   node_templates:
 
     oscar:

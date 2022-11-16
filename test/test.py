@@ -66,6 +66,22 @@ class TestToscarizer(unittest.TestCase):
     def test_10_tosca(self, random_string):
         random_string.return_value = "fixed"
         application_dir = os.path.join(tests_path, "../app_demo")
+
+        # Test base elastic case
+        runner = CliRunner()
+        result = runner.invoke(toscarizer_cli, ['tosca', '--application_dir', application_dir, "--base", "--elastic", "5"])
+        self.assertEqual(result.exit_code, 0)
+
+        c1 = open(os.path.join(application_dir, "aisprint/deployments/base/im/blurry-faces-onnx.yaml")).read()
+        c2 = open(os.path.join(application_dir, "aisprint/deployments/base/im/mask-detector.yaml")).read()
+        c1_exp = open(os.path.join(tests_path, "blurry-faces-onnx.yaml")).read()
+        c2_exp = open(os.path.join(tests_path, "mask-detector_elastic.yaml")).read()
+
+        #print(c2)
+        self.maxDiff = None
+        self.assertEqual(c1, c1_exp)
+        self.assertEqual(c2, c2_exp)
+
         # Test base case
         runner = CliRunner()
         result = runner.invoke(toscarizer_cli, ['tosca', '--application_dir', application_dir, "--base"])

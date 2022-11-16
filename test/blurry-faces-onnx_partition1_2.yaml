@@ -24,6 +24,11 @@ topology_template:
     fe_os_image:
       default: one://ramses.i3m.upv.es/1396
       type: string
+    max_wn_num:
+      default: 1
+      description: Maximum Number of WNs in the OSCAR cluster
+      required: true
+      type: integer
     minio_password:
       default: fixed
       type: string
