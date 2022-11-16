@@ -40,11 +40,6 @@ topology_template:
       type: string
   node_templates:
     elastic_cluster_front_end:
-      capabilities:
-        endpoint:
-          properties:
-            port: 8800
-            protocol: tcp
       interfaces:
         Standard:
           configure:
