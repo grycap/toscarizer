@@ -246,6 +246,9 @@ topology_template:
       type: tosca.nodes.indigo.LRMS.WorkerNode.Kubernetes
     wn_resource1:
       capabilities:
+        endpoint:
+          properties:
+            dns_name: vnode-#N#.localdomain
         host:
           properties:
             mem_size: 8192 MB
