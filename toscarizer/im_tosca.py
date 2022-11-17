@@ -127,7 +127,7 @@ def gen_tosca_yamls(dag, containers, resources, resources_file, deployments_file
             for cl_name, cl in nd["ComputationalLayers"].items():
                 cls[cl_name] = cl
 
-    # Now create the OSCAR services and merge in the correct OSCAR cluster
+    # Create the OSCAR clusters per component
     oscar_clusters_per_component = {}
     for component in dag.nodes():
         # First find the Component cluster
@@ -136,6 +136,7 @@ def gen_tosca_yamls(dag, containers, resources, resources_file, deployments_file
             raise Exception("No compute layer found for component." % component.get("name"))
         oscar_clusters_per_component[component] = gen_tosca_cluster(cls[cl_name], phys_nodes, elastic, auth_data)
 
+    # Now create the OSCAR services and merge in the correct OSCAR cluster
     for component, next_items in dag.adj.items():
         # Add the node
         oscar_service = get_service(component, next_items, list(dag.predecessors(component)), resources,
@@ -387,7 +388,8 @@ def gen_tosca_cluster(compute_layer, phys_nodes, elastic, auth_data):
     elif compute_layer["type"] == "PhysicalAlreadyProvisioned":
         tosca_res["topology_template"]["inputs"] = {}
 
-        # TODO: Check this as it should be only one resource in this case
+        if len(compute_layer["Resources"]) != 1:
+            raise Exception("PhysicalAlreadyProvisioned ComputeLayer must only have 1 resource.")
         res = list(compute_layer["Resources"].values())[0]
         minio_endpoint = get_physical_resource_data(compute_layer, res, phys_nodes, "minio", "endpoint")
         minio_ak = get_physical_resource_data(compute_layer, res, phys_nodes, "minio", "access_key")
