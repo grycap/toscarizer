@@ -17,6 +17,7 @@ tests_path = os.path.dirname(os.path.abspath(__file__))
 class TestToscarizer(unittest.TestCase):
 
     def __init__(self, *args):
+        self.maxDiff = None
         unittest.TestCase.__init__(self, *args)
 
     def test_00_docker(self):
@@ -27,8 +28,7 @@ class TestToscarizer(unittest.TestCase):
                  'aisprint/designs/blurry-faces-onnx/base/script.sh',
                  'aisprint/designs/blurry-faces-onnx/partition1_1/script.sh',
                  'aisprint/designs/blurry-faces-onnx/partition1_2/script.sh',
-                 'aisprint/designs/mask-detector/base/script.sh'
-        ]
+                 'aisprint/designs/mask-detector/base/script.sh']
         application_dir = os.path.join(tests_path, "../app_demo")
 
         runner = CliRunner()
@@ -64,8 +64,25 @@ class TestToscarizer(unittest.TestCase):
 
     @patch('toscarizer.im_tosca.get_random_string')
     def test_10_tosca(self, random_string):
-        random_string.return_value = "fixed"
+        random_string.side_effect = ["fixed1", "fixed2", "fixed3", "fixed4", "fixed1", "fixed6", "fixed7", "fixed4",
+                                     "fixed9", "fixed10", "fixed11", "fixed12", "fixed13", "fixed14", "fixed15",
+                                     "fixed16"]
         application_dir = os.path.join(tests_path, "../app_demo")
+
+        # Test base elastic case
+        runner = CliRunner()
+        result = runner.invoke(toscarizer_cli, ['tosca', '--application_dir', application_dir,
+                                                '--base', '--elastic', '5'])
+        self.assertEqual(result.exit_code, 0)
+
+        c1 = open(os.path.join(application_dir, "aisprint/deployments/base/im/blurry-faces-onnx.yaml")).read()
+        c2 = open(os.path.join(application_dir, "aisprint/deployments/base/im/mask-detector.yaml")).read()
+        c1_exp = open(os.path.join(tests_path, "blurry-faces-onnx.yaml")).read()
+        c2_exp = open(os.path.join(tests_path, "mask-detector_elastic.yaml")).read()
+
+        self.assertEqual(c1, c1_exp)
+        self.assertEqual(c2, c2_exp)
+
         # Test base case
         runner = CliRunner()
         result = runner.invoke(toscarizer_cli, ['tosca', '--application_dir', application_dir, "--base"])
@@ -84,9 +101,12 @@ class TestToscarizer(unittest.TestCase):
         self.assertEqual(result.exit_code, 0)
 
         os.unlink(os.path.join(application_dir, 'aisprint/designs/containers.yaml'))
-        c1 = open(os.path.join(application_dir, "aisprint/deployments/optimal_deployment/im/blurry-faces-onnx_partition1_1.yaml")).read()
-        c2 = open(os.path.join(application_dir, "aisprint/deployments/optimal_deployment/im/blurry-faces-onnx_partition1_2.yaml")).read()
-        c3 = open(os.path.join(application_dir, "aisprint/deployments/optimal_deployment/im/mask-detector.yaml")).read()
+        c1 = open(os.path.join(application_dir,
+                               "aisprint/deployments/optimal_deployment/im/blurry-faces-onnx_partition1_1.yaml")).read()
+        c2 = open(os.path.join(application_dir,
+                               "aisprint/deployments/optimal_deployment/im/blurry-faces-onnx_partition1_2.yaml")).read()
+        c3 = open(os.path.join(application_dir,
+                               "aisprint/deployments/optimal_deployment/im/mask-detector.yaml")).read()
         c1_exp = open(os.path.join(tests_path, "blurry-faces-onnx_partition1_1.yaml")).read()
         c2_exp = open(os.path.join(tests_path, "blurry-faces-onnx_partition1_2.yaml")).read()
         c3_exp = open(os.path.join(tests_path, "mask-detector-optimal.yaml")).read()
@@ -145,7 +165,7 @@ class TestToscarizer(unittest.TestCase):
 
         application_dir = os.path.join(tests_path, "../app_demo")
         runner = CliRunner()
-        result = runner.invoke(toscarizer_cli, ['deploy', '--application_dir', application_dir, "--base",])
+        result = runner.invoke(toscarizer_cli, ['deploy', '--application_dir', application_dir, "--base"])
         self.assertEqual(result.exit_code, 0)
 
         os.unlink(os.path.join(application_dir, "aisprint/deployments/base/im/blurry-faces-onnx.yaml"))
@@ -158,15 +178,17 @@ class TestToscarizer(unittest.TestCase):
         self.assertIn("COMPONENT_NAME: mask-detector", post.call_args_list[0][1]["data"])
         self.assertIn("COMPONENT_NAME: blurry-faces-onnx", post.call_args_list[1][1]["data"])
 
-
         application_dir = os.path.join(tests_path, "../app_demo")
         runner = CliRunner()
-        result = runner.invoke(toscarizer_cli, ['deploy', '--application_dir', application_dir, "--optimal",])
+        result = runner.invoke(toscarizer_cli, ['deploy', '--application_dir', application_dir, "--optimal"])
         self.assertEqual(result.exit_code, 0)
 
-        os.unlink(os.path.join(application_dir, "aisprint/deployments/optimal_deployment/im/blurry-faces-onnx_partition1_1.yaml"))
-        os.unlink(os.path.join(application_dir, "aisprint/deployments/optimal_deployment/im/blurry-faces-onnx_partition1_2.yaml"))
-        os.unlink(os.path.join(application_dir, "aisprint/deployments/optimal_deployment/im/mask-detector.yaml"))
+        os.unlink(os.path.join(application_dir,
+                               "aisprint/deployments/optimal_deployment/im/blurry-faces-onnx_partition1_1.yaml"))
+        os.unlink(os.path.join(application_dir,
+                               "aisprint/deployments/optimal_deployment/im/blurry-faces-onnx_partition1_2.yaml"))
+        os.unlink(os.path.join(application_dir,
+                               "aisprint/deployments/optimal_deployment/im/mask-detector.yaml"))
 
         infras = open(os.path.join(application_dir, "aisprint/deployments/optimal_deployment/im/infras.yaml")).read()
         self.assertEqual(infras, ("blurry-faces-onnx_partition1_1:\n- https://im/inf_id5\n- configured\n"
@@ -187,8 +209,8 @@ class TestToscarizer(unittest.TestCase):
 
         application_dir = os.path.join(tests_path, "../app_demo")
         runner = CliRunner()
-        
-        result = runner.invoke(toscarizer_cli, ['outputs', '--application_dir', application_dir, "--base",])
+
+        result = runner.invoke(toscarizer_cli, ['outputs', '--application_dir', application_dir, "--base"])
         self.assertEqual(result.exit_code, 0)
         self.assertEqual(get.call_args_list[0][0][0], 'https://im/inf_id2/outputs')
         self.assertEqual(get.call_args_list[1][0][0], 'https://im/inf_id1/outputs')
@@ -197,7 +219,7 @@ class TestToscarizer(unittest.TestCase):
                                                               'mask-detector:\n'
                                                               '  out1: value1\n'))
 
-        result = runner.invoke(toscarizer_cli, ['outputs', '--application_dir', application_dir, "--optimal",])
+        result = runner.invoke(toscarizer_cli, ['outputs', '--application_dir', application_dir, "--optimal"])
         self.assertEqual(result.exit_code, 0)
         self.assertEqual(get.call_args_list[2][0][0], 'https://im/inf_id5/outputs')
         self.assertEqual(get.call_args_list[3][0][0], 'https://im/inf_id4/outputs')
@@ -218,16 +240,17 @@ class TestToscarizer(unittest.TestCase):
 
         application_dir = os.path.join(tests_path, "../app_demo")
         runner = CliRunner()
-        result = runner.invoke(toscarizer_cli, ['delete', '--application_dir', application_dir, "--base",])
+        result = runner.invoke(toscarizer_cli, ['delete', '--application_dir', application_dir, "--base"])
         self.assertEqual(result.exit_code, 0)
         self.assertEqual(delete.call_args_list[0][0][0], 'https://im/inf_id2')
         self.assertEqual(delete.call_args_list[1][0][0], 'https://im/inf_id1')
 
-        result = runner.invoke(toscarizer_cli, ['delete', '--application_dir', application_dir, "--optimal",])
+        result = runner.invoke(toscarizer_cli, ['delete', '--application_dir', application_dir, "--optimal"])
         self.assertEqual(result.exit_code, 0)
         self.assertEqual(delete.call_args_list[2][0][0], 'https://im/inf_id5')
         self.assertEqual(delete.call_args_list[3][0][0], 'https://im/inf_id4')
         self.assertEqual(delete.call_args_list[4][0][0], 'https://im/inf_id3')
+
 
 if __name__ == "__main__":
     unittest.main()
