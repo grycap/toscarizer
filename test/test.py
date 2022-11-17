@@ -17,6 +17,7 @@ tests_path = os.path.dirname(os.path.abspath(__file__))
 class TestToscarizer(unittest.TestCase):
 
     def __init__(self, *args):
+        self.maxDiff = None
         unittest.TestCase.__init__(self, *args)
 
     def test_00_docker(self):
@@ -63,10 +64,9 @@ class TestToscarizer(unittest.TestCase):
 
     @patch('toscarizer.im_tosca.get_random_string')
     def test_10_tosca(self, random_string):
-        random_string.side_effect = ["fixed1", "fixed2", "fixed3", "fixed4", "fixed5", "fixed6", "fixed7", "fixed8",
-                                     "fixed1", "fixed10", "fixed11", "fixed4", "fixed13", "fixed14", "fixed15",
-                                     "fixed16", "fixed17", "fixed18", "fixed19", "fixed20", "fixed21", "fixed22",
-                                     "fixed23", "fixed24"]
+        random_string.side_effect = ["fixed1", "fixed2", "fixed3", "fixed4", "fixed1", "fixed6", "fixed7", "fixed4",
+                                     "fixed9", "fixed10", "fixed11", "fixed12", "fixed13", "fixed14", "fixed15",
+                                     "fixed16"]
         application_dir = os.path.join(tests_path, "../app_demo")
 
         # Test base elastic case

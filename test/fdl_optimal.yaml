@@ -1,11 +1,11 @@
 functions:
   oscar:
-  - oscar-cluster-fixed21:
+  - oscar-cluster-fixed13:
       cpu: '0.9'
       environment:
         Variables:
           COMPONENT_NAME: mask-detector
-          KCI: https://minio.oscar-cluster-fixed21.im.grycap.net
+          KCI: https://minio.oscar-cluster-fixed13.im.grycap.net
           MONIT_HOST: ai-sprint-mask-detector-app-telegraf
           MONIT_PORT: '8094'
       image: docker.io/micafer/mask-detector_base_amd64:latest
@@ -38,21 +38,21 @@ functions:
       - path: blurry-faces-onnx-partition1-1/output
         storage_provider: minio
       - path: blurry-faces-onnx-partition1-1/output
-        storage_provider: minio.oscar-cluster-fixed17
+        storage_provider: minio.oscar-cluster-fixed9
       script: /opt/blurry-faces-onnx_partition1_1/script.sh
       storage_providers:
         minio:
-          oscar-cluster-fixed17:
+          oscar-cluster-fixed9:
             access_key: minio
-            endpoint: https://minio.oscar-cluster-fixed17.im.grycap.net
+            endpoint: https://minio.oscar-cluster-fixed9.im.grycap.net
             region: us-east-1
-            secret_key: fixed20
-  - oscar-cluster-fixed17:
+            secret_key: fixed12
+  - oscar-cluster-fixed9:
       cpu: '0.9'
       environment:
         Variables:
           COMPONENT_NAME: blurry-faces-onnx_partition1_2
-          KCI: https://minio.oscar-cluster-fixed17.im.grycap.net
+          KCI: https://minio.oscar-cluster-fixed9.im.grycap.net
           MONIT_HOST: ai-sprint-blurry-faces-onnx_partition1_2-app-telegraf
           MONIT_PORT: '8094'
       image: docker.io/micafer/blurry-faces-onnx_partition1_2_amd64:latest
@@ -67,12 +67,12 @@ functions:
       - path: blurry-faces-onnx-partition1-2/output
         storage_provider: minio
       - path: blurry-faces-onnx-partition1-2/output
-        storage_provider: minio.oscar-cluster-fixed21
+        storage_provider: minio.oscar-cluster-fixed13
       script: /opt/blurry-faces-onnx_partition1_2/script.sh
       storage_providers:
         minio:
-          oscar-cluster-fixed21:
+          oscar-cluster-fixed13:
             access_key: minio
-            endpoint: https://minio.oscar-cluster-fixed21.im.grycap.net
+            endpoint: https://minio.oscar-cluster-fixed13.im.grycap.net
             region: us-east-1
-            secret_key: fixed24
+            secret_key: fixed16

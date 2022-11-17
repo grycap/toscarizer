@@ -4,7 +4,7 @@ imports:
 topology_template:
   inputs:
     admin_token:
-      default: fixed10
+      default: fixed6
       type: string
     cert_user_email:
       default: jhondoe@server.com
@@ -33,7 +33,7 @@ topology_template:
       default: fixed4
       type: string
     oscar_password:
-      default: fixed11
+      default: fixed7
       type: string
     storage_size:
       default: 100 GB

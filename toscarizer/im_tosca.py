@@ -120,12 +120,12 @@ def gen_tosca_yamls(dag, containers, resources, resources_file, deployments_file
         with open(phys_file, 'r') as f:
             phys_nodes = yaml.safe_load(f)
 
-    # First generate the OSCAR cluster per each Computational Layer
-    oscar_clusters = {}
+    # Get a dict of ComputationalLayers by name
+    cls = {}
     for nd in list(full_resouces["System"]["NetworkDomains"].values()):
         if "ComputationalLayers" in nd:
             for cl_name, cl in nd["ComputationalLayers"].items():
-                oscar_clusters[cl_name] = gen_tosca_cluster(cl, phys_nodes, elastic, auth_data)
+                cls[cl_name] = cl
 
     # Now create the OSCAR services and merge in the correct OSCAR cluster
     oscar_clusters_per_component = {}
@@ -134,7 +134,7 @@ def gen_tosca_yamls(dag, containers, resources, resources_file, deployments_file
         cl_name = find_compute_layer(full_resouces, component, deployments["Components"])
         if not cl_name:
             raise Exception("No compute layer found for component." % component.get("name"))
-        oscar_clusters_per_component[component] = oscar_clusters[cl_name]
+        oscar_clusters_per_component[component] = gen_tosca_cluster(cls[cl_name], phys_nodes, elastic, auth_data)
 
     for component, next_items in dag.adj.items():
         # Add the node
@@ -380,6 +380,8 @@ def gen_tosca_cluster(compute_layer, phys_nodes, elastic, auth_data):
                 tosca_wn["topology_template"]["node_templates"]["wn_%s" % wn_name] = wn
                 tosca_res = merge_templates(tosca_comp, tosca_wn)
                 if elastic:
+                    if len(compute_layer["Resources"]) > 1:
+                        raise Exception("Elastic option cannot be using with heterogeneous WNs.")
                     ec_fe["requirements"][1]["wn"] = "wn_node_%s" % wn_name
 
     elif compute_layer["type"] == "PhysicalAlreadyProvisioned":
