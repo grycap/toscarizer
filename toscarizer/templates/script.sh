@@ -6,7 +6,7 @@ echo "$FILE_NAME" | grep -q "^aisprint-"
 if [ $? -eq 0 ]
 then
     OUTPUT_FILE="$TMP_OUTPUT_DIR/$FILE_NAME"
-    UUID="${FILE_NAME:9:36}"
+    UUID="$(echo $FILE_NAME | cut -c 10-45)"
 else
     UUID=$(uuidgen) 
     OUTPUT_FILE="$TMP_OUTPUT_DIR/aisprint-$UUID"
