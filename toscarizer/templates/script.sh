@@ -1,14 +1,15 @@
-#!/bin/bash
+#!/bin/sh
 
 FILE_NAME="$(basename "$INPUT_FILE_PATH" | cut -f 1 -d '.')"
 
-if [[ $FILE_NAME == aisprint-* ]]
+echo "$FILE_NAME" | grep -q "^aisprint-"
+if [ $? -eq 0 ]
 then
-	OUTPUT_FILE="$TMP_OUTPUT_DIR/$FILE_NAME"
+    OUTPUT_FILE="$TMP_OUTPUT_DIR/$FILE_NAME"
     UUID="${FILE_NAME:9:36}"
 else
     UUID=$(uuidgen) 
-	OUTPUT_FILE="$TMP_OUTPUT_DIR/aisprint-$UUID"
+    OUTPUT_FILE="$TMP_OUTPUT_DIR/aisprint-$UUID"
 fi
 
 echo "SCRIPT: Processing file '$INPUT_FILE_PATH', saving the output in '$OUTPUT_FILE'"
