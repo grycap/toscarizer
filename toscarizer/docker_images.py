@@ -20,6 +20,8 @@ def generate_dockerfiles(app_dir, components, resources):
     """Generates dockerfiles per each component using the template."""
     with open(DOCKERFILE_TEMPLATE, 'r') as f:
         dockerfile_tpl = f.read()
+    with open(SCRIPT_TEMPLATE, 'r') as f:
+        scriptfile_tpl = f.read()
 
     dockerfiles = {}
     for component, partitions in components["components"].items():
@@ -42,8 +44,11 @@ def generate_dockerfiles(app_dir, components, resources):
             for platform in resources[part_name]["platforms"]:
                 dockerfiles[component][partition].append(("linux/%s" % platform, dockerfile_path))
 
-            # Copy the script that is generic
-            shutil.copy(SCRIPT_TEMPLATE, dockerfile_dir)
+            # Copy the script
+            scriptfile = scriptfile_tpl.replace("{{component_name}}", component)
+            scriptfile_path = "%s/script.sh" % dockerfile_dir
+            with open(scriptfile_path, 'w+') as f:
+                f.write(scriptfile)
 
     return dockerfiles
 

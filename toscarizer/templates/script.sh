@@ -14,6 +14,8 @@ fi
 
 echo "SCRIPT: Processing file '$INPUT_FILE_PATH', saving the output in '$OUTPUT_FILE'"
 echo "UUID: $UUID"
+
+cd /opt/{{component_name}}/
 # In case of partitions
 # python main.py -i "$INPUT_FILE_PATH" -o "$TMP_OUTPUT_DIR" -x "$INTERMEDIATE"
 UUID=$UUID python main.py -i "$INPUT_FILE_PATH" -o "$OUTPUT_FILE"
