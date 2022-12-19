@@ -159,7 +159,7 @@ topology_template:
           KCI: https://minio.oscar-cluster-fixed13.im.grycap.net
           MONIT_HOST: ai-sprint-mask-detector-app-telegraf
           MONIT_PORT: '8094'
-        image: docker.io/micafer/mask-detector_base_amd64:latest
+        image: registry.gitlab.polimi.it/ai-sprint/mask-detector:tag
         input:
         - path: mask-detector/input
           storage_provider: minio

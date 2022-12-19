@@ -24,17 +24,6 @@ def gen_oscar_name():
     return "oscar-cluster-%s" % get_random_string(8)
 
 
-def get_image_url(component, resources, containers):
-    arch = "amd64"
-    if "arm64" in resources[component]["platforms"]:
-        arch = "arm64"
-    for images in list(containers["components"].values()):
-        for image in images["docker_images"]:
-            if "/%s_%s" % (component, arch) in image or "/%s_base_%s" % (component, arch) in image:
-                return image
-    return None
-
-
 def merge_templates(template, new_template):
     for item in ["inputs", "node_templates", "outputs"]:
         if item in new_template["topology_template"]:
@@ -59,7 +48,14 @@ def find_compute_layer(resources, component_name, components):
         if "ComputationalLayers" in nd:
             for cl_name, cl in nd["ComputationalLayers"].items():
                 if cl.get("number") == layer_num:
-                    return cl_name
+                    cont = list(component["Containers"].values())[0]
+                    if "candidateExecutionResources" in cont:
+                        res_name = cont["candidateExecutionResources"][0]
+                    elif "selectedExecutionResource" in cont:
+                        res_name = cont["selectedExecutionResource"]
+                    else:
+                        raise Exception("No ExecutionResources in container")
+                    return res_name, cont, cl_name
     return None
 
 
@@ -107,7 +103,7 @@ def get_physical_resource_data(comp_layer, res, phys_file, node_type, value, ind
     return None
 
 
-def gen_tosca_yamls(dag, containers, resources, resources_file, deployments_file, phys_file, elastic, auth_data):
+def gen_tosca_yamls(dag, resources_file, deployments_file, phys_file, elastic, auth_data):
     with open(deployments_file, 'r') as f:
         deployments = yaml.safe_load(f)
         if "System" in deployments:
@@ -129,31 +125,33 @@ def gen_tosca_yamls(dag, containers, resources, resources_file, deployments_file
 
     # Create the OSCAR clusters per component
     oscar_clusters_per_component = {}
+    container_per_component = {}
     for component in dag.nodes():
         # First find the Component cluster
-        cl_name = find_compute_layer(full_resouces, component, deployments["Components"])
+        res_name, cont, cl_name = find_compute_layer(full_resouces, component, deployments["Components"])
+        container_per_component[component] = cont
         if not cl_name:
             raise Exception("No compute layer found for component." % component.get("name"))
-        oscar_clusters_per_component[component] = gen_tosca_cluster(cls[cl_name], phys_nodes, elastic, auth_data)
+        oscar_clusters_per_component[component] = gen_tosca_cluster(cls[cl_name], res_name, phys_nodes, elastic, auth_data)
 
     # Now create the OSCAR services and merge in the correct OSCAR cluster
     for component, next_items in dag.adj.items():
         # Add the node
-        oscar_service = get_service(component, next_items, list(dag.predecessors(component)), resources,
-                                    containers, oscar_clusters_per_component)
+        oscar_service = get_service(component, next_items, list(dag.predecessors(component)),
+                                    container_per_component[component], oscar_clusters_per_component)
         oscar_clusters_per_component[component] = merge_templates(oscar_clusters_per_component[component],
                                                                   oscar_service)
 
     return oscar_clusters_per_component
 
 
-def get_service(component, next_items, prev_items, resources, containers, oscar_clusters):
+def get_service(component, next_items, prev_items, container, oscar_clusters):
     """Generate the OSCAR service TOSCA."""
     service = {
         "type": "tosca.nodes.aisprint.FaaS.Function",
         "properties": {
             "name": component.replace("_", "-"),
-            "image": get_image_url(component, resources, containers),
+            "image": container.get("image"),
             "script": "/opt/%s/script.sh" % component,
             "input": [{
                 "storage_provider": "minio",
@@ -165,8 +163,8 @@ def get_service(component, next_items, prev_items, resources, containers, oscar_
                     "path": "%s/output" % component.replace("_", "-")
                 }
             ],
-            "memory": "%sMi" % resources.get(component, {}).get("memory", 512),
-            "cpu": resources.get(component, {}).get("cpu", "1"),
+            "memory": "%sMi" % container.get("memorySize", 512),
+            "cpu": container.get("computingUnits", "1"),
             "env_variables": {
                 "COMPONENT_NAME": component,
                 "MONIT_HOST": "ai-sprint-%s-app-telegraf" % component,
@@ -256,7 +254,7 @@ def get_service(component, next_items, prev_items, resources, containers, oscar_
     return res
 
 
-def gen_tosca_cluster(compute_layer, phys_nodes, elastic, auth_data):
+def gen_tosca_cluster(compute_layer, res_name, phys_nodes, elastic, auth_data):
     with open(TOSCA_TEMPLATE, 'r') as f:
         tosca_tpl = yaml.safe_load(f)
 
@@ -311,6 +309,8 @@ def gen_tosca_cluster(compute_layer, phys_nodes, elastic, auth_data):
             set_node_credentials(tosca_comp["topology_template"]["node_templates"]["front"], ssh_user, ssh_key)
 
         for res_id, res in compute_layer["Resources"].items():
+            if res["name"] != res_name:
+                continue
             tosca_wn = copy.deepcopy(wn_tosca_tpl)
             wn_name = res_id
 
