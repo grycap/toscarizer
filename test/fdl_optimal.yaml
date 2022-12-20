@@ -1,5 +1,52 @@
 functions:
   oscar:
+  - oscar-cluster-fixed13:
+      cpu: '0.9'
+      environment:
+        Variables:
+          COMPONENT_NAME: mask-detector
+          KCI: https://minio.oscar-cluster-fixed13.im.grycap.net
+          MONIT_HOST: ai-sprint-mask-detector-app-telegraf
+          MONIT_PORT: '8094'
+      image: registry.gitlab.polimi.it/ai-sprint/mask-detector:tag
+      input:
+      - path: mask-detector/input
+        storage_provider: minio
+      - path: blurry-faces-onnx-partition1-2/output
+        storage_provider: minio
+      memory: 4096Mi
+      name: mask-detector
+      output:
+      - path: mask-detector/output
+        storage_provider: minio
+      script: /opt/mask-detector/script.sh
+  - oscar-test:
+      cpu: '0.9'
+      environment:
+        Variables:
+          COMPONENT_NAME: blurry-faces-onnx_partition1_1
+          KCI: https://minio.graspi.im.grycap.net
+          MONIT_HOST: ai-sprint-blurry-faces-onnx_partition1_1-app-telegraf
+          MONIT_PORT: '8094'
+      image: registry.gitlab.polimi.it/ai-sprint/blurry-faces-onnx_partition1_1:tag
+      input:
+      - path: blurry-faces-onnx-partition1-1/input
+        storage_provider: minio
+      memory: 1024Mi
+      name: blurry-faces-onnx-partition1-1
+      output:
+      - path: blurry-faces-onnx-partition1-1/output
+        storage_provider: minio
+      - path: blurry-faces-onnx-partition1-1/output
+        storage_provider: minio.oscar-cluster-fixed9
+      script: /opt/blurry-faces-onnx_partition1_1/script.sh
+      storage_providers:
+        minio:
+          oscar-cluster-fixed9:
+            access_key: minio
+            endpoint: https://minio.oscar-cluster-fixed9.im.grycap.net
+            region: us-east-1
+            secret_key: fixed12
   - oscar-cluster-fixed9:
       cpu: '0.9'
       environment:
@@ -8,7 +55,7 @@ functions:
           KCI: https://minio.oscar-cluster-fixed9.im.grycap.net
           MONIT_HOST: ai-sprint-blurry-faces-onnx_partition1_2-app-telegraf
           MONIT_PORT: '8094'
-      image: docker.io/micafer/blurry-faces-onnx_partition1_2_amd64:latest
+      image: registry.gitlab.polimi.it/ai-sprint/blurry-faces-onnx_partition1_2:tag
       input:
       - path: blurry-faces-onnx-partition1-2/input
         storage_provider: minio
@@ -29,50 +76,3 @@ functions:
             endpoint: https://minio.oscar-cluster-fixed13.im.grycap.net
             region: us-east-1
             secret_key: fixed16
-  - oscar-test:
-      cpu: '0.9'
-      environment:
-        Variables:
-          COMPONENT_NAME: blurry-faces-onnx_partition1_1
-          KCI: https://minio.graspi.im.grycap.net
-          MONIT_HOST: ai-sprint-blurry-faces-onnx_partition1_1-app-telegraf
-          MONIT_PORT: '8094'
-      image: docker.io/micafer/blurry-faces-onnx_partition1_1_arm64:latest
-      input:
-      - path: blurry-faces-onnx-partition1-1/input
-        storage_provider: minio
-      memory: 1024Mi
-      name: blurry-faces-onnx-partition1-1
-      output:
-      - path: blurry-faces-onnx-partition1-1/output
-        storage_provider: minio
-      - path: blurry-faces-onnx-partition1-1/output
-        storage_provider: minio.oscar-cluster-fixed9
-      script: /opt/blurry-faces-onnx_partition1_1/script.sh
-      storage_providers:
-        minio:
-          oscar-cluster-fixed9:
-            access_key: minio
-            endpoint: https://minio.oscar-cluster-fixed9.im.grycap.net
-            region: us-east-1
-            secret_key: fixed12
-  - oscar-cluster-fixed13:
-      cpu: '0.9'
-      environment:
-        Variables:
-          COMPONENT_NAME: mask-detector
-          KCI: https://minio.oscar-cluster-fixed13.im.grycap.net
-          MONIT_HOST: ai-sprint-mask-detector-app-telegraf
-          MONIT_PORT: '8094'
-      image: docker.io/micafer/mask-detector_base_amd64:latest
-      input:
-      - path: mask-detector/input
-        storage_provider: minio
-      - path: blurry-faces-onnx-partition1-2/output
-        storage_provider: minio
-      memory: 4096Mi
-      name: mask-detector
-      output:
-      - path: mask-detector/output
-        storage_provider: minio
-      script: /opt/mask-detector/script.sh
