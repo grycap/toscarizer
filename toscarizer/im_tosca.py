@@ -319,6 +319,8 @@ def gen_tosca_cluster(compute_layer, res_name, phys_nodes, elastic, auth_data):
 
             wn = tosca_wn["topology_template"]["node_templates"].pop("wn")
             wn["capabilities"]["scalable"]["properties"]["count"] = res.get("totalNodes")
+            if res.get("flavorName"):
+                wn["capabilities"]["host"]["properties"]["instance_type"] = res.get("flavorName")
             wn["capabilities"]["host"]["properties"]["mem_size"] = "%s MB" % res.get("memorySize")
             wn["capabilities"]["host"]["properties"]["preemtible_instance"] = res.get("onSpot", False)
 

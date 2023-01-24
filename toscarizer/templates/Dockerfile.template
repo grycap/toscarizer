@@ -1,6 +1,3 @@
-#FROM registry.gitlab.polimi.it/ai-sprint/apps/base:latest
-FROM registry.gitlab.polimi.it/ai-sprint/toscarizer/ai-sprint-base
-
 RUN mkdir /opt/{{component_name}}
 
 WORKDIR /opt/{{component_name}}
