@@ -17,7 +17,7 @@ def get_part_x_name(part_name):
     return part_name[:ini + 10] + "X" + part_name[end:]
 
 
-def generate_dockerfiles(app_dir, components, resources):
+def generate_dockerfiles(base_image, app_dir, components, resources):
     """Generates dockerfiles per each component using the template."""
     with open(DOCKERFILE_TEMPLATE, 'r') as f:
         dockerfile_tpl = f.read()
@@ -41,7 +41,8 @@ def generate_dockerfiles(app_dir, components, resources):
             dockerfiles[component][partition] = []
             dockerfile_dir = "%s/aisprint/designs/%s/%s" % (app_dir, component, partition)
             dockerfile_path = "%s/Dockerfile" % dockerfile_dir
-            dockerfile = dockerfile_tpl.replace("{{component_name}}", component)
+            dockerfile = "FROM %s\n" % base_image
+            dockerfile += dockerfile_tpl.replace("{{component_name}}", component)
             if resources[part_name]["aws"]:
                 dockerfile += dockerfile_aws_tpl
                 
