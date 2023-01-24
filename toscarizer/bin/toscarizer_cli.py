@@ -37,13 +37,14 @@ def toscarizer_cli():
 @click.option("--password", help="Pasword to login to the docker registry.", type=str, required=True)
 @click.option("--registry", help="Registry to push the generated docker images.", type=str, required=True)
 @click.option("--registry_folder", help="Registry folder to push the generated docker images.", type=str, default="/")
+@click.option("--base_image", help="Base image for the docker images.", type=str, default="registry.gitlab.polimi.it/ai-sprint/toscarizer/ai-sprint-base")
 @click.option("--dry-run", help="Registry to push the generated docker images.", default=False, is_flag=True)
-def docker(application_dir, username, password, registry, registry_folder, dry_run):
+def docker(application_dir, username, password, registry, registry_folder, base_image, dry_run):
     resources = parse_resources("%s/%s" % (application_dir, RESOURCES_FILE),
                                 "%s/%s" % (application_dir, DEPLOYMENTS_FILE))
     with open("%s/%s" % (application_dir, COMPONENT_FILE), 'r') as f:
         components = yaml.safe_load(f)
-    dockerfiles = generate_dockerfiles(application_dir, components, resources)
+    dockerfiles = generate_dockerfiles(base_image, application_dir, components, resources)
     docker_images = build_and_push(registry, registry_folder, dockerfiles,
                                    username, password, not dry_run, not dry_run)
     print("Docker images generated and pushed to the registry.")
