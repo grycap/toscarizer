@@ -180,6 +180,13 @@ def get_service(component, next_items, prev_items, container, oscar_clusters):
         service["properties"]["env_variables"]["KCI"] = \
             "https://minio.%s.%s" % (cluster_inputs["cluster_name"]["default"],
                                      cluster_inputs["domain_name"]["default"])
+    elif "aws" in cluster_inputs and cluster_inputs["aws"]["default"]:
+        # It is deployed in AWS Lambda
+        service["properties"]["env_variables"]["KCI"] = "AWS Lambda"
+        service["properties"]["input"]["storage_provider"] = "s3"
+        service["properties"]["output"]["storage_provider"] = "s3"
+        # TODO: push to ECR
+        service["properties"]["image"] = "??"
     else:
         # It is an already existing OSCAR cluster
         service["properties"]["env_variables"]["KCI"] = cluster_inputs["minio_endpoint"]["default"]
@@ -188,8 +195,12 @@ def get_service(component, next_items, prev_items, container, oscar_clusters):
 
     # Add inputs (All must be in the local cluster)
     for prev_item in prev_items:
+        storage_provider_type = "minio"
+        cluster_inputs = oscar_clusters[prev_item]["topology_template"]["inputs"]
+        if "aws" in cluster_inputs and cluster_inputs["aws"]["default"]:
+            storage_provider_type = "s3"
         service["properties"]["input"].append({
-            "storage_provider": "minio",
+            "storage_provider": storage_provider_type,
             "path": "%s/output" % prev_item.replace("_", "-")
         })
 
@@ -400,4 +411,10 @@ def gen_tosca_cluster(compute_layer, res_name, phys_nodes, elastic, auth_data):
         tosca_res["topology_template"]["inputs"]["minio_ak"] = {"default": minio_ak, "type": "string"}
         tosca_res["topology_template"]["inputs"]["minio_sk"] = {"default": minio_sk, "type": "string"}
         tosca_res["topology_template"]["inputs"]["oscar_name"] = {"default": oscar_name, "type": "string"}
+    elif compute_layer["type"] == "NativeCloudFunction":
+        tosca_res["topology_template"]["inputs"] = {}
+        tosca_res["topology_template"]["inputs"]["aws"] = {"default": True, "type": "boolean"}
+        # TODO: Where to get this?
+        tosca_res["topology_template"]["inputs"]["aws_region"] = {"default": "us-east-1", "type": "boolean"}
+
     return tosca_res

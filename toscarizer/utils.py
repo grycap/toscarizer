@@ -42,6 +42,8 @@ def parse_resources(resource_file, deployments_files):
             if "ComputationalLayers" in nd:
                 for cl_name, cl in nd["ComputationalLayers"].items():
                     cls[cl["number"]] = {"name": cl_name, "resources": {}}
+                    if cl["type"] == "NativeCloudFunction":
+                        cls[cl["number"]]["aws"] = True
                     for res in list(cl["Resources"].values()):
                         cls[cl["number"]]["resources"][res["name"]] = {}
                         if res.get("architecture"):
@@ -67,7 +69,10 @@ def parse_resources(resource_file, deployments_files):
                                 "executionLayer defined in Component: %s" % cname)
 
             platforms = []
+            aws = False
             for l in layers:
+                if "aws" in l and l["aws"]:
+                    aws = True
                 for r in list(l["resources"].values()):
                     if r["arch"] not in platforms:
                         platforms.append(r["arch"])
@@ -79,6 +84,7 @@ def parse_resources(resource_file, deployments_files):
                                       "cpu": cont["computingUnits"],
                                       "image": cont.get("image"),
                                       "platforms": platforms,
+                                      "aws": aws,
                                       "layers": layers}
     except Exception as ex:
         print("Error reading resources.yaml: %s" % ex)

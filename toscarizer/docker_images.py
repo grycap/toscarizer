@@ -6,6 +6,7 @@ import shutil
 
 TEMPLATES_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "templates")
 DOCKERFILE_TEMPLATE = os.path.join(TEMPLATES_PATH, 'Dockerfile.template')
+DOCKERFILE_AWS_TEMPLATE = os.path.join(TEMPLATES_PATH, 'Dockerfile.aws.template')
 SCRIPT_TEMPLATE = os.path.join(TEMPLATES_PATH, 'script.sh')
 
 
@@ -20,6 +21,8 @@ def generate_dockerfiles(app_dir, components, resources):
     """Generates dockerfiles per each component using the template."""
     with open(DOCKERFILE_TEMPLATE, 'r') as f:
         dockerfile_tpl = f.read()
+    with open(DOCKERFILE_AWS_TEMPLATE, 'r') as f:
+        dockerfile_aws_tpl = f.read()
     with open(SCRIPT_TEMPLATE, 'r') as f:
         scriptfile_tpl = f.read()
 
@@ -27,12 +30,6 @@ def generate_dockerfiles(app_dir, components, resources):
     for component, partitions in components["components"].items():
         dockerfiles[component] = {}
         for partition in partitions["partitions"]:
-            dockerfiles[component][partition] = []
-            dockerfile_dir = "%s/aisprint/designs/%s/%s" % (app_dir, component, partition)
-            dockerfile_path = "%s/Dockerfile" % dockerfile_dir
-            dockerfile = dockerfile_tpl.replace("{{component_name}}", component)
-            with open(dockerfile_path, 'w+') as f:
-                f.write(dockerfile)
             if partition == "base":
                 part_name = component
             else:
@@ -41,14 +38,24 @@ def generate_dockerfiles(app_dir, components, resources):
             if part_name not in resources:
                 part_name = get_part_x_name(part_name)
 
-            for platform in resources[part_name]["platforms"]:
-                dockerfiles[component][partition].append(("linux/%s" % platform, dockerfile_path))
+            dockerfiles[component][partition] = []
+            dockerfile_dir = "%s/aisprint/designs/%s/%s" % (app_dir, component, partition)
+            dockerfile_path = "%s/Dockerfile" % dockerfile_dir
+            dockerfile = dockerfile_tpl.replace("{{component_name}}", component)
+            if resources[part_name]["aws"]:
+                dockerfile += dockerfile_aws_tpl
+                
+            with open(dockerfile_path, 'w+') as f:
+                f.write(dockerfile)
 
             # Copy the script
             scriptfile = scriptfile_tpl.replace("{{component_name}}", component)
             scriptfile_path = "%s/script.sh" % dockerfile_dir
             with open(scriptfile_path, 'w+') as f:
                 f.write(scriptfile)
+
+            for platform in resources[part_name]["platforms"]:
+                dockerfiles[component][partition].append(("linux/%s" % platform, dockerfile_path))
 
     return dockerfiles
 
