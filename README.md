@@ -15,8 +15,26 @@ python3 -m pip install .
 A docker image is available with TOSCARIZER and AI-SPRINT Desing tools:
 `registry.gitlab.polimi.it/ai-sprint/toscarizer/toscarizer`
 
-But TOSCARIZER requires docker to build and push the application images
-so it must be installed to enable the full operation of the tool.
+You can use it setting the path of you local application directory as in
+this example:
+
+```sh
+docker run --rm -v local_app_path:/app \
+    -ti registry.gitlab.polimi.it/ai-sprint/toscarizer/toscarizer \
+    toscarizer tosca --application_dir app --base
+```
+
+In the case of the `docker` operation (Step3) docker is used to build and
+push the application images so it must be enabled inside the docker container
+to work, as in this example:
+
+```sh
+docker run --rm -v local_app_path:/app \
+    -v /var/run/docker.sock:/var/run/docker.sock
+    -ti registry.gitlab.polimi.it/ai-sprint/toscarizer/toscarizer \
+    toscarizer docker --application_dir app
+    ...
+```
 
 ### Step2: Try --help
 
@@ -37,6 +55,10 @@ toscarizer docker --registry registry.gitlab.polimi.it \
                   --password pass \
                   --application_dir app
 ```
+
+Optionally the `--base_image` parameter can be set to define a different base image
+for the generated images. The default value is:
+`registry.gitlab.polimi.it/ai-sprint/toscarizer/ai-sprint-base`.
 
 ### Step4: Generate the corresponding TOSCA YAML files
 
