@@ -183,10 +183,12 @@ def get_service(component, next_items, prev_items, container, oscar_clusters):
     elif "aws" in cluster_inputs and cluster_inputs["aws"]["default"]:
         # It is deployed in AWS Lambda
         service["properties"]["env_variables"]["KCI"] = "AWS Lambda"
-        service["properties"]["input"]["storage_provider"] = "s3"
-        service["properties"]["output"]["storage_provider"] = "s3"
-        # TODO: push to ECR
-        service["properties"]["image"] = "??"
+        service["properties"]["input"]["storage_provider"] = "s3.%s" % cluster_inputs["cluster_name"]["default"]
+        service["properties"]["input"]["path"] = "%s/%s/input" % (cluster_inputs["aws_bucket"]["default"],
+                                                                  component.replace("_", "-"))
+        service["properties"]["output"]["storage_provider"] = "s3.%s" % cluster_inputs["cluster_name"]["default"]
+        service["properties"]["output"]["path"] = "%s/%s/output" % (cluster_inputs["aws_bucket"]["default"],
+                                                                    component.replace("_", "-"))
     else:
         # It is an already existing OSCAR cluster
         service["properties"]["env_variables"]["KCI"] = cluster_inputs["minio_endpoint"]["default"]
@@ -195,14 +197,18 @@ def get_service(component, next_items, prev_items, container, oscar_clusters):
 
     # Add inputs (All must be in the local cluster)
     for prev_item in prev_items:
-        storage_provider_type = "minio"
         cluster_inputs = oscar_clusters[prev_item]["topology_template"]["inputs"]
         if "aws" in cluster_inputs and cluster_inputs["aws"]["default"]:
-            storage_provider_type = "s3"
-        service["properties"]["input"].append({
-            "storage_provider": storage_provider_type,
-            "path": "%s/output" % prev_item.replace("_", "-")
-        })
+            service["properties"]["input"].append({
+                "storage_provider": "s3.%s" % cluster_inputs["cluster_name"]["default"],
+                "path": "%s/%s/output" % (cluster_inputs["aws_bucket"]["default"],
+                                          prev_item.replace("_", "-"))
+            })
+        else:
+            service["properties"]["input"].append({
+                "storage_provider": "minio",
+                "path": "%s/output" % prev_item.replace("_", "-")
+            })
 
     # Add outputs (check if they are in the same or in other OSCAR cluster)
     for next_comp in next_items:
@@ -212,34 +218,50 @@ def get_service(component, next_items, prev_items, container, oscar_clusters):
             repeated = False
             if cluster_name in storage_providers:
                 repeated = True
-            if len(oscar_clusters[next_comp]["topology_template"]["node_templates"]) > 1:
-                # It is a IM deployed cluster
+            if "aws" in cluster_inputs and cluster_inputs["aws"]["default"]:
+                # It is an AWS Lambda function
                 if not repeated:
                     storage_providers[cluster_name] = {
+                        "access_key": cluster_inputs["aws_ak"]["default"],
+                        "secret_key": cluster_inputs["aws_sk"]["default"],
+                        "region": cluster_inputs["aws_region"]["default"],
+                    }
+            else:
+                if len(oscar_clusters[next_comp]["topology_template"]["node_templates"]) > 1:
+                    # It is a IM deployed cluster
+                    if not repeated:
+                        storage_providers[cluster_name] = {
                             "endpoint": "https://minio.%s.%s" % (cluster_inputs["cluster_name"]["default"],
-                                                                 cluster_inputs["domain_name"]["default"]),
+                                                                cluster_inputs["domain_name"]["default"]),
                             # "verify": True,
                             "access_key": "minio",
                             "secret_key": cluster_inputs["minio_password"]["default"],
                             "region": "us-east-1"
-                    }
-            else:
-                # It is an already existing OSCAR cluster
-                if not repeated:
-                    storage_providers[cluster_name] = {
-                        "endpoint": cluster_inputs["minio_endpoint"]["default"],
-                        # "verify": True,
-                        "access_key": cluster_inputs["minio_ak"]["default"],
-                        "secret_key": cluster_inputs["minio_sk"]["default"],
-                        "region": "us-east-1"
-                    }
+                        }
+                else:
+                    # It is an already existing OSCAR cluster
+                    if not repeated:
+                        storage_providers[cluster_name] = {
+                            "endpoint": cluster_inputs["minio_endpoint"]["default"],
+                            # "verify": True,
+                            "access_key": cluster_inputs["minio_ak"]["default"],
+                            "secret_key": cluster_inputs["minio_sk"]["default"],
+                            "region": "us-east-1"
+                        }
 
             # avoid adding the same output again
             if not repeated:
-                service["properties"]["output"].append({
-                    "storage_provider": "minio.%s" % cluster_name,
-                    "path": "%s/output" % component.replace("_", "-")
-                })
+                if "aws" in cluster_inputs and cluster_inputs["aws"]["default"]:
+                    service["properties"]["output"].append({
+                        "storage_provider": "s3.%s" % cluster_name,
+                        "path": "%s/%s/output" % (cluster_inputs["aws_bucket"]["default"],
+                                                  component.replace("_", "-"))
+                    })
+                else:
+                    service["properties"]["output"].append({
+                        "storage_provider": "minio.%s" % cluster_name,
+                        "path": "%s/output" % component.replace("_", "-")
+                    })
 
     if len(oscar_clusters[component]["topology_template"]["node_templates"]) > 1:
         service["requirements"] = [
@@ -247,20 +269,39 @@ def get_service(component, next_items, prev_items, container, oscar_clusters):
         ]
 
     if storage_providers:
-        service["properties"]["storage_providers"] = {"minio": storage_providers}
+        service["properties"]["storage_providers"] = {}
+        for cl_name, storage in storage_providers.items():
+            if "endpoint" in storage:
+                # MinIO
+                if not "minio" in service["properties"]["storage_providers"]:
+                    service["properties"]["storage_providers"]["minio"] = {}
+                service["properties"]["storage_providers"]["minio"][cl_name] = storage
+            else:
+                # AWS
+                if not "s3" in service["properties"]["storage_providers"]:
+                    service["properties"]["storage_providers"]["s3"] = {}
+                service["properties"]["storage_providers"]["s3"][cl_name] = storage
 
-    res = {
-            "topology_template":
-            {
-                "node_templates": {"oscar_service_%s" % component: service},
-                "outputs": {
-                    "oscar_service_url": {"value": {"get_attribute": ["oscar_service_%s" % component,
-                                                                      "endpoint"]}},
-                    "oscar_service_cred": {"value": {"get_attribute": ["oscar_service_%s" % component,
-                                                                       "credential"]}}
+    if "aws" in cluster_inputs and cluster_inputs["aws"]["default"]:
+        res = {
+                "topology_template":
+                {
+                    "node_templates": {"lambda_function_%s" % component: service},
                 }
-            }
-    }
+        }
+    else:
+        res = {
+                "topology_template":
+                {
+                    "node_templates": {"oscar_service_%s" % component: service},
+                    "outputs": {
+                        "oscar_service_url": {"value": {"get_attribute": ["oscar_service_%s" % component,
+                                                                        "endpoint"]}},
+                        "oscar_service_cred": {"value": {"get_attribute": ["oscar_service_%s" % component,
+                                                                        "credential"]}}
+                    }
+                }
+        }
 
     return res
 
@@ -286,7 +327,13 @@ def gen_tosca_cluster(compute_layer, res_name, phys_nodes, elastic, auth_data):
             {"ec3_custom_types": "https://raw.githubusercontent.com/grycap/ec3/tosca/tosca/custom_types.yaml"}
         ],
         "topology_template": {
-            "node_templates": {}
+            "node_templates": {},
+            "inputs": {
+                "cluster_name": {
+                    "default": gen_oscar_name(),
+                    "type": "string"
+                }
+            }
         }
     }
 
@@ -397,8 +444,6 @@ def gen_tosca_cluster(compute_layer, res_name, phys_nodes, elastic, auth_data):
                     ec_fe["requirements"][1]["wn"] = "wn_node_%s" % wn_name
 
     elif compute_layer["type"] == "PhysicalAlreadyProvisioned":
-        tosca_res["topology_template"]["inputs"] = {}
-
         if len(compute_layer["Resources"]) != 1:
             raise Exception("PhysicalAlreadyProvisioned ComputeLayer must only have 1 resource.")
         res = list(compute_layer["Resources"].values())[0]
@@ -412,9 +457,19 @@ def gen_tosca_cluster(compute_layer, res_name, phys_nodes, elastic, auth_data):
         tosca_res["topology_template"]["inputs"]["minio_sk"] = {"default": minio_sk, "type": "string"}
         tosca_res["topology_template"]["inputs"]["oscar_name"] = {"default": oscar_name, "type": "string"}
     elif compute_layer["type"] == "NativeCloudFunction":
-        tosca_res["topology_template"]["inputs"] = {}
         tosca_res["topology_template"]["inputs"]["aws"] = {"default": True, "type": "boolean"}
-        # TODO: Where to get this?
-        tosca_res["topology_template"]["inputs"]["aws_region"] = {"default": "us-east-1", "type": "boolean"}
+
+        if len(compute_layer["Resources"]) != 1:
+            raise Exception("PhysicalAlreadyProvisioned ComputeLayer must only have 1 resource.")
+        res = list(compute_layer["Resources"].values())[0]
+        aws_region = get_physical_resource_data(compute_layer, res, phys_nodes, "aws", "region")
+        aws_bucket = get_physical_resource_data(compute_layer, res, phys_nodes, "aws", "bucket")
+        aws_ak = get_physical_resource_data(compute_layer, res, phys_nodes, "aws", "access_key")
+        aws_sk = get_physical_resource_data(compute_layer, res, phys_nodes, "aws", "secret_key")
+
+        tosca_res["topology_template"]["inputs"]["aws_region"] = {"default": aws_region, "type": "string"}
+        tosca_res["topology_template"]["inputs"]["aws_bucket"] = {"default": aws_bucket, "type": "string"}
+        tosca_res["topology_template"]["inputs"]["aws_ak"] = {"default": aws_ak, "type": "string"}
+        tosca_res["topology_template"]["inputs"]["aws_sk"] = {"default": aws_sk, "type": "string"}
 
     return tosca_res
