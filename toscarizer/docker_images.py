@@ -56,34 +56,37 @@ def generate_dockerfiles(base_image, app_dir, components, resources):
                 f.write(scriptfile)
 
             for platform in resources[part_name]["platforms"]:
-                dockerfiles[component][partition].append(("linux/%s" % platform, dockerfile_path))
+                dockerfiles[component][partition].append(("linux/%s" % platform,
+                                                          resources[part_name]["aws"],
+                                                          dockerfile_path))
 
     return dockerfiles
 
 
-def build_and_push(registry, registry_folder, dockerfiles, username, password, push=True, build=True):
+def build_and_push(registry, registry_folder, dockerfiles, ecr, push=True, build=True):
     """Build and push the images per each component using the dockerfiles specified."""
     try:
         dclient = docker.from_env()
     except docker.errors.DockerException:
         raise Exception("Error getting docker client. Check if current user"
                         " has the correct permissions (docker group).")
-    if push:
-        dclient.login(username=username, password=password, registry=registry)
 
     res = {}
     for component, partitions in dockerfiles.items():
         res[component] = {}
         for partition, docker_images in partitions.items():
             res[component][partition] = []
-            for (platform, dockerfile) in docker_images:
+            for (platform, aws, dockerfile) in docker_images:
                 if platform == "linux/amd64":
                     name = "%s_%s_amd64" % (component, partition)
                 else:
                     name = "%s_%s_arm64" % (component, partition)
                 if registry_folder.startswith("/"):
                     registry_folder = registry_folder[1:]
-                image = "%s/%s/%s:latest" % (registry, registry_folder, name)
+                if aws:
+                    image = "%s/%s:latest" % (ecr, name)
+                else:
+                    image = "%s/%s/%s:latest" % (registry, registry_folder, name)
                 if build:
                     print("Building image: %s ..." % name)
                     build_dir = os.path.dirname(dockerfile)

@@ -48,17 +48,39 @@ This step requires `docker` installed. See how to install it [here](https://docs
 In case that any of the images will run on an ARM platform, support multiarch
 docker builds must be installed also. See how to configure it [here](https://docs.docker.com/desktop/multi-arch/).
 
+First you need to login to the container registry that you will use in the `docker` operation:
+
+```sh
+docker login registry.gitlab.polimi.it
+```
+
+Also in case that any of the steps uses NativeCloudFunctions (AWS Lambda). You need to also
+to login to the ECR repository:
+
+```sh
+aws ecr get-login-password --region [region] | docker login --username AWS --password-stdin
+ XXXXXXXXXXXX.dkr.ecr.[region].amazonaws.com
+```
+
 ```sh
 toscarizer docker --registry registry.gitlab.polimi.it \
                   --registry_folder /ai-sprint \
-                  --username user \
-                  --password pass \
                   --application_dir app
 ```
 
 Optionally the `--base_image` parameter can be set to define a different base image
 for the generated images. The default value is:
 `registry.gitlab.polimi.it/ai-sprint/toscarizer/ai-sprint-base`.
+
+Furthermore in case that any of the steps uses NativeCloudFunctions (AWS Lambda). You need to also
+set the ECR repository URL:
+
+```sh
+toscarizer docker --registry registry.gitlab.polimi.it \
+                  --registry_folder /ai-sprint \
+                  --application_dir app
+                  --ecr XXXXXXXXXXXX.dkr.ecr.[region].amazonaws.com
+```
 
 ### Step4: Generate the corresponding TOSCA YAML files
 
