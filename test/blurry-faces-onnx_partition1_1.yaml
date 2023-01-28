@@ -2,6 +2,9 @@ imports:
 - ec3_custom_types: https://raw.githubusercontent.com/grycap/ec3/tosca/tosca/custom_types.yaml
 topology_template:
   inputs:
+    cluster_name:
+      default: oscar-cluster-fixed13
+      type: string
     minio_ak:
       default: minio
       type: string
@@ -33,15 +36,15 @@ topology_template:
         - path: blurry-faces-onnx-partition1-1/output
           storage_provider: minio
         - path: blurry-faces-onnx-partition1-1/output
-          storage_provider: minio.oscar-cluster-fixed9
+          storage_provider: minio.oscar-cluster-fixed15
         script: /opt/blurry-faces-onnx_partition1_1/script.sh
         storage_providers:
           minio:
-            oscar-cluster-fixed9:
+            oscar-cluster-fixed15:
               access_key: minio
-              endpoint: https://minio.oscar-cluster-fixed9.im.grycap.net
+              endpoint: https://minio.oscar-cluster-fixed15.im.grycap.net
               region: us-east-1
-              secret_key: fixed12
+              secret_key: fixed18
       type: tosca.nodes.aisprint.FaaS.Function
   outputs:
     oscar_service_cred:

@@ -1,0 +1,139 @@
+System:
+  name: Mask Detection Application
+  NetworkDomains:
+    ND1:
+      name: Network Domain 1
+      AccessDelay: 2.77e-06
+      Bandwidth: 40000
+      subNetworkDomains: []
+      ComputationalLayers:
+        computationalLayer1:
+          name: Edge Layer
+          number: 1
+          type: PhysicalAlreadyProvisioned
+          Resources:
+            resource1:
+              name: RaspPi
+              totalNodes: 3
+              description: Raspberry PIs 4 Model B
+              cost: 0.6
+              memorySize: 4096
+              operatingSystemDistribution: Raspbian
+              operatingSystemType: Linux
+              operatingSystemVersion: 10
+              operatingSystemImageId: None
+              secureBoot: string
+              measuredBoot: string
+              storageSize: 64GB
+              storageType: flash
+              processors:
+                processor1:
+                  name: BCM2711
+                  type: Cortex-A72
+                  architecture: arm64
+                  computingUnits: 4
+                  internalMemory: 4
+                  SGXFlag: false
+        computationalLayer2:
+          name: Private cloud Layer
+          number: 2
+          type: Virtual
+          Resources:
+            resource1:
+              name: VM1
+              totalNodes: 4
+              description: Inhouse VM Type 1 UPV
+              cost: 0.675
+              memorySize: 8192
+              storageSize: 25
+              storageType: SSD
+              operatingSystemDistribution: Ubuntu
+              operatingSystemType: Linux
+              operatingSystemVersion: 22.04
+              operatingSystemImageId: one://ramses.i3m.upv.es/1396
+              secureBoot: false
+              measuredBoot: false
+              onSpot: false
+              processors:
+                processor1:
+                  name: Xeon
+                  type: SkyLake
+                  architecture: amd64
+                  computingUnits: 4
+                  internalMemory: 64
+                  SGXFlag: false
+    ND2:
+      name: Network Domain 2
+      AccessDelay: 0.00000277
+      Bandwidth: 40000
+      subNetworkDomains: [ND1]
+      ComputationalLayers:
+        computationalLayer3:
+            name: Public Cloud Layer
+            number: 3
+            type: Virtual
+            Resources:
+              resource1:
+                  name: VM3
+                  totalNodes: 3
+                  description: c7g.xlarge 
+                  cost: 0.9
+                  memorySize: 8192
+                  storageSize: 25
+                  storageType: SSD
+                  operatingSystemDistribution: Ubuntu
+                  operatingSystemType: Linux
+                  operatingSystemVersion: 20.04
+                  operatingSystemImageId: aws://us-east-1/ami-XXXXXXXX
+                  secureBoot: False
+                  measuredBoot: False
+                  onSpot: False
+                  processors:
+                     processor1:
+                        name: Xeon
+                        type: SkyLake
+                        architecture: amd64
+                        computingUnits: 4
+                        internalMemory: 64
+                        SGXFlag: False   
+
+  Components:
+        component1_partition1_1:
+           name: blurry-faces-onnx_partition1_1
+           executionLayer: 1
+           Containers:
+             container1: 
+                image: registry.gitlab.polimi.it/ai-sprint/blurry-faces-onnx_partition1_1:tag
+                memorySize: 1024
+                computingUnits: 0.9
+                trustedExecution: False
+                networkProtection: False
+                fileSystemProtection: False
+                GPURequirement: False
+                selectedExecutionResource: RaspPi
+        component1_partition1_2:
+            name: blurry-faces-onnx_partition1_2
+            executionLayer: 2
+            Containers:
+              container1: 
+                image: registry.gitlab.polimi.it/ai-sprint/blurry-faces-onnx_partition1_2:tag
+                memorySize: 1024
+                computingUnits: 0.9
+                trustedExecution: False
+                networkProtection: False
+                fileSystemProtection: False
+                GPURequirement: False
+                selectedExecutionResource: VM1
+        component2:
+            name: mask-detector
+            executionLayer: 3
+            Containers:
+                 container1:
+                    image: registry.gitlab.polimi.it/ai-sprint/mask-detector:tag
+                    memorySize: 4096
+                    computingUnits: 0.9
+                    trustedExecution: False
+                    networkProtection: False
+                    fileSystemProtection: False
+                    GPURequirement: False
+                    selectedExecutionResource:  VM3 

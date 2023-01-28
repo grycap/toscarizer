@@ -67,6 +67,58 @@ class TestToscarizer(unittest.TestCase):
         random_string.side_effect = ["fixed1", "fixed2", "fixed3", "fixed4", "fixed1", "fixed6", "fixed7", "fixed4",
                                      "fixed9", "fixed10", "fixed11", "fixed12", "fixed13", "fixed14", "fixed15",
                                      "fixed16"]
+        application_dir = os.path.join(tests_path, "../app_test")
+
+        # Test base elastic case
+        runner = CliRunner()
+        result = runner.invoke(toscarizer_cli, ['tosca', '--application_dir', application_dir, '--base'])
+        self.assertEqual(result.exit_code, 0)
+
+        c1 = open(os.path.join(application_dir, "aisprint/deployments/base/im/blurry-faces-onnx.yaml")).read()
+        c2 = open(os.path.join(application_dir, "aisprint/deployments/base/im/mask-detector.yaml")).read()
+        c1_exp = open(os.path.join(tests_path, "blurry-faces-onnx.yaml")).read()
+        c2_exp = open(os.path.join(tests_path, "mask-detector_elastic.yaml")).read()
+
+        self.assertEqual(c1, c1_exp)
+        self.assertEqual(c2, c2_exp)
+
+        # Test base case
+        runner = CliRunner()
+        result = runner.invoke(toscarizer_cli, ['tosca', '--application_dir', application_dir, "--base"])
+        self.assertEqual(result.exit_code, 0)
+
+        c1 = open(os.path.join(application_dir, "aisprint/deployments/base/im/blurry-faces-onnx.yaml")).read()
+        c2 = open(os.path.join(application_dir, "aisprint/deployments/base/im/mask-detector.yaml")).read()
+        c1_exp = open(os.path.join(tests_path, "blurry-faces-onnx.yaml")).read()
+        c2_exp = open(os.path.join(tests_path, "mask-detector.yaml")).read()
+
+        self.assertEqual(c1, c1_exp)
+        self.assertEqual(c2, c2_exp)
+
+        # Test optimal case
+        result = runner.invoke(toscarizer_cli, ['tosca', '--application_dir', application_dir, "--optimal"])
+        self.assertEqual(result.exit_code, 0)
+
+        os.unlink(os.path.join(application_dir, 'aisprint/designs/containers.yaml'))
+        c1 = open(os.path.join(application_dir,
+                               "aisprint/deployments/optimal_deployment/im/blurry-faces-onnx_partition1_1.yaml")).read()
+        c2 = open(os.path.join(application_dir,
+                               "aisprint/deployments/optimal_deployment/im/blurry-faces-onnx_partition1_2.yaml")).read()
+        c3 = open(os.path.join(application_dir,
+                               "aisprint/deployments/optimal_deployment/im/mask-detector.yaml")).read()
+        c1_exp = open(os.path.join(tests_path, "blurry-faces-onnx_partition1_1.yaml")).read()
+        c2_exp = open(os.path.join(tests_path, "blurry-faces-onnx_partition1_2.yaml")).read()
+        c3_exp = open(os.path.join(tests_path, "mask-detector-optimal.yaml")).read()
+
+        self.assertEqual(c1, c1_exp)
+        self.assertEqual(c2, c2_exp)
+        self.assertEqual(c3, c3_exp)
+
+    @patch('toscarizer.im_tosca.get_random_string')
+    def test_15_tosca(self, random_string):
+        random_string.side_effect = ["fixed1", "fixed2", "fixed3", "fixed4", "fixed5", "fixed6", "fixed1", "fixed4",
+                                     "fixed3", "fixed10", "fixed11", "fixed6", "fixed13", "fixed14", "fixed15",
+                                     "fixed16", "fixed17", "fixed18", "fixed19","fixed20", "fixed21", "fixed22", "fixed23"]
         application_dir = os.path.join(tests_path, "../app_demo")
 
         # Test base elastic case
