@@ -90,21 +90,26 @@ def build_and_push(registry, registry_folder, dockerfiles, ecr, push=True, build
                 if registry_folder.startswith("/"):
                     registry_folder = registry_folder[1:]
                 if aws:
-                    image = "%s/%s:latest" % (ecr, name)
+                    if not ecr:
+                        raise Exception("AWS ECR repository URL parameter not set.")
+                    image = "%s:%s" % (ecr, name)
                 else:
                     image = "%s/%s/%s:latest" % (registry, registry_folder, name)
                 if build:
-                    print("Building image: %s ..." % name)
-                    build_dir = os.path.dirname(dockerfile)
-                    dclient.images.build(path=build_dir, tag=image, pull=True, platform=platform)
+                    print("Building %simage: %s ..." % ("ECR " if aws else "", name))
+                    dclient.images.build(path=os.path.dirname(dockerfile), tag=image, pull=True,
+                                         platform=platform, dockerfile=os.path.basename(dockerfile))
 
                 # Pushing new image
                 res[component][partition].append(image)
                 if push:
-                    print("Pushing image: %s ..." % name)
+                    print("Pushing %simage: %s ..." % ("ECR " if aws else "", name))
                     for line in dclient.images.push(image, stream=True, decode=True):
                         if 'error' in line:
-                            raise Exception("Error pushing image: %s" % line['errorDetail']['message'])
+                            msg = line['errorDetail']['message']
+                            if msg == 'EOF':
+                                msg += ". Check if the ECR repo exists."
+                            raise Exception("Error pushing image: %s" % msg)
             if build:
                 os.unlink(dockerfile)
 
