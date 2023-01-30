@@ -55,7 +55,8 @@ docker login registry.gitlab.polimi.it
 ```
 
 Also in case that any of the steps uses NativeCloudFunctions (AWS Lambda). You need to also
-to login to the ECR repository:
+to login to the ECR repository, using the aws-cli tool (See how to install it
+[here](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-started.html)):
 
 ```sh
 aws ecr get-login-password --region [region] | docker login --username AWS --password-stdin
