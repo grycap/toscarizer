@@ -95,7 +95,22 @@ System:
                         architecture: amd64
                         computingUnits: 4
                         internalMemory: 64
-                        SGXFlag: False   
+                        SGXFlag: False
+        computationalLayer4:
+            name: FaaS Layer
+            number: 4
+            type: NativeCloudFunction
+            Resources: 
+                resource1:
+                  name: AWS-FaaS
+                  description: AWS Lambda
+                  architecture: amd64
+                  cost: 0.0001561
+                  memorySize: 8192
+                  storageSize: 0.512
+                  region: eu-south-1
+                  idleTime: 600
+                  transitionCost:  0.02625   
 
   Components:
         component1_partition1_1:
@@ -126,14 +141,14 @@ System:
                 selectedExecutionResource: VM1
         component2:
             name: mask-detector
-            executionLayer: 3
+            executionLayer: 4
             Containers:
                  container1:
-                    image: registry.gitlab.polimi.it/ai-sprint/mask-detector:tag
+                    image: 000000000000.dkr.ecr.us-east-1.amazonaws.com/mask-detector:tag
                     memorySize: 4096
                     computingUnits: 0.9
                     trustedExecution: False
                     networkProtection: False
                     fileSystemProtection: False
                     GPURequirement: False
-                    selectedExecutionResource:  VM3 
+                    selectedExecutionResource:  AWS-FaaS 

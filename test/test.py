@@ -29,12 +29,54 @@ class TestToscarizer(unittest.TestCase):
                  'aisprint/designs/blurry-faces-onnx/partition1_1/script.sh',
                  'aisprint/designs/blurry-faces-onnx/partition1_2/script.sh',
                  'aisprint/designs/mask-detector/base/script.sh']
+        application_dir = os.path.join(tests_path, "../app_test")
+
+        runner = CliRunner()
+        result = runner.invoke(toscarizer_cli, ['docker', "--dry-run", '--application_dir', application_dir,
+                                                "--registry", "docker.io", "--registry_folder", "/micafer",
+                                                "--ecr", "000000000000.dkr.ecr.us-east-1.amazonaws.com"])
+
+        self.assertEqual(result.exit_code, 0)
+        for fname in files:
+            self.assertTrue(os.path.isfile(os.path.join(application_dir, fname)))
+            os.unlink(os.path.join(application_dir, fname))
+
+        with open(os.path.join(application_dir, 'aisprint/designs/containers.yaml'), 'r') as f:
+            containers = yaml.safe_load(f)
+        os.unlink(os.path.join(application_dir, 'aisprint/designs/containers.yaml'))
+        expected = {
+            'components': {
+                'blurry-faces-onnx': {
+                    'docker_images': [
+                        'docker.io/micafer/blurry-faces-onnx_base_arm64:latest',
+                        'docker.io/micafer/blurry-faces-onnx_base_amd64:latest',
+                        'docker.io/micafer/blurry-faces-onnx_partition1_2_amd64:latest',
+                        'docker.io/micafer/blurry-faces-onnx_partition1_1_arm64:latest'
+                    ]
+                },
+                'mask-detector': {
+                    'docker_images': [
+                        '000000000000.dkr.ecr.us-east-1.amazonaws.com/mask-detector_base_amd64:latest'
+                    ]
+                }
+            }
+        }
+        self.assertEqual(containers, expected)
+
+    def test_05_docker(self):
+        files = ['aisprint/designs/blurry-faces-onnx/base/Dockerfile',
+                 'aisprint/designs/blurry-faces-onnx/partition1_1/Dockerfile',
+                 'aisprint/designs/blurry-faces-onnx/partition1_2/Dockerfile',
+                 'aisprint/designs/mask-detector/base/Dockerfile',
+                 'aisprint/designs/blurry-faces-onnx/base/script.sh',
+                 'aisprint/designs/blurry-faces-onnx/partition1_1/script.sh',
+                 'aisprint/designs/blurry-faces-onnx/partition1_2/script.sh',
+                 'aisprint/designs/mask-detector/base/script.sh']
         application_dir = os.path.join(tests_path, "../app_demo")
 
         runner = CliRunner()
         result = runner.invoke(toscarizer_cli, ['docker', "--dry-run", '--application_dir', application_dir,
-                                                "--registry", "docker.io", "--registry_folder",
-                                                "/micafer", "--username", "user", "--password", "pass"])
+                                                "--registry", "docker.io", "--registry_folder", "/micafer"])
 
         self.assertEqual(result.exit_code, 0)
         for fname in files:
@@ -76,21 +118,8 @@ class TestToscarizer(unittest.TestCase):
 
         c1 = open(os.path.join(application_dir, "aisprint/deployments/base/im/blurry-faces-onnx.yaml")).read()
         c2 = open(os.path.join(application_dir, "aisprint/deployments/base/im/mask-detector.yaml")).read()
-        c1_exp = open(os.path.join(tests_path, "blurry-faces-onnx.yaml")).read()
-        c2_exp = open(os.path.join(tests_path, "mask-detector_elastic.yaml")).read()
-
-        self.assertEqual(c1, c1_exp)
-        self.assertEqual(c2, c2_exp)
-
-        # Test base case
-        runner = CliRunner()
-        result = runner.invoke(toscarizer_cli, ['tosca', '--application_dir', application_dir, "--base"])
-        self.assertEqual(result.exit_code, 0)
-
-        c1 = open(os.path.join(application_dir, "aisprint/deployments/base/im/blurry-faces-onnx.yaml")).read()
-        c2 = open(os.path.join(application_dir, "aisprint/deployments/base/im/mask-detector.yaml")).read()
-        c1_exp = open(os.path.join(tests_path, "blurry-faces-onnx.yaml")).read()
-        c2_exp = open(os.path.join(tests_path, "mask-detector.yaml")).read()
+        c1_exp = open(os.path.join(tests_path, "blurry-faces-onnx-aws.yaml")).read()
+        c2_exp = open(os.path.join(tests_path, "mask-detector-aws.yaml")).read()
 
         self.assertEqual(c1, c1_exp)
         self.assertEqual(c2, c2_exp)
@@ -99,16 +128,15 @@ class TestToscarizer(unittest.TestCase):
         result = runner.invoke(toscarizer_cli, ['tosca', '--application_dir', application_dir, "--optimal"])
         self.assertEqual(result.exit_code, 0)
 
-        os.unlink(os.path.join(application_dir, 'aisprint/designs/containers.yaml'))
         c1 = open(os.path.join(application_dir,
                                "aisprint/deployments/optimal_deployment/im/blurry-faces-onnx_partition1_1.yaml")).read()
         c2 = open(os.path.join(application_dir,
                                "aisprint/deployments/optimal_deployment/im/blurry-faces-onnx_partition1_2.yaml")).read()
         c3 = open(os.path.join(application_dir,
                                "aisprint/deployments/optimal_deployment/im/mask-detector.yaml")).read()
-        c1_exp = open(os.path.join(tests_path, "blurry-faces-onnx_partition1_1.yaml")).read()
-        c2_exp = open(os.path.join(tests_path, "blurry-faces-onnx_partition1_2.yaml")).read()
-        c3_exp = open(os.path.join(tests_path, "mask-detector-optimal.yaml")).read()
+        c1_exp = open(os.path.join(tests_path, "blurry-faces-onnx_partition1_1-aws.yaml")).read()
+        c2_exp = open(os.path.join(tests_path, "blurry-faces-onnx_partition1_2-aws.yaml")).read()
+        c3_exp = open(os.path.join(tests_path, "mask-detector-optimal-aws.yaml")).read()
 
         self.assertEqual(c1, c1_exp)
         self.assertEqual(c2, c2_exp)
