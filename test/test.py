@@ -154,12 +154,12 @@ class TestToscarizer(unittest.TestCase):
         }
         self.assertEqual(containers, expected)
 
-
     @patch('toscarizer.im_tosca.get_random_string')
     def test_15_tosca(self, random_string):
         random_string.side_effect = ["fixed1", "fixed2", "fixed3", "fixed4", "fixed5", "fixed6", "fixed1", "fixed4",
                                      "fixed3", "fixed10", "fixed11", "fixed6", "fixed13", "fixed14", "fixed15",
-                                     "fixed16", "fixed17", "fixed18", "fixed19","fixed20", "fixed21", "fixed22", "fixed23"]
+                                     "fixed16", "fixed17", "fixed18", "fixed19", "fixed20", "fixed21", "fixed22",
+                                     "fixed23"]
         application_dir = os.path.join(tests_path, "../app_demo")
 
         # Test base elastic case

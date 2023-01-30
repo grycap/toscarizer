@@ -35,7 +35,8 @@ def toscarizer_cli():
 @click.option("--application_dir", help="Path to the AI-SPRINT application.", required=True)
 @click.option("--registry", help="Registry to push the generated docker images.", type=str, required=True)
 @click.option("--registry_folder", help="Registry folder to push the generated docker images.", type=str, default="/")
-@click.option("--base_image", help="Base image for the docker images.", type=str, default="registry.gitlab.polimi.it/ai-sprint/toscarizer/ai-sprint-base")
+@click.option("--base_image", help="Base image for the docker images.", type=str,
+              default="registry.gitlab.polimi.it/ai-sprint/toscarizer/ai-sprint-base")
 @click.option("--ecr", help="AWS ECR repository URL.", type=str, default=None)
 @click.option("--dry-run", help="Registry to push the generated docker images.", default=False, is_flag=True)
 def docker(application_dir, registry, registry_folder, base_image, ecr, dry_run):

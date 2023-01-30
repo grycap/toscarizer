@@ -132,7 +132,8 @@ def gen_tosca_yamls(dag, resources_file, deployments_file, phys_file, elastic, a
         container_per_component[component] = cont
         if not cl_name:
             raise Exception("No compute layer found for component." % component.get("name"))
-        oscar_clusters_per_component[component] = gen_tosca_cluster(cls[cl_name], res_name, phys_nodes, elastic, auth_data)
+        oscar_clusters_per_component[component] = gen_tosca_cluster(cls[cl_name], res_name, phys_nodes,
+                                                                    elastic, auth_data)
 
     # Now create the OSCAR services and merge in the correct OSCAR cluster
     for component, next_items in dag.adj.items():
@@ -238,7 +239,7 @@ def get_service(component, next_items, prev_items, container, oscar_clusters):
                     if not repeated:
                         storage_providers[cluster_name] = {
                             "endpoint": "https://minio.%s.%s" % (cluster_inputs["cluster_name"]["default"],
-                                                                cluster_inputs["domain_name"]["default"]),
+                                                                 cluster_inputs["domain_name"]["default"]),
                             # "verify": True,
                             "access_key": "minio",
                             "secret_key": cluster_inputs["minio_password"]["default"],
@@ -279,12 +280,12 @@ def get_service(component, next_items, prev_items, container, oscar_clusters):
         for cl_name, storage in storage_providers.items():
             if "endpoint" in storage:
                 # MinIO
-                if not "minio" in service["properties"]["storage_providers"]:
+                if "minio" not in service["properties"]["storage_providers"]:
                     service["properties"]["storage_providers"]["minio"] = {}
                 service["properties"]["storage_providers"]["minio"][cl_name] = storage
             else:
                 # AWS
-                if not "s3" in service["properties"]["storage_providers"]:
+                if "s3" not in service["properties"]["storage_providers"]:
                     service["properties"]["storage_providers"]["s3"] = {}
                 service["properties"]["storage_providers"]["s3"][cl_name] = storage
 
@@ -303,9 +304,9 @@ def get_service(component, next_items, prev_items, container, oscar_clusters):
                     "node_templates": {"oscar_service_%s" % component: service},
                     "outputs": {
                         "oscar_service_url": {"value": {"get_attribute": ["oscar_service_%s" % component,
-                                                                        "endpoint"]}},
+                                                                          "endpoint"]}},
                         "oscar_service_cred": {"value": {"get_attribute": ["oscar_service_%s" % component,
-                                                                        "credential"]}}
+                                                                           "credential"]}}
                     }
                 }
         }

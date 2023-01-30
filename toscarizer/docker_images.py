@@ -45,7 +45,7 @@ def generate_dockerfiles(base_image, app_dir, components, resources):
             dockerfile += dockerfile_tpl.replace("{{component_name}}", component)
             if resources[part_name]["aws"]:
                 dockerfile += dockerfile_aws_tpl
-                
+
             with open(dockerfile_path, 'w+') as f:
                 f.write(dockerfile)
 

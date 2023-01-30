@@ -70,10 +70,10 @@ def parse_resources(resource_file, deployments_files):
 
             platforms = []
             aws = False
-            for l in layers:
-                if "aws" in l and l["aws"]:
+            for layer in layers:
+                if "aws" in layer and layer["aws"]:
                     aws = True
-                for r in list(l["resources"].values()):
+                for r in list(layer["resources"].values()):
                     if r["arch"] not in platforms:
                         platforms.append(r["arch"])
 
