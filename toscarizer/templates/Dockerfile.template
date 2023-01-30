@@ -17,3 +17,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application and onnx models
 COPY . /opt/{{component_name}}/
+RUN chmod +x /opt/{{component_name}}/script.sh

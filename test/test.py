@@ -35,7 +35,7 @@ class TestToscarizer(unittest.TestCase):
         runner = CliRunner()
         result = runner.invoke(toscarizer_cli, ['docker', "--dry-run", '--application_dir', application_dir,
                                                 "--registry", "docker.io", "--registry_folder", "/micafer",
-                                                "--ecr", "000000000000.dkr.ecr.us-east-1.amazonaws.com"])
+                                                "--ecr", "000000000000.dkr.ecr.us-east-1.amazonaws.com/repo"])
 
         self.assertEqual(result.exit_code, 0)
         for fname in files:
@@ -57,7 +57,7 @@ class TestToscarizer(unittest.TestCase):
                 'mask-detector': {
                     'docker_images': [
                         'docker.io/micafer/mask-detector_base_amd64:latest',
-                        '000000000000.dkr.ecr.us-east-1.amazonaws.com/mask-detector_base_amd64:latest'
+                        '000000000000.dkr.ecr.us-east-1.amazonaws.com/repo:mask-detector_base_amd64'
                     ]
                 }
             }

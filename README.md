@@ -74,13 +74,13 @@ for the generated images. The default value is:
 `registry.gitlab.polimi.it/ai-sprint/toscarizer/ai-sprint-base`.
 
 Furthermore in case that any of the steps uses NativeCloudFunctions (AWS Lambda). You need to also
-set the ECR repository URL:
+set an existing ECR repository URL:
 
 ```sh
 toscarizer docker --registry registry.gitlab.polimi.it \
                   --registry_folder /ai-sprint \
                   --application_dir app
-                  --ecr XXXXXXXXXXXX.dkr.ecr.[region].amazonaws.com
+                  --ecr XXXXXXXXXXXX.dkr.ecr.[region].amazonaws.com/repo_name
 ```
 
 ### Step4: Generate the corresponding TOSCA YAML files

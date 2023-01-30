@@ -175,19 +175,20 @@ def get_service(component, next_items, prev_items, container, oscar_clusters):
     }
 
     cluster_inputs = oscar_clusters[component]["topology_template"]["inputs"]
+    curr_cluster_aws = "aws" in cluster_inputs and cluster_inputs["aws"]["default"]
     if len(oscar_clusters[component]["topology_template"]["node_templates"]) > 1:
         # It is a IM deployed cluster
         # Use the minio url as we alredy have it
         service["properties"]["env_variables"]["KCI"] = \
             "https://minio.%s.%s" % (cluster_inputs["cluster_name"]["default"],
                                      cluster_inputs["domain_name"]["default"])
-    elif "aws" in cluster_inputs and cluster_inputs["aws"]["default"]:
+    elif curr_cluster_aws:
         # It is deployed in AWS Lambda
         service["properties"]["env_variables"]["KCI"] = "AWS Lambda"
-        service["properties"]["input"][0]["storage_provider"] = "s3.%s" % cluster_inputs["cluster_name"]["default"]
+        service["properties"]["input"][0]["storage_provider"] = "s3"
         service["properties"]["input"][0]["path"] = "%s/%s/input" % (cluster_inputs["aws_bucket"]["default"],
                                                                      component.replace("_", "-"))
-        service["properties"]["output"][0]["storage_provider"] = "s3.%s" % cluster_inputs["cluster_name"]["default"]
+        service["properties"]["output"][0]["storage_provider"] = "s3"
         service["properties"]["output"][0]["path"] = "%s/%s/output" % (cluster_inputs["aws_bucket"]["default"],
                                                                        component.replace("_", "-"))
     else:
@@ -196,18 +197,11 @@ def get_service(component, next_items, prev_items, container, oscar_clusters):
 
     storage_providers = {}
 
-    if "aws" in cluster_inputs and cluster_inputs["aws"]["default"]:
-        storage_providers[cluster_inputs["cluster_name"]["default"]] = {
-            "access_key": cluster_inputs["aws_ak"]["default"],
-            "secret_key": cluster_inputs["aws_sk"]["default"],
-            "region": cluster_inputs["aws_region"]["default"],
-        }
-
     # Add inputs (All must be in the local cluster)
     for prev_item in prev_items:
-        if "aws" in cluster_inputs and cluster_inputs["aws"]["default"]:
+        if curr_cluster_aws:
             service["properties"]["input"].append({
-                "storage_provider": "s3.%s" % cluster_inputs["cluster_name"]["default"],
+                "storage_provider": "s3",
                 "path": "%s/%s/output" % (cluster_inputs["aws_bucket"]["default"],
                                           prev_item.replace("_", "-"))
             })
@@ -225,8 +219,8 @@ def get_service(component, next_items, prev_items, container, oscar_clusters):
             repeated = False
             if cluster_name in storage_providers:
                 repeated = True
-            if "aws" in cluster_inputs and cluster_inputs["aws"]["default"]:
-                # It is an AWS Lambda function
+            if not curr_cluster_aws and "aws" in cluster_inputs and cluster_inputs["aws"]["default"]:
+                # The output is for a lambda function but this is not a lambda function
                 if not repeated:
                     storage_providers[cluster_name] = {
                         "access_key": cluster_inputs["aws_ak"]["default"],
