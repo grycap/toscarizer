@@ -25,6 +25,7 @@ class TestToscarizer(unittest.TestCase):
                  'aisprint/designs/blurry-faces-onnx/partition1_1/Dockerfile',
                  'aisprint/designs/blurry-faces-onnx/partition1_2/Dockerfile',
                  'aisprint/designs/mask-detector/base/Dockerfile',
+                 'aisprint/designs/mask-detector/base/Dockerfile.aws',
                  'aisprint/designs/blurry-faces-onnx/base/script.sh',
                  'aisprint/designs/blurry-faces-onnx/partition1_1/script.sh',
                  'aisprint/designs/blurry-faces-onnx/partition1_2/script.sh',
@@ -55,6 +56,7 @@ class TestToscarizer(unittest.TestCase):
                 },
                 'mask-detector': {
                     'docker_images': [
+                        'docker.io/micafer/mask-detector_base_amd64:latest',
                         '000000000000.dkr.ecr.us-east-1.amazonaws.com/mask-detector_base_amd64:latest'
                     ]
                 }

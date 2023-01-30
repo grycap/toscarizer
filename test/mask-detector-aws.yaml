@@ -29,7 +29,7 @@ topology_template:
           KCI: AWS Lambda
           MONIT_HOST: ai-sprint-mask-detector-app-telegraf
           MONIT_PORT: '8094'
-        image: registry.gitlab.polimi.it/ai-sprint/mask-detector:tag
+        image: 000000000000.dkr.ecr.us-east-1.amazonaws.com/mask-detector:tag
         input:
         - path: test1/mask-detector/input
           storage_provider: s3.oscar-cluster-fixed2

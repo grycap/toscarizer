@@ -52,7 +52,7 @@ Components:
         candidateExecutionLayers: [4,3]
         Containers:
              container1:
-                image: registry.gitlab.polimi.it/ai-sprint/mask-detector:tag
+                image: 000000000000.dkr.ecr.us-east-1.amazonaws.com/mask-detector:tag
                 memorySize: 4096
                 computingUnits: 0.9
                 trustedExecution: False
