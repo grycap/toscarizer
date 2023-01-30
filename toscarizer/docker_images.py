@@ -1,7 +1,6 @@
 import docker
 import yaml
 import os
-import shutil
 
 
 TEMPLATES_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "templates")
