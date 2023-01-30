@@ -10,8 +10,6 @@ functions:
           MONIT_PORT: '8094'
       image: registry.gitlab.polimi.it/ai-sprint/mask-detector:tag
       input:
-      - path: mask-detector/input
-        storage_provider: minio
       - path: blurry-faces-onnx/output
         storage_provider: minio
       memory: 4096Mi
@@ -35,8 +33,6 @@ functions:
       memory: 2048Mi
       name: blurry-faces-onnx
       output:
-      - path: blurry-faces-onnx/output
-        storage_provider: minio
       - path: blurry-faces-onnx/output
         storage_provider: minio.oscar-cluster-fixed3
       script: /opt/blurry-faces-onnx/script.sh

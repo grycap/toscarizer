@@ -154,16 +154,8 @@ def get_service(component, next_items, prev_items, container, oscar_clusters):
             "name": component.replace("_", "-"),
             "image": container.get("image"),
             "script": "/opt/%s/script.sh" % component,
-            "input": [{
-                "storage_provider": "minio",
-                "path": "%s/input" % component.replace("_", "-")
-            }],
-            "output": [
-                {
-                    "storage_provider": "minio",
-                    "path": "%s/output" % component.replace("_", "-")
-                }
-            ],
+            "input": [],
+            "output": [],
             "memory": "%sMi" % container.get("memorySize", 512),
             "cpu": container.get("computingUnits", "1"),
             "env_variables": {
@@ -185,12 +177,6 @@ def get_service(component, next_items, prev_items, container, oscar_clusters):
     elif curr_cluster_aws:
         # It is deployed in AWS Lambda
         service["properties"]["env_variables"]["KCI"] = "AWS Lambda"
-        service["properties"]["input"][0]["storage_provider"] = "s3"
-        service["properties"]["input"][0]["path"] = "%s/%s/input" % (cluster_inputs["aws_bucket"]["default"],
-                                                                     component.replace("_", "-"))
-        service["properties"]["output"][0]["storage_provider"] = "s3"
-        service["properties"]["output"][0]["path"] = "%s/%s/output" % (cluster_inputs["aws_bucket"]["default"],
-                                                                       component.replace("_", "-"))
     else:
         # It is an already existing OSCAR cluster
         service["properties"]["env_variables"]["KCI"] = cluster_inputs["minio_endpoint"]["default"]
@@ -264,6 +250,33 @@ def get_service(component, next_items, prev_items, container, oscar_clusters):
                         "path": "%s/output" % component.replace("_", "-")
                     })
 
+    cluster_inputs = oscar_clusters[component]["topology_template"]["inputs"]
+    if not service["properties"]["output"]:
+        default_output = {
+            "storage_provider": "minio",
+            "path": "%s/output" % component.replace("_", "-")
+        }
+        if curr_cluster_aws:
+            default_output = {
+                "storage_provider": "s3",
+                "path": "%s/%s/output" % (cluster_inputs["aws_bucket"]["default"],
+                                          component.replace("_", "-"))
+            }
+        service["properties"]["output"].append(default_output)
+
+    if not service["properties"]["input"]:
+        default_input = {
+            "storage_provider": "minio",
+            "path": "%s/input" % component.replace("_", "-")
+        }
+        if curr_cluster_aws:
+            default_input = {
+                "storage_provider": "s3",
+                "path": "%s/%s/input" % (cluster_inputs["aws_bucket"]["default"],
+                                         component.replace("_", "-"))
+            }
+        service["properties"]["input"].append(default_input)
+
     if len(oscar_clusters[component]["topology_template"]["node_templates"]) > 1:
         service["requirements"] = [
             {"host": "oscar"}
@@ -283,7 +296,6 @@ def get_service(component, next_items, prev_items, container, oscar_clusters):
                     service["properties"]["storage_providers"]["s3"] = {}
                 service["properties"]["storage_providers"]["s3"][cl_name] = storage
 
-    cluster_inputs = oscar_clusters[component]["topology_template"]["inputs"]
     if "aws" in cluster_inputs and cluster_inputs["aws"]["default"]:
         res = {
                 "topology_template":

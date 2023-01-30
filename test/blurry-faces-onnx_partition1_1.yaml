@@ -34,8 +34,6 @@ topology_template:
         name: blurry-faces-onnx-partition1-1
         output:
         - path: blurry-faces-onnx-partition1-1/output
-          storage_provider: minio
-        - path: blurry-faces-onnx-partition1-1/output
           storage_provider: minio.oscar-cluster-fixed15
         script: /opt/blurry-faces-onnx_partition1_1/script.sh
         storage_providers:

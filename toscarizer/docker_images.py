@@ -40,14 +40,14 @@ def generate_dockerfiles(base_image, app_dir, components, resources):
             dockerfiles[component][partition] = []
             dockerfile_dir = "%s/aisprint/designs/%s/%s" % (app_dir, component, partition)
             dockerfile_path = "%s/Dockerfile" % dockerfile_dir
-            dockerfile = "FROM %s\n" % base_image + dockerfile_tpl.replace("{{component_name}}", component)
+            dockerfile = "FROM %s\n%s" % (base_image, dockerfile_tpl.replace("{{component_name}}", component))
             with open(dockerfile_path, 'w+') as f:
                 f.write(dockerfile)
 
             # Generate image for SCAR in ECR
             if resources[part_name]["aws"]:
                 dockerfile_path_aws = "%s/Dockerfile.aws" % dockerfile_dir
-                dockerfile = "FROM %s\n" % base_image + dockerfile_aws_tpl
+                dockerfile = "FROM %s\n%s" % (base_image, dockerfile_aws_tpl)
                 with open(dockerfile_path_aws, 'w+') as f:
                     f.write(dockerfile)
 

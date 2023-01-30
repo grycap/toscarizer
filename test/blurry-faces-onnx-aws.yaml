@@ -33,8 +33,6 @@ topology_template:
         memory: 2048Mi
         name: blurry-faces-onnx
         output:
-        - path: blurry-faces-onnx/output
-          storage_provider: minio
         - path: test1/blurry-faces-onnx/output
           storage_provider: s3.oscar-cluster-fixed2
         script: /opt/blurry-faces-onnx/script.sh

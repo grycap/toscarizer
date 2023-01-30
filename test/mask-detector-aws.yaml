@@ -31,8 +31,6 @@ topology_template:
           MONIT_PORT: '8094'
         image: 000000000000.dkr.ecr.us-east-1.amazonaws.com/mask-detector:tag
         input:
-        - path: test1/mask-detector/input
-          storage_provider: s3
         - path: test1/blurry-faces-onnx/output
           storage_provider: s3
         memory: 4096Mi

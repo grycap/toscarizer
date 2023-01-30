@@ -10,15 +10,11 @@ functions:
           MONIT_PORT: '8094'
       image: registry.gitlab.polimi.it/ai-sprint/blurry-faces-onnx_partition1_2:tag
       input:
-      - path: blurry-faces-onnx-partition1-2/input
-        storage_provider: minio
       - path: blurry-faces-onnx-partition1-1/output
         storage_provider: minio
       memory: 1024Mi
       name: blurry-faces-onnx-partition1-2
       output:
-      - path: blurry-faces-onnx-partition1-2/output
-        storage_provider: minio
       - path: blurry-faces-onnx-partition1-2/output
         storage_provider: minio.oscar-cluster-fixed20
       script: /opt/blurry-faces-onnx_partition1_2/script.sh

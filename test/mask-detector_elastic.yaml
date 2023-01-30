@@ -208,8 +208,6 @@ topology_template:
           MONIT_PORT: '8094'
         image: registry.gitlab.polimi.it/ai-sprint/mask-detector:tag
         input:
-        - path: mask-detector/input
-          storage_provider: minio
         - path: blurry-faces-onnx/output
           storage_provider: minio
         memory: 4096Mi
