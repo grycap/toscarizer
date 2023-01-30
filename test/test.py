@@ -79,6 +79,11 @@ class TestToscarizer(unittest.TestCase):
         c1_exp = open(os.path.join(tests_path, "blurry-faces-onnx-aws.yaml")).read()
         c2_exp = open(os.path.join(tests_path, "mask-detector-aws.yaml")).read()
 
+        os.unlink(os.path.join(application_dir,
+                               "aisprint/deployments/base/im/blurry-faces-onnx.yaml"))
+        os.unlink(os.path.join(application_dir,
+                               "aisprint/deployments/base/im/mask-detector.yaml"))
+
         self.assertEqual(c1, c1_exp)
         self.assertEqual(c2, c2_exp)
 
@@ -95,6 +100,14 @@ class TestToscarizer(unittest.TestCase):
         c1_exp = open(os.path.join(tests_path, "blurry-faces-onnx_partition1_1-aws.yaml")).read()
         c2_exp = open(os.path.join(tests_path, "blurry-faces-onnx_partition1_2-aws.yaml")).read()
         c3_exp = open(os.path.join(tests_path, "mask-detector-optimal-aws.yaml")).read()
+
+        os.unlink(os.path.join(application_dir,
+                               "aisprint/deployments/optimal_deployment/im/blurry-faces-onnx_partition1_1.yaml"))
+        os.unlink(os.path.join(application_dir,
+                               "aisprint/deployments/optimal_deployment/im/blurry-faces-onnx_partition1_2.yaml"))
+        os.unlink(os.path.join(application_dir,
+                               "aisprint/deployments/optimal_deployment/im/mask-detector.yaml"))
+        os.unlink(os.path.join(application_dir, 'aisprint/designs/containers.yaml'))
 
         self.assertEqual(c1, c1_exp)
         self.assertEqual(c2, c2_exp)
