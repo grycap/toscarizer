@@ -1,11 +1,11 @@
 import docker
 import yaml
 import os
-import shutil
 
 
 TEMPLATES_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "templates")
 DOCKERFILE_TEMPLATE = os.path.join(TEMPLATES_PATH, 'Dockerfile.template')
+DOCKERFILE_AWS_TEMPLATE = os.path.join(TEMPLATES_PATH, 'Dockerfile.aws.template')
 SCRIPT_TEMPLATE = os.path.join(TEMPLATES_PATH, 'script.sh')
 
 
@@ -20,6 +20,8 @@ def generate_dockerfiles(base_image, app_dir, components, resources):
     """Generates dockerfiles per each component using the template."""
     with open(DOCKERFILE_TEMPLATE, 'r') as f:
         dockerfile_tpl = f.read()
+    with open(DOCKERFILE_AWS_TEMPLATE, 'r') as f:
+        dockerfile_aws_tpl = f.read()
     with open(SCRIPT_TEMPLATE, 'r') as f:
         scriptfile_tpl = f.read()
 
@@ -27,13 +29,6 @@ def generate_dockerfiles(base_image, app_dir, components, resources):
     for component, partitions in components["components"].items():
         dockerfiles[component] = {}
         for partition in partitions["partitions"]:
-            dockerfiles[component][partition] = []
-            dockerfile_dir = "%s/aisprint/designs/%s/%s" % (app_dir, component, partition)
-            dockerfile_path = "%s/Dockerfile" % dockerfile_dir
-            dockerfile = "FROM %s\n" % base_image
-            dockerfile += dockerfile_tpl.replace("{{component_name}}", component)
-            with open(dockerfile_path, 'w+') as f:
-                f.write(dockerfile)
             if partition == "base":
                 part_name = component
             else:
@@ -42,8 +37,21 @@ def generate_dockerfiles(base_image, app_dir, components, resources):
             if part_name not in resources:
                 part_name = get_part_x_name(part_name)
 
-            for platform in resources[part_name]["platforms"]:
-                dockerfiles[component][partition].append(("linux/%s" % platform, dockerfile_path))
+            dockerfiles[component][partition] = []
+            dockerfile_dir = "%s/aisprint/designs/%s/%s" % (app_dir, component, partition)
+            dockerfile_path = "%s/Dockerfile" % dockerfile_dir
+            dockerfile = "FROM %s\n%s" % (base_image, dockerfile_tpl.replace("{{component_name}}", component))
+            with open(dockerfile_path, 'w+') as f:
+                f.write(dockerfile)
+
+            # Generate image for SCAR in ECR
+            if resources[part_name]["aws"]:
+                dockerfile_path_aws = "%s/Dockerfile.aws" % dockerfile_dir
+                dockerfile = "FROM %s\n%s\n%s" % (base_image,
+                                                  dockerfile_tpl.replace("{{component_name}}", component), 
+                                                  dockerfile_aws_tpl)
+                with open(dockerfile_path_aws, 'w+') as f:
+                    f.write(dockerfile)
 
             # Copy the script
             scriptfile = scriptfile_tpl.replace("{{component_name}}", component)
@@ -51,44 +59,59 @@ def generate_dockerfiles(base_image, app_dir, components, resources):
             with open(scriptfile_path, 'w+') as f:
                 f.write(scriptfile)
 
+            for platform in resources[part_name]["platforms"]:
+                dockerfiles[component][partition].append(("linux/%s" % platform,
+                                                          False,
+                                                          dockerfile_path))
+                if resources[part_name]["aws"]:
+                    dockerfiles[component][partition].append(("linux/%s" % platform,
+                                                            True,
+                                                            dockerfile_path_aws))
+
     return dockerfiles
 
 
-def build_and_push(registry, registry_folder, dockerfiles, username, password, push=True, build=True):
+def build_and_push(registry, registry_folder, dockerfiles, ecr, push=True, build=True):
     """Build and push the images per each component using the dockerfiles specified."""
     try:
         dclient = docker.from_env()
     except docker.errors.DockerException:
         raise Exception("Error getting docker client. Check if current user"
                         " has the correct permissions (docker group).")
-    if push:
-        dclient.login(username=username, password=password, registry=registry)
 
     res = {}
     for component, partitions in dockerfiles.items():
         res[component] = {}
         for partition, docker_images in partitions.items():
             res[component][partition] = []
-            for (platform, dockerfile) in docker_images:
+            for (platform, aws, dockerfile) in docker_images:
                 if platform == "linux/amd64":
                     name = "%s_%s_amd64" % (component, partition)
                 else:
                     name = "%s_%s_arm64" % (component, partition)
                 if registry_folder.startswith("/"):
                     registry_folder = registry_folder[1:]
-                image = "%s/%s/%s:latest" % (registry, registry_folder, name)
+                if aws:
+                    if not ecr:
+                        raise Exception("AWS ECR repository URL parameter not set.")
+                    image = "%s:%s" % (ecr, name)
+                else:
+                    image = "%s/%s/%s:latest" % (registry, registry_folder, name)
                 if build:
-                    print("Building image: %s ..." % name)
-                    build_dir = os.path.dirname(dockerfile)
-                    dclient.images.build(path=build_dir, tag=image, pull=True, platform=platform)
+                    print("Building %simage: %s ..." % ("ECR " if aws else "", name))
+                    dclient.images.build(path=os.path.dirname(dockerfile), tag=image, pull=True,
+                                         platform=platform, dockerfile=os.path.basename(dockerfile))
 
                 # Pushing new image
                 res[component][partition].append(image)
                 if push:
-                    print("Pushing image: %s ..." % name)
+                    print("Pushing %simage: %s ..." % ("ECR " if aws else "", name))
                     for line in dclient.images.push(image, stream=True, decode=True):
                         if 'error' in line:
-                            raise Exception("Error pushing image: %s" % line['errorDetail']['message'])
+                            msg = line['errorDetail']['message']
+                            if msg == 'EOF':
+                                msg += ". Check if the ECR repo exists."
+                            raise Exception("Error pushing image: %s" % msg)
             if build:
                 os.unlink(dockerfile)
 

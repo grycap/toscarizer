@@ -1,0 +1,22 @@
+ComputationalLayers: 
+   computationalLayer1:
+      number: 1
+      Resources: 
+         resource1:
+            name: RaspPi
+            minio:
+               endpoint: https://minio.graspi.im.grycap.net
+               access_key: minio
+               secret_key: minio123
+            oscar:
+               name: oscar-test
+   computationalLayer4:
+      number: 4
+      Resources: 
+         resource1:
+            name: AWS-FaaS
+            aws:
+               bucket: test1
+               region: us-east-1
+               access_key: ak
+               secret_key: sk

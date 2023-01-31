@@ -1,17 +1,15 @@
 functions:
   oscar:
-  - oscar-cluster-fixed1:
+  - oscar-cluster-fixed3:
       cpu: '0.9'
       environment:
         Variables:
           COMPONENT_NAME: mask-detector
-          KCI: https://minio.oscar-cluster-fixed1.im.grycap.net
+          KCI: https://minio.oscar-cluster-fixed3.im.grycap.net
           MONIT_HOST: ai-sprint-mask-detector-app-telegraf
           MONIT_PORT: '8094'
       image: registry.gitlab.polimi.it/ai-sprint/mask-detector:tag
       input:
-      - path: mask-detector/input
-        storage_provider: minio
       - path: blurry-faces-onnx/output
         storage_provider: minio
       memory: 4096Mi
@@ -20,7 +18,7 @@ functions:
       - path: mask-detector/output
         storage_provider: minio
       script: /opt/mask-detector/script.sh
-  - oscar-test:
+  - oscar-cluster-fixed1:
       cpu: '0.9'
       environment:
         Variables:
@@ -36,14 +34,12 @@ functions:
       name: blurry-faces-onnx
       output:
       - path: blurry-faces-onnx/output
-        storage_provider: minio
-      - path: blurry-faces-onnx/output
-        storage_provider: minio.oscar-cluster-fixed1
+        storage_provider: minio.oscar-cluster-fixed3
       script: /opt/blurry-faces-onnx/script.sh
       storage_providers:
         minio:
-          oscar-cluster-fixed1:
+          oscar-cluster-fixed3:
             access_key: minio
-            endpoint: https://minio.oscar-cluster-fixed1.im.grycap.net
+            endpoint: https://minio.oscar-cluster-fixed3.im.grycap.net
             region: us-east-1
-            secret_key: fixed4
+            secret_key: fixed6

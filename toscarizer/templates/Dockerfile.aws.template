@@ -1,0 +1,13 @@
+# Create a base dir
+ARG FUNCTION_DIR="/var/task"
+WORKDIR ${FUNCTION_DIR}
+# Set workdir in the path
+ENV PATH="${FUNCTION_DIR}:${PATH}"
+# Copy the script
+COPY script.sh ${FUNCTION_DIR}
+RUN chmod +x ${FUNCTION_DIR}/script.sh
+# Copy the supervisor
+RUN wget -P ${FUNCTION_DIR} https://github.com/grycap/faas-supervisor/releases/download/1.5.5/supervisor
+RUN chmod +x ${FUNCTION_DIR}/supervisor
+# Set it as the CMD
+CMD [ "supervisor" ]

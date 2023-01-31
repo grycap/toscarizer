@@ -21,16 +21,15 @@ topology_template:
         memory: 2048Mi
         name: blurry-faces-onnx
         output:
-        - path: blurry-faces-onnx/output
-          storage_provider: minio.oscar-cluster-fixed3
+        - path: test1/blurry-faces-onnx/output
+          storage_provider: s3.oscar-cluster-fixed2
         script: /opt/blurry-faces-onnx/script.sh
         storage_providers:
-          minio:
-            oscar-cluster-fixed3:
-              access_key: minio
-              endpoint: https://minio.oscar-cluster-fixed3.im.grycap.net
+          s3:
+            oscar-cluster-fixed2:
+              access_key: ak
               region: us-east-1
-              secret_key: fixed6
+              secret_key: sk
       type: tosca.nodes.aisprint.FaaS.Function
   outputs:
     oscar_service_cred:

@@ -1,0 +1,135 @@
+System:
+  name: Mask Detection Application
+  NetworkDomains:
+    ND1:
+      name: Network Domain 1
+      AccessDelay: 0.00000277
+      Bandwidth: 40000
+      subNetworkDomains: []
+      ComputationalLayers: 
+         computationalLayer1:
+            name: Edge Layer
+            number: 1
+            type: PhysicalAlreadyProvisioned
+            Resources: 
+              resource1:
+                  name: RaspPi
+                  totalNodes: 3
+                  description: Raspberry PIs 4 Model B 
+                  cost: 0.6
+                  memorySize: 4096
+                  operatingSystemDistribution: Raspbian
+                  operatingSystemType: Linux
+                  operatingSystemVersion: 10
+                  operatingSystemImageId: ""
+                  secureBoot: string
+                  measuredBoot: string
+                  storageSize: 64GB
+                  storageType: flash
+                  processors:
+                     processor1:
+                        name: BCM2711
+                        type: Cortex-A72
+                        architecture: arm64
+                        computingUnits: 4
+                        internalMemory: 4
+                        SGXFlag: False
+         computationalLayer2:
+            name: Private cloud Layer
+            number: 2
+            type: Virtual
+            Resources: 
+               resource1:
+                  name: VM1
+                  totalNodes: 4
+                  description: Inhouse VM Type 1 UPV
+                  cost: 0.675
+                  memorySize: 8192
+                  storageSize: 25
+                  storageType: SSD
+                  operatingSystemDistribution: Ubuntu
+                  operatingSystemType: Linux
+                  operatingSystemVersion: 22.04
+                  operatingSystemImageId: one://ramses.i3m.upv.es/1396
+                  secureBoot: False
+                  measuredBoot: False
+                  onSpot: False
+                  processors:
+                     processor1:
+                        name: Xeon
+                        type: SkyLake
+                        architecture: amd64
+                        computingUnits: 4
+                        internalMemory: 64
+                        SGXFlag: False
+    ND2:
+      name: Network Domain 2
+      AccessDelay: 0.00000277
+      Bandwidth: 40000
+      subNetworkDomains: [ND1]
+      ComputationalLayers:
+         computationalLayer3:
+            name: Public Cloud Layer
+            number: 3
+            type: Virtual
+            Resources:
+              resource1:
+                  name: VM2
+                  totalNodes: 5
+                  description: g5.2xlarge 
+                  cost: 1.2
+                  memorySize: 32768
+                  storageSize: 450
+                  storageType: SSD
+                  operatingSystemDistribution: Ubuntu
+                  operatingSystemType: Linux
+                  operatingSystemVersion: 20.04
+                  operatingSystemImageId: one://ramses.i3m.upv.es/1396
+                  secureBoot: False
+                  measuredBoot: False
+                  onSpot: False
+                  processors:
+                     processor1:
+                        name: Xeon
+                        type: SkyLake
+                        architecture: amd64
+                        computingUnits: 8
+                        internalMemory: 64
+                        SGXFlag: False
+              resource2:
+                  name: VM3
+                  totalNodes: 5
+                  description: c7g.2xlarge 
+                  cost: 0.289
+                  memorySize: 16384
+                  storageSize: 25
+                  storageType: SSD
+                  operatingSystemDistribution: Ubuntu
+                  operatingSystemType: Linux
+                  operatingSystemVersion: 20.04
+                  secureBoot: False
+                  measuredBoot: False
+                  onSpot: False
+                  processors:
+                     processor1:
+                        name: Xeon
+                        type: SkyLake
+                        architecture: amd64
+                        computingUnits: 8
+                        internalMemory: 64
+                        SGXFlag: False
+         computationalLayer4:
+            name: FaaS Layer
+            number: 4
+            type: NativeCloudFunction
+            Resources: 
+                resource1:
+                  name: AWS-FaaS
+                  description: AWS Lambda
+                  architecture: amd64
+                  cost: 0.0001561
+                  memorySize: 8192
+                  storageSize: 0.512
+                  region: eu-south-1
+                  idleTime: 600
+                  transitionCost:  0.02625   

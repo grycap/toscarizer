@@ -1,0 +1,28 @@
+imports:
+- ec3_custom_types: https://raw.githubusercontent.com/grycap/ec3/tosca/tosca/custom_types.yaml
+topology_template:
+  inputs:
+    cluster_name:
+      default: oscar-cluster-fixed2
+      type: string
+  node_templates:
+    lambda_function_mask-detector:
+      properties:
+        cpu: 0.9
+        env_variables:
+          COMPONENT_NAME: mask-detector
+          KCI: AWS Lambda
+          MONIT_HOST: ai-sprint-mask-detector-app-telegraf
+          MONIT_PORT: '8094'
+        image: 000000000000.dkr.ecr.us-east-1.amazonaws.com/mask-detector:tag
+        input:
+        - path: test1/blurry-faces-onnx/output
+          storage_provider: s3
+        memory: 4096Mi
+        name: mask-detector
+        output:
+        - path: test1/mask-detector/output
+          storage_provider: s3
+        script: /opt/mask-detector/script.sh
+      type: tosca.nodes.aisprint.FaaS.Function
+tosca_definitions_version: tosca_simple_yaml_1_0

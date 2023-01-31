@@ -3,7 +3,7 @@ imports:
 topology_template:
   inputs:
     cluster_name:
-      default: oscar-cluster-fixed13
+      default: oscar-cluster-fixed3
       type: string
   node_templates:
     oscar_service_blurry-faces-onnx_partition1_1:
@@ -22,15 +22,15 @@ topology_template:
         name: blurry-faces-onnx-partition1-1
         output:
         - path: blurry-faces-onnx-partition1-1/output
-          storage_provider: minio.oscar-cluster-fixed15
+          storage_provider: minio.oscar-cluster-fixed1
         script: /opt/blurry-faces-onnx_partition1_1/script.sh
         storage_providers:
           minio:
-            oscar-cluster-fixed15:
+            oscar-cluster-fixed1:
               access_key: minio
-              endpoint: https://minio.oscar-cluster-fixed15.im.grycap.net
+              endpoint: https://minio.oscar-cluster-fixed1.im.grycap.net
               region: us-east-1
-              secret_key: fixed18
+              secret_key: fixed4
       type: tosca.nodes.aisprint.FaaS.Function
   outputs:
     oscar_service_cred:
