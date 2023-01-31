@@ -143,6 +143,13 @@ def gen_tosca_yamls(dag, resources_file, deployments_file, phys_file, elastic, a
         oscar_clusters_per_component[component] = merge_templates(oscar_clusters_per_component[component],
                                                                   oscar_service)
 
+    to_delete = ["minio_endpoint", "minio_ak", "minio_sk", "oscar_name",
+                 "aws", "aws_region", "aws_bucket", "aws_ak", "aws_sk"]
+    for cluster in list(oscar_clusters_per_component.values()):
+        for item in to_delete:
+            if item in cluster["topology_template"]["inputs"]:
+                del cluster["topology_template"]["inputs"][item]
+
     return oscar_clusters_per_component
 
 
@@ -462,6 +469,9 @@ def gen_tosca_cluster(compute_layer, res_name, phys_nodes, elastic, auth_data):
     elif compute_layer["type"] == "PhysicalAlreadyProvisioned":
         if len(compute_layer["Resources"]) != 1:
             raise Exception("PhysicalAlreadyProvisioned ComputeLayer must only have 1 resource.")
+        if not phys_nodes:
+            raise Exception("Computational layer of type PhysicalToBeProvisioned,"
+                            " but Physical Data File not exists.")
         res = list(compute_layer["Resources"].values())[0]
         minio_endpoint = get_physical_resource_data(compute_layer, res, phys_nodes, "minio", "endpoint")
         minio_ak = get_physical_resource_data(compute_layer, res, phys_nodes, "minio", "access_key")
@@ -477,6 +487,9 @@ def gen_tosca_cluster(compute_layer, res_name, phys_nodes, elastic, auth_data):
 
         if len(compute_layer["Resources"]) != 1:
             raise Exception("PhysicalAlreadyProvisioned ComputeLayer must only have 1 resource.")
+        if not phys_nodes:
+            raise Exception("Computational layer of type PhysicalToBeProvisioned,"
+                            " but Physical Data File not exists.")
         res = list(compute_layer["Resources"].values())[0]
         aws_region = get_physical_resource_data(compute_layer, res, phys_nodes, "aws", "region")
         aws_bucket = get_physical_resource_data(compute_layer, res, phys_nodes, "aws", "bucket")

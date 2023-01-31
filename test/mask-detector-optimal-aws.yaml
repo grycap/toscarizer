@@ -2,21 +2,6 @@ imports:
 - ec3_custom_types: https://raw.githubusercontent.com/grycap/ec3/tosca/tosca/custom_types.yaml
 topology_template:
   inputs:
-    aws:
-      default: true
-      type: boolean
-    aws_ak:
-      default: ak
-      type: string
-    aws_bucket:
-      default: test1
-      type: string
-    aws_region:
-      default: us-east-1
-      type: string
-    aws_sk:
-      default: sk
-      type: string
     cluster_name:
       default: oscar-cluster-fixed9
       type: string

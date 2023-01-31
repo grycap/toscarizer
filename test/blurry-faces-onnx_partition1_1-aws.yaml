@@ -5,18 +5,6 @@ topology_template:
     cluster_name:
       default: oscar-cluster-fixed3
       type: string
-    minio_ak:
-      default: minio
-      type: string
-    minio_endpoint:
-      default: https://minio.graspi.im.grycap.net
-      type: string
-    minio_sk:
-      default: minio123
-      type: string
-    oscar_name:
-      default: oscar-test
-      type: string
   node_templates:
     oscar_service_blurry-faces-onnx_partition1_1:
       properties:

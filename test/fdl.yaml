@@ -18,7 +18,7 @@ functions:
       - path: mask-detector/output
         storage_provider: minio
       script: /opt/mask-detector/script.sh
-  - oscar-test:
+  - oscar-cluster-fixed1:
       cpu: '0.9'
       environment:
         Variables:
