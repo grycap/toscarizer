@@ -3,7 +3,7 @@ ARG FUNCTION_DIR="/var/task"
 WORKDIR ${FUNCTION_DIR}
 # Set workdir in the path
 ENV PATH="${FUNCTION_DIR}:${PATH}"
-# Coy the script
+# Copy the script
 COPY script.sh ${FUNCTION_DIR}
 RUN chmod +x ${FUNCTION_DIR}/script.sh
 # Copy the supervisor
