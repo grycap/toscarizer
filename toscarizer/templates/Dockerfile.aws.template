@@ -5,6 +5,7 @@ WORKDIR ${FUNCTION_DIR}
 ENV PATH="${FUNCTION_DIR}:${PATH}"
 # Coy the script
 COPY script.sh ${FUNCTION_DIR}
+RUN chmod +x ${FUNCTION_DIR}/script.sh
 # Copy the supervisor
 RUN wget -P ${FUNCTION_DIR} https://github.com/grycap/faas-supervisor/releases/download/1.5.5/supervisor
 RUN chmod +x ${FUNCTION_DIR}/supervisor

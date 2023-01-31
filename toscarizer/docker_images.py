@@ -47,7 +47,9 @@ def generate_dockerfiles(base_image, app_dir, components, resources):
             # Generate image for SCAR in ECR
             if resources[part_name]["aws"]:
                 dockerfile_path_aws = "%s/Dockerfile.aws" % dockerfile_dir
-                dockerfile = "FROM %s\n%s" % (base_image, dockerfile_aws_tpl)
+                dockerfile = "FROM %s\n%s\n%s" % (base_image,
+                                                  dockerfile_tpl.replace("{{component_name}}", component), 
+                                                  dockerfile_aws_tpl)
                 with open(dockerfile_path_aws, 'w+') as f:
                     f.write(dockerfile)
 
