@@ -25,7 +25,7 @@ functions:
             endpoint: https://minio.oscar-cluster-fixed20.im.grycap.net
             region: us-east-1
             secret_key: fixed23
-  - oscar-test:
+  - oscar-cluster-fixed13:
       cpu: '0.9'
       environment:
         Variables:
