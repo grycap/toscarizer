@@ -21,7 +21,7 @@ this example:
 ```sh
 docker run --rm -v local_app_path:/app \
     -ti registry.gitlab.polimi.it/ai-sprint/toscarizer/toscarizer \
-    toscarizer tosca --application_dir app --base
+    toscarizer tosca --application_dir /app --base
 ```
 
 In the case of the `docker` operation (Step3) docker is used to build and
@@ -30,9 +30,10 @@ to work, as in this example:
 
 ```sh
 docker run --rm -v local_app_path:/app \
-    -v /var/run/docker.sock:/var/run/docker.sock
+    -v /var/run/docker.sock:/var/run/docker.sock  \
+    -v $HOME/.docker/config.json:/root/.docker/config.json \
     -ti registry.gitlab.polimi.it/ai-sprint/toscarizer/toscarizer \
-    toscarizer docker --application_dir app
+    toscarizer docker --application_dir /app
     ...
 ```
 
