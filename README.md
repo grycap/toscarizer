@@ -139,9 +139,8 @@ is located at path ``app/im/auth.dat``. It will use the EGI IM instance (<https:
 The auth file must contain not only the InfrastructureManager and the cloud provider
 selected, but also some AWS credentials (EC2 type) to manage the DNS domain names
 used in the OSCAR TOSCA template. In case of using the default domain value
-`im.grycap.net` you should contact the authors to get a set of valid
-credentials. Otherwise you can change the `domain` input value in the
-`oscar.yaml` template and then use your own credentials.
+`im.grycap.net` you should contact the authors to get a set of valid credentials.
+Otherwise you can change set the `domain` parameter and then use your own credentials.
 
 But you can also specify the URL of another IM endpoint, an specific IM
 authentication file, and even the set of TOSCA files to deploy.
@@ -149,6 +148,7 @@ authentication file, and even the set of TOSCA files to deploy.
 ```sh
 toscarizer deploy --im_url http://someim.com \
                   --im_auth auth.dat \
+                  --domain some_domain.com \
                   --tosca_file some_path/tosca1.yaml \
                   --tosca_file some_path/tosca1.yaml
 ```

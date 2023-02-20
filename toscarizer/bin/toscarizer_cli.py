@@ -86,9 +86,10 @@ def fdl(application_dir, base, optimal):
 @click.option("--application_dir", help="Path to the AI-SPRINT application.", default=None)
 @click.option('--base', is_flag=True, help="Generates base TOSCA file for base case", default=False)
 @click.option('--optimal', is_flag=True, help="Generates the optimal TOSCA file", default=False)
-@click.option('--elastic', help="Set max number of nodes to deploy the OSCAR cluster as elastic.", default=0)
-@click.option('--im_auth', required=False)
-def tosca(application_dir, base, optimal, elastic, im_auth):
+@click.option('--elastic', help="Set max number of nodes to deploy the OSCAR cluster as elastic", default=0)
+@click.option('--im_auth', help="Set the IM auth file path", required=False)
+@click.option('--domain', help="Set the OSCAR clusters DNS domain", required=False)
+def tosca(application_dir, base, optimal, elastic, im_auth, domain):
     if not base and not optimal:
         print("--base or --optimal options must be set.")
         sys.exit(1)
@@ -113,7 +114,7 @@ def tosca(application_dir, base, optimal, elastic, im_auth):
         resources_file = "%s/%s" % (application_dir, RESOURCES_COMPLETE_FILE)
 
     toscas = gen_tosca_yamls(dag, resources_file, deployments_file,
-                             "%s/%s" % (application_dir, PHYSICAL_NODES_FILE), elastic, auth_data)
+                             "%s/%s" % (application_dir, PHYSICAL_NODES_FILE), elastic, auth_data, domain)
     for cl, tosca in toscas.items():
         if optimal:
             tosca_file = "%s/aisprint/deployments/optimal_deployment/im/%s.yaml" % (application_dir, cl)
