@@ -103,7 +103,7 @@ def get_physical_resource_data(comp_layer, res, phys_file, node_type, value, ind
     return None
 
 
-def gen_tosca_yamls(dag, resources_file, deployments_file, phys_file, elastic, auth_data):
+def gen_tosca_yamls(dag, resources_file, deployments_file, phys_file, elastic, auth_data, domain):
     with open(deployments_file, 'r') as f:
         deployments = yaml.safe_load(f)
         if "System" in deployments:
@@ -133,7 +133,7 @@ def gen_tosca_yamls(dag, resources_file, deployments_file, phys_file, elastic, a
         if not cl_name:
             raise Exception("No compute layer found for component." % component.get("name"))
         oscar_clusters_per_component[component] = gen_tosca_cluster(cls[cl_name], res_name, phys_nodes,
-                                                                    elastic, auth_data)
+                                                                    elastic, auth_data, domain)
 
     # Now create the OSCAR services and merge in the correct OSCAR cluster
     for component, next_items in dag.adj.items():
@@ -327,7 +327,7 @@ def get_service(component, next_items, prev_items, container, oscar_clusters):
     return res
 
 
-def gen_tosca_cluster(compute_layer, res_name, phys_nodes, elastic, auth_data):
+def gen_tosca_cluster(compute_layer, res_name, phys_nodes, elastic, auth_data, domain):
     with open(TOSCA_TEMPLATE, 'r') as f:
         tosca_tpl = yaml.safe_load(f)
 
@@ -365,6 +365,9 @@ def gen_tosca_cluster(compute_layer, res_name, phys_nodes, elastic, auth_data):
             tosca_comp["topology_template"]["inputs"]["max_wn_num"]["default"] = elastic
             ec_fe = tosca_comp["topology_template"]["node_templates"]["elastic_cluster_front_end"]
             ec_fe["properties"]["im_auth"] = auth_data
+
+        if domain:
+            tosca_comp["topology_template"]["inputs"]["domain_name"]["default"] = domain
 
         tosca_comp["topology_template"]["inputs"]["cluster_name"]["default"] = gen_oscar_name()
         tosca_comp["topology_template"]["inputs"]["admin_token"]["default"] = get_random_string(16)
