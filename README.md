@@ -107,6 +107,11 @@ SSH auth data or MinIO service info) is needed. It is expected in the app
 common_config directory with name ``physical_nodes.yaml``. See [here](app2/common_config/physical_nodes.yaml)
 an example of the format.
 
+In the OSCAR configuration a set of valid DNS records are assigned to the nodes to
+enable correct and secure external access to the services. A Route53 managed domain
+is required to make it work. You can set it with the ``--domain`` parameter
+(otherwise the default im.grycap.net will be used):
+
 It has also the option to prepare the OSCAR clusters to be elastic,
 use the `--elastic` option setting the maximum number of nodes to set.
 This option has a limitation: the WNs of the cluster must have the same
@@ -140,7 +145,7 @@ The auth file must contain not only the InfrastructureManager and the cloud prov
 selected, but also some AWS credentials (EC2 type) to manage the DNS domain names
 used in the OSCAR TOSCA template. In case of using the default domain value
 `im.grycap.net` you should contact the authors to get a set of valid credentials.
-Otherwise you can change set the `domain` parameter and then use your own credentials.
+Otherwise you have to add some EC2 credentials able to manage the specified domain in AWS Route53.
 
 But you can also specify the URL of another IM endpoint, an specific IM
 authentication file, and even the set of TOSCA files to deploy.
@@ -148,7 +153,6 @@ authentication file, and even the set of TOSCA files to deploy.
 ```sh
 toscarizer deploy --im_url http://someim.com \
                   --im_auth auth.dat \
-                  --domain some_domain.com \
                   --tosca_file some_path/tosca1.yaml \
                   --tosca_file some_path/tosca1.yaml
 ```
