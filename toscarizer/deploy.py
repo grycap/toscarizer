@@ -70,7 +70,9 @@ def deploy(tosca_files, auth_data, im_url, verify, dag, delay=10, max_time=900):
                             while not success and num < 5:
                                 success, inf_id = launch(tosca_file, im_url, auth_data, verify)
                                 if not success:
-                                    print("Error launching deployment for component %s. Waiting to retry." % component)
+                                    print("Error launching deployment for component %s." % component)
+                                    print(inf_id)
+                                    print("Waiting to retry.")
                                     time.sleep(num*10)
                                 num += 1
                         else:
