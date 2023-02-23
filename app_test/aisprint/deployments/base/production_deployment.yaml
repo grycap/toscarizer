@@ -62,6 +62,77 @@ System:
                   computingUnits: 4
                   internalMemory: 64
                   SGXFlag: false
+    ND2:
+      name: Network Domain 2
+      AccessDelay: 0.00000277
+      Bandwidth: 40000
+      subNetworkDomains: [ND1]
+      ComputationalLayers:
+         computationalLayer3:
+            name: Public Cloud Layer
+            number: 3
+            type: Virtual
+            Resources:
+              resource1:
+                  name: VM2
+                  totalNodes: 5
+                  description: g5.2xlarge 
+                  cost: 1.2
+                  memorySize: 32768
+                  storageSize: 450
+                  storageType: SSD
+                  operatingSystemDistribution: Ubuntu
+                  operatingSystemType: Linux
+                  operatingSystemVersion: 20.04
+                  operatingSystemImageId: one://ramses.i3m.upv.es/1396
+                  secureBoot: False
+                  measuredBoot: False
+                  onSpot: False
+                  processors:
+                     processor1:
+                        name: Xeon
+                        type: SkyLake
+                        architecture: amd64
+                        computingUnits: 8
+                        internalMemory: 64
+                        SGXFlag: False
+              resource2:
+                  name: VM3
+                  totalNodes: 5
+                  description: c7g.2xlarge 
+                  cost: 0.289
+                  memorySize: 16384
+                  storageSize: 25
+                  storageType: SSD
+                  operatingSystemDistribution: Ubuntu
+                  operatingSystemType: Linux
+                  operatingSystemVersion: 20.04
+                  secureBoot: False
+                  measuredBoot: False
+                  onSpot: False
+                  processors:
+                     processor1:
+                        name: Xeon
+                        type: SkyLake
+                        architecture: amd64
+                        computingUnits: 8
+                        internalMemory: 64
+                        SGXFlag: False
+         computationalLayer4:
+            name: FaaS Layer
+            number: 4
+            type: NativeCloudFunction
+            Resources: 
+                resource1:
+                  name: AWS-FaaS
+                  description: AWS Lambda
+                  architecture: amd64
+                  cost: 0.0001561
+                  memorySize: 8192
+                  storageSize: 0.512
+                  region: eu-south-1
+                  idleTime: 600
+                  transitionCost:  0.02625   
   Components:
     component1:
       name: blurry-faces-onnx
@@ -75,17 +146,17 @@ System:
           networkProtection: false
           fileSystemProtection: false
           GPURequirement: false
-          selectedExecutionResources: RaspPi
+          selectedExecutionResource: RaspPi
     component2:
       name: mask-detector
-      executionLayer: 2
+      executionLayer: 4
       Containers:
         container1:
-          image: registry.gitlab.polimi.it/ai-sprint/mask-detector:tag
+          image: 000000000000.dkr.ecr.us-east-1.amazonaws.com/mask-detector:tag
           memorySize: 4096
           computingUnits: 0.9
           trustedExecution: false
           networkProtection: false
           fileSystemProtection: false
           GPURequirement: false
-          selectedExecutionResources: VM1
+          selectedExecutionResource: AWS-FaaS
