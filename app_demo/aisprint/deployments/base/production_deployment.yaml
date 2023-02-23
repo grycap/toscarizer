@@ -75,7 +75,7 @@ System:
           networkProtection: false
           fileSystemProtection: false
           GPURequirement: false
-          selectedExecutionResources: RaspPi
+          selectedExecutionResource: RaspPi
     component2:
       name: mask-detector
       executionLayer: 2
@@ -88,4 +88,4 @@ System:
           networkProtection: false
           fileSystemProtection: false
           GPURequirement: false
-          selectedExecutionResources: VM1
+          selectedExecutionResource: VM1
