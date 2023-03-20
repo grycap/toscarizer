@@ -157,7 +157,13 @@ toscarizer deploy --im_url http://someim.com \
                   --tosca_file some_path/tosca1.yaml
 ```
 
-It will return in the standard output a YAML formatted output with the name
+During deployment process the command will show the IDs of the infrastructures
+deployed. You can use this ID to track the status of the deployment. You can
+access the IM-Dashboard associated to the IM instance you have specified in
+the deploy command ([default one](https://im.egi.eu)), or you can also use the
+[IM-Client](https://github.com/grycap/im-client).
+
+At the end it will return in the standard output a YAML formatted output with the name
 of each yaml file with the infrastructure ID generated or the error message
 returned.
 
