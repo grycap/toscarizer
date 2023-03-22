@@ -13,7 +13,7 @@ except ImportError:
 def launch(tosca_file, im_url, auth_data, verify):
     headers = {"Authorization": auth_data}
     headers["Content-Type"] = "text/yaml"
-    url = "%s/infrastructures" % im_url
+    url = "%s/infrastructures?async=1" % im_url
 
     try:
         with open(tosca_file, 'r') as f:
