@@ -47,6 +47,23 @@ topology_template:
       default: 1
       required: yes
 
+    top_influx_url:
+      type: string
+      description: URL of the Top level InfluxDB instance
+      default: 'https://influx.oncloudandheat.com'
+    top_influx_token:
+      type: string
+      description: Token to access the Top level InfluxDB API
+      default: ''
+    qos_constraints:
+      type: string
+      description: App QoS Constraints
+      default: ''
+    app_name:
+      type: string
+      description: App name
+      default: ''
+
   node_templates:
 
     oscar:
@@ -72,6 +89,20 @@ topology_template:
                 source: 30300
       requirements:
         - host: lrms_front_end
+
+    monitoring:
+      type: tosca.nodes.SoftwareComponent
+      requirements:
+        - host: lrms_front_end 
+      interfaces:
+        Standard:
+          configure:
+            implementation: https://raw.githubusercontent.com/grycap/ec3/tosca/tosca/artifacts/ai-monitoring/ai-sprint-monit-site.yaml
+            inputs:
+              REMOTE_INFLUX_URL: { get_input: top_influx_url }
+              REMOTE_INFLUX_TOKEN: { get_input: top_influx_token }
+              QOS_CONSTRAINTS: { get_input: qos_constraints }
+              APP_NAME: { get_input: app_name }
 
     lrms_front_end:
       type: tosca.nodes.indigo.LRMS.FrontEnd.Kubernetes
