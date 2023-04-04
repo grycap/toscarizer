@@ -12,7 +12,7 @@ topology_template:
         env_variables:
           COMPONENT_NAME: mask-detector
           KCI: AWS Lambda
-          MONIT_HOST: ai-sprint-mask-detector-app-telegraf
+          MONIT_HOST: ai-sprint_mask_detection_app-telegraf
           MONIT_PORT: '8094'
         image: 000000000000.dkr.ecr.us-east-1.amazonaws.com/mask-detector:tag
         input:

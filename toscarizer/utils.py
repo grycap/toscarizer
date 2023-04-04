@@ -26,7 +26,7 @@ def parse_dag(dag_file):
     for source, target, weight in dag['dependencies']:
         G.add_edge(source, target, weight=weight)
 
-    return G
+    return dag["name"], G
 
 
 def parse_resources(resource_file, deployments_files):
