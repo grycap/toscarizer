@@ -157,7 +157,7 @@ topology_template:
         env_variables:
           COMPONENT_NAME: blurry-faces-onnx_partition1_2
           KCI: https://minio.oscar-cluster-fixed1.im.grycap.net
-          MONIT_HOST: ai-sprint-blurry-faces-onnx_partition1_2-app-telegraf
+          MONIT_HOST: ai-sprint_mask_detection_app-telegraf
           MONIT_PORT: '8094'
         image: registry.gitlab.polimi.it/ai-sprint/blurry-faces-onnx_partition1_2:tag
         input:

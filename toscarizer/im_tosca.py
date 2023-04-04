@@ -103,7 +103,7 @@ def get_physical_resource_data(comp_layer, res, phys_file, node_type, value, ind
     return None
 
 
-def gen_tosca_yamls(dag, resources_file, deployments_file, phys_file, elastic, auth_data, domain):
+def gen_tosca_yamls(app_name, dag, resources_file, deployments_file, phys_file, elastic, auth_data, domain):
     with open(deployments_file, 'r') as f:
         deployments = yaml.safe_load(f)
         if "System" in deployments:
@@ -138,7 +138,7 @@ def gen_tosca_yamls(dag, resources_file, deployments_file, phys_file, elastic, a
     # Now create the OSCAR services and merge in the correct OSCAR cluster
     for component, next_items in dag.adj.items():
         # Add the node
-        oscar_service = get_service(component, next_items, list(dag.predecessors(component)),
+        oscar_service = get_service(app_name, component, next_items, list(dag.predecessors(component)),
                                     container_per_component[component], oscar_clusters_per_component)
         oscar_clusters_per_component[component] = merge_templates(oscar_clusters_per_component[component],
                                                                   oscar_service)
@@ -153,7 +153,7 @@ def gen_tosca_yamls(dag, resources_file, deployments_file, phys_file, elastic, a
     return oscar_clusters_per_component
 
 
-def get_service(component, next_items, prev_items, container, oscar_clusters):
+def get_service(app_name, component, next_items, prev_items, container, oscar_clusters):
     """Generate the OSCAR service TOSCA."""
     service = {
         "type": "tosca.nodes.aisprint.FaaS.Function",
@@ -167,7 +167,7 @@ def get_service(component, next_items, prev_items, container, oscar_clusters):
             "cpu": container.get("computingUnits", "1"),
             "env_variables": {
                 "COMPONENT_NAME": component,
-                "MONIT_HOST": "ai-sprint-%s-app-telegraf" % component,
+                "MONIT_HOST": "%s-telegraf" % app_name,
                 "MONIT_PORT": "8094"
             }
         }

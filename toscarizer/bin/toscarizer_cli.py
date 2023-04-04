@@ -106,15 +106,15 @@ def tosca(application_dir, base, optimal, elastic, im_auth, domain):
             auth_data = f.read().replace("\n", "\\n")
 
     if base:
-        dag = parse_dag("%s/%s" % (application_dir, BASE_DAG_FILE))
+        app_name, dag = parse_dag("%s/%s" % (application_dir, BASE_DAG_FILE))
         deployments_file = "%s/%s" % (application_dir, BASE_RESOURCES_COMPLETE_FILE)
         resources_file = "%s/%s" % (application_dir, BASE_RESOURCES_COMPLETE_FILE)
     else:
-        dag = parse_dag("%s/%s" % (application_dir, OPTIMAL_DAG_FILE))
+        app_name, dag = parse_dag("%s/%s" % (application_dir, OPTIMAL_DAG_FILE))
         deployments_file = "%s/%s" % (application_dir, RESOURCES_COMPLETE_FILE)
         resources_file = "%s/%s" % (application_dir, RESOURCES_COMPLETE_FILE)
 
-    toscas = gen_tosca_yamls(dag, resources_file, deployments_file,
+    toscas = gen_tosca_yamls(app_name, dag, resources_file, deployments_file,
                              "%s/%s" % (application_dir, PHYSICAL_NODES_FILE), elastic, auth_data, domain)
     for cl, tosca in toscas.items():
         if optimal:
@@ -146,10 +146,10 @@ def deploy(im_url, im_auth, verify, application_dir, base, optimal, tosca_file):
 
         if optimal:
             tosca_dir = "%s/aisprint/deployments/optimal_deployment/im" % application_dir
-            dag = parse_dag("%s/%s" % (application_dir, OPTIMAL_DAG_FILE))
+            _, dag = parse_dag("%s/%s" % (application_dir, OPTIMAL_DAG_FILE))
         else:
             tosca_dir = "%s/aisprint/deployments/base/im" % application_dir
-            dag = parse_dag("%s/%s" % (application_dir, BASE_DAG_FILE))
+            _, dag = parse_dag("%s/%s" % (application_dir, BASE_DAG_FILE))
         tosca_file = glob.glob("%s/*.yaml" % tosca_dir)
 
     elif not tosca_file:

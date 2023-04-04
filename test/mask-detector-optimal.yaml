@@ -157,7 +157,7 @@ topology_template:
         env_variables:
           COMPONENT_NAME: mask-detector
           KCI: https://minio.oscar-cluster-fixed20.im.grycap.net
-          MONIT_HOST: ai-sprint-mask-detector-app-telegraf
+          MONIT_HOST: ai-sprint_mask_detection_app-telegraf
           MONIT_PORT: '8094'
         image: registry.gitlab.polimi.it/ai-sprint/mask-detector:tag
         input:
