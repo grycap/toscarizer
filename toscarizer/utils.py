@@ -14,6 +14,9 @@ RESOURCES_COMPLETE_FILE = "aisprint/deployments/optimal_deployment/production_de
 BASE_DAG_FILE = "aisprint/deployments/base/application_dag.yaml"
 OPTIMAL_DAG_FILE = "aisprint/deployments/optimal_deployment/application_dag.yaml"
 
+QOS_CONSTRAINTS_FILE = "aisprint/deployments/base/ams/qos_constraints.yaml"
+OPTIMAL_QOS_CONSTRAINTS_FILE = "aisprint/deployments/optimal_deployment/ams/qos_constraints.yaml"
+
 
 def parse_dag(dag_file):
     """Pase the application_dag.yml fila and return a networkx.DiGraph."""

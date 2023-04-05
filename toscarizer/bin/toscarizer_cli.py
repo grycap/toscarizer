@@ -15,6 +15,8 @@ from toscarizer.utils import (DEPLOYMENTS_FILE,
                               BASE_DAG_FILE,
                               OPTIMAL_DAG_FILE,
                               PHYSICAL_NODES_FILE,
+                              QOS_CONSTRAINTS_FILE,
+                              OPTIMAL_QOS_CONSTRAINTS_FILE,
                               parse_dag,
                               parse_resources)
 from toscarizer.fdl import generate_fdl
@@ -90,7 +92,9 @@ def fdl(application_dir, base, optimal):
 @click.option('--elastic', help="Set max number of nodes to deploy the OSCAR cluster as elastic", default=0)
 @click.option('--im_auth', help="Set the IM auth file path", required=False)
 @click.option('--domain', help="Set the OSCAR clusters DNS domain", required=False)
-def tosca(application_dir, base, optimal, elastic, im_auth, domain):
+@click.option('--influxdb_url', help="Set the Central InfluxDB URL", required=False, default='https://influx.oncloudandheat.com/')
+@click.option('--influxdb_token', help="Set the Central InfluxDB API token", required=False)
+def tosca(application_dir, base, optimal, elastic, im_auth, domain, influxdb_url, influxdb_token):
     if not base and not optimal:
         print("--base or --optimal options must be set.")
         sys.exit(1)
@@ -109,13 +113,17 @@ def tosca(application_dir, base, optimal, elastic, im_auth, domain):
         app_name, dag = parse_dag("%s/%s" % (application_dir, BASE_DAG_FILE))
         deployments_file = "%s/%s" % (application_dir, BASE_RESOURCES_COMPLETE_FILE)
         resources_file = "%s/%s" % (application_dir, BASE_RESOURCES_COMPLETE_FILE)
+        qos_contraints_file = "%s/%s" % (application_dir, QOS_CONSTRAINTS_FILE)
     else:
         app_name, dag = parse_dag("%s/%s" % (application_dir, OPTIMAL_DAG_FILE))
         deployments_file = "%s/%s" % (application_dir, RESOURCES_COMPLETE_FILE)
         resources_file = "%s/%s" % (application_dir, RESOURCES_COMPLETE_FILE)
+        qos_contraints_file = "%s/%s" % (application_dir, OPTIMAL_QOS_CONSTRAINTS_FILE)
 
     toscas = gen_tosca_yamls(app_name, dag, resources_file, deployments_file,
-                             "%s/%s" % (application_dir, PHYSICAL_NODES_FILE), elastic, auth_data, domain)
+                             "%s/%s" % (application_dir, PHYSICAL_NODES_FILE),
+                             elastic, auth_data, domain, influxdb_url, influxdb_token,
+                             qos_contraints_file)
     for cl, tosca in toscas.items():
         if optimal:
             tosca_file = "%s/aisprint/deployments/optimal_deployment/im/%s.yaml" % (application_dir, cl)

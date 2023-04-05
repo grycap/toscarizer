@@ -125,6 +125,10 @@ In the elastic cases it needs the [IM authentication file](https://imdocs.readth
 The default location is ``app/im/auth.dat`` or you can set another one using
 `--im_auth` option.
 
+The generated TOSCA will also set the needed recipes to include the AI-SPRINT
+monitoring system. These recipes require to set the central InfluxDB instance URL
+(`--influxdb_url` option) and a valid API token (`--influxdb_token` option).
+
 ### Step5: Deploy TOSCA YAML files
 
 To deploy the TOSCA files generated for the base case use:
