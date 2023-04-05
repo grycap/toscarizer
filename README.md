@@ -169,7 +169,8 @@ the deploy command ([default one](https://im.egi.eu)), or you can also use the
 
 At the end it will return in the standard output a YAML formatted output with the name
 of each yaml file with the infrastructure ID generated or the error message
-returned.
+returned. In case of unconfigured infrastructures it will also retun the contextualization
+log with all the Ansible tasks performed to the infrastructure enabled to debug the error.
 
 ### Step6: Get infrastructures Outputs
 
