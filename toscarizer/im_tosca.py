@@ -332,7 +332,7 @@ def get_service(app_name, component, next_items, prev_items, container, oscar_cl
 
 
 def gen_tosca_cluster(compute_layer, res_name, phys_nodes, elastic, auth_data,
-                      domain, app_name, influxdb_url, influxdb_token, qos_contraints):
+                      domain, app_name, influxdb_url, influxdb_token, qos_constraints):
     with open(TOSCA_TEMPLATE, 'r') as f:
         tosca_tpl = yaml.safe_load(f)
 
@@ -379,8 +379,8 @@ def gen_tosca_cluster(compute_layer, res_name, phys_nodes, elastic, auth_data,
             tosca_comp["topology_template"]["inputs"]["top_influx_url"]["default"] = influxdb_url
         if influxdb_token:
             tosca_comp["topology_template"]["inputs"]["top_influx_token"]["default"] = influxdb_token
-        if qos_contraints:
-            tosca_comp["topology_template"]["inputs"]["qos_contraints"]["default"] = qos_contraints
+        if qos_constraints:
+            tosca_comp["topology_template"]["inputs"]["qos_constraints"]["default"] = qos_constraints
 
         tosca_comp["topology_template"]["inputs"]["cluster_name"]["default"] = gen_oscar_name()
         tosca_comp["topology_template"]["inputs"]["admin_token"]["default"] = get_random_string(16)

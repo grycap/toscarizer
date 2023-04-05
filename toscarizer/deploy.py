@@ -44,10 +44,9 @@ def get_contmsg(inf_id, auth_data, verify):
     headers = {"Authorization": auth_data}
     try:
         resp = requests.get("%s/contmsg" % inf_id, verify=verify, headers=headers)
-        success = resp.status_code == 200
-        return success, resp.text
+        return resp.text
     except Exception as ex:
-        return False, str(ex)
+        return str(ex)
 
 
 def deploy(tosca_files, auth_data, im_url, verify, dag, delay=10, max_time=900):
@@ -106,10 +105,11 @@ def deploy(tosca_files, auth_data, im_url, verify, dag, delay=10, max_time=900):
             end = True
             for component in dag.nodes():
                 if component in components_deployed:
-                    state = components_deployed[component][1]
+                    inf_id, state, _ = components_deployed[component]
                 else:
+                    inf_id = None
                     state = 'pending'
-                if state in ['unconfigured']:
+                if inf_id and state in ['unconfigured']:
                     contmsg = get_contmsg(inf_id, auth_data, verify)
                     components_deployed[component] = (inf_id, state, contmsg)
                 if state in ['pending', 'running']:

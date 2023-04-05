@@ -90,7 +90,8 @@ class TestToscarizer(unittest.TestCase):
         self.assertEqual(c2, c2_exp)
 
         # Test optimal case
-        result = runner.invoke(toscarizer_cli, ['tosca', '--application_dir', application_dir, "--optimal"])
+        result = runner.invoke(toscarizer_cli, ['tosca', '--application_dir', application_dir, '--optimal',
+                                                '--influxdb_token', 'influx_token'])
         self.assertEqual(result.exit_code, 0)
 
         c1 = open(os.path.join(application_dir,
@@ -253,10 +254,16 @@ class TestToscarizer(unittest.TestCase):
         create_im5.status_code = 200
         create_im5.text = "https://im/inf_id5"
         post.side_effect = [create_im, create_im2, create_im3, create_im4, create_im5]
-        get_state = MagicMock()
-        get_state.status_code = 200
-        get_state.json.return_value = {"state": {"state": "configured"}}
-        get.return_value = get_state
+        get_state_conf = MagicMock()
+        get_state_conf.status_code = 200
+        get_state_conf.json.return_value = {"state": {"state": "configured"}}
+        get_state_unconf = MagicMock()
+        get_state_unconf.status_code = 200
+        get_state_unconf.json.return_value = {"state": {"state": "unconfigured"}}
+        get_contmsg = MagicMock()
+        get_contmsg.status_code = 200
+        get_contmsg.text = 'CONTMSG'
+        get.side_effect = [get_state_conf, get_state_conf, get_state_conf, get_state_conf, get_state_unconf, get_contmsg]
 
         application_dir = os.path.join(tests_path, "../app_demo")
         runner = CliRunner()
@@ -267,8 +274,8 @@ class TestToscarizer(unittest.TestCase):
         os.unlink(os.path.join(application_dir, "aisprint/deployments/base/im/mask-detector.yaml"))
 
         infras = open(os.path.join(application_dir, "aisprint/deployments/base/im/infras.yaml")).read()
-        self.assertEqual(infras, ("blurry-faces-onnx:\n- https://im/inf_id2\n- configured\n"
-                                  "mask-detector:\n- https://im/inf_id1\n- configured\n"))
+        self.assertEqual(infras, ("blurry-faces-onnx:\n- https://im/inf_id2\n- configured\n- ''\n"
+                                  "mask-detector:\n- https://im/inf_id1\n- configured\n- ''\n"))
 
         self.assertIn("COMPONENT_NAME: mask-detector", post.call_args_list[0][1]["data"])
         self.assertIn("COMPONENT_NAME: blurry-faces-onnx", post.call_args_list[1][1]["data"])
@@ -286,9 +293,9 @@ class TestToscarizer(unittest.TestCase):
                                "aisprint/deployments/optimal_deployment/im/mask-detector.yaml"))
 
         infras = open(os.path.join(application_dir, "aisprint/deployments/optimal_deployment/im/infras.yaml")).read()
-        self.assertEqual(infras, ("blurry-faces-onnx_partition1_1:\n- https://im/inf_id5\n- configured\n"
-                                  "blurry-faces-onnx_partition1_2:\n- https://im/inf_id4\n- configured\n"
-                                  "mask-detector:\n- https://im/inf_id3\n- configured\n"))
+        self.assertEqual(infras, ("blurry-faces-onnx_partition1_1:\n- https://im/inf_id5\n- unconfigured\n- CONTMSG\n"
+                                  "blurry-faces-onnx_partition1_2:\n- https://im/inf_id4\n- configured\n- ''\n"
+                                  "mask-detector:\n- https://im/inf_id3\n- configured\n- ''\n"))
 
         self.assertIn("COMPONENT_NAME: mask-detector", post.call_args_list[2][1]["data"])
         self.assertIn("COMPONENT_NAME: blurry-faces-onnx_partition1_2", post.call_args_list[3][1]["data"])
