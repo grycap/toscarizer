@@ -112,7 +112,9 @@ def gen_tosca_yamls(app_name, dag, resources_file, deployments_file, phys_file, 
     with open(resources_file, 'r') as f:
         full_resouces = yaml.safe_load(f)
     with open(qos_contraints_file, 'r') as f:
-        qos_contraints = f.read()
+        qos_contraints_yaml = yaml.safe_load(f)
+        qos_contraints_yaml['system']['name'] = qos_contraints_yaml['system']['name'].replace('_', '-')
+        qos_contraints = yaml.safe_dump(qos_contraints_yaml)
 
     phys_nodes = {}
     if phys_file:
