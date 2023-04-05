@@ -103,13 +103,18 @@ def get_physical_resource_data(comp_layer, res, phys_file, node_type, value, ind
     return None
 
 
-def gen_tosca_yamls(app_name, dag, resources_file, deployments_file, phys_file, elastic, auth_data, domain):
+def gen_tosca_yamls(app_name, dag, resources_file, deployments_file, phys_file, elastic,
+                    auth_data, domain, influxdb_url, influxdb_token, qos_contraints_file):
     with open(deployments_file, 'r') as f:
         deployments = yaml.safe_load(f)
         if "System" in deployments:
             deployments = deployments["System"]
     with open(resources_file, 'r') as f:
         full_resouces = yaml.safe_load(f)
+    with open(qos_contraints_file, 'r') as f:
+        qos_contraints_yaml = yaml.safe_load(f)
+        qos_contraints_yaml['system']['name'] = qos_contraints_yaml['system']['name'].replace('_', '-')
+        qos_contraints = yaml.safe_dump(qos_contraints_yaml)
 
     phys_nodes = {}
     if phys_file:
@@ -133,7 +138,8 @@ def gen_tosca_yamls(app_name, dag, resources_file, deployments_file, phys_file, 
         if not cl_name:
             raise Exception("No compute layer found for component." % component.get("name"))
         oscar_clusters_per_component[component] = gen_tosca_cluster(cls[cl_name], res_name, phys_nodes,
-                                                                    elastic, auth_data, domain)
+                                                                    elastic, auth_data, domain, app_name,
+                                                                    influxdb_url, influxdb_token, qos_contraints)
 
     # Now create the OSCAR services and merge in the correct OSCAR cluster
     for component, next_items in dag.adj.items():
@@ -327,7 +333,8 @@ def get_service(app_name, component, next_items, prev_items, container, oscar_cl
     return res
 
 
-def gen_tosca_cluster(compute_layer, res_name, phys_nodes, elastic, auth_data, domain):
+def gen_tosca_cluster(compute_layer, res_name, phys_nodes, elastic, auth_data,
+                      domain, app_name, influxdb_url, influxdb_token, qos_constraints):
     with open(TOSCA_TEMPLATE, 'r') as f:
         tosca_tpl = yaml.safe_load(f)
 
@@ -368,6 +375,14 @@ def gen_tosca_cluster(compute_layer, res_name, phys_nodes, elastic, auth_data, d
 
         if domain:
             tosca_comp["topology_template"]["inputs"]["domain_name"]["default"] = domain
+        if app_name:
+            tosca_comp["topology_template"]["inputs"]["app_name"]["default"] = app_name.replace('_', '-')
+        if influxdb_url:
+            tosca_comp["topology_template"]["inputs"]["top_influx_url"]["default"] = influxdb_url
+        if influxdb_token:
+            tosca_comp["topology_template"]["inputs"]["top_influx_token"]["default"] = influxdb_token
+        if qos_constraints:
+            tosca_comp["topology_template"]["inputs"]["qos_constraints"]["default"] = qos_constraints
 
         tosca_comp["topology_template"]["inputs"]["cluster_name"]["default"] = gen_oscar_name()
         tosca_comp["topology_template"]["inputs"]["admin_token"]["default"] = get_random_string(16)

@@ -6,6 +6,10 @@ topology_template:
     admin_token:
       default: fixed10
       type: string
+    app_name:
+      default: ai-sprint-mask-detection-app
+      description: App name
+      type: string
     cert_user_email:
       default: jhondoe@server.com
       type: string
@@ -35,8 +39,22 @@ topology_template:
     oscar_password:
       default: fixed11
       type: string
+    qos_constraints:
+      default: "system:\n  global_constraints: {}\n  local_constraints:\n    local_constraint_1:\n\
+        \      component_name: blurry-faces-onnx\n      threshold: 20\n    local_constraint_2:\n\
+        \      component_name: mask-detector\n      threshold: 10\n  name: mask-detection-v1\n"
+      description: App QoS Constraints
+      type: string
     storage_size:
       default: 100 GB
+      type: string
+    top_influx_token:
+      default: ''
+      description: Token to access the Top level InfluxDB API
+      type: string
+    top_influx_url:
+      default: https://influx.oncloudandheat.com/
+      description: URL of the Top level InfluxDB instance
       type: string
   node_templates:
     front:
@@ -107,6 +125,23 @@ topology_template:
       requirements:
       - host: front
       type: tosca.nodes.indigo.LRMS.FrontEnd.Kubernetes
+    monitoring:
+      interfaces:
+        Standard:
+          configure:
+            implementation: https://raw.githubusercontent.com/grycap/ec3/tosca/tosca/artifacts/ai-monitoring/ai-sprint-monit-site.yaml
+            inputs:
+              APP_NAME:
+                get_input: app_name
+              QOS_CONSTRAINTS:
+                get_input: qos_constraints
+              REMOTE_INFLUX_TOKEN:
+                get_input: top_influx_token
+              REMOTE_INFLUX_URL:
+                get_input: top_influx_url
+      requirements:
+      - host: lrms_front_end
+      type: tosca.nodes.SoftwareComponent
     my_block_storage:
       properties:
         size:
