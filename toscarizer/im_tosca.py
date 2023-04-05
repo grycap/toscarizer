@@ -376,7 +376,7 @@ def gen_tosca_cluster(compute_layer, res_name, phys_nodes, elastic, auth_data,
         if domain:
             tosca_comp["topology_template"]["inputs"]["domain_name"]["default"] = domain
         if app_name:
-            tosca_comp["topology_template"]["inputs"]["app_name"]["default"] = app_name
+            tosca_comp["topology_template"]["inputs"]["app_name"]["default"] = app_name.replace('_', '-')
         if influxdb_url:
             tosca_comp["topology_template"]["inputs"]["top_influx_url"]["default"] = influxdb_url
         if influxdb_token:

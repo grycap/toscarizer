@@ -7,7 +7,7 @@ topology_template:
       default: fixed6
       type: string
     app_name:
-      default: ai-sprint_mask_detection_app
+      default: ai-sprint-mask-detection-app
       description: App name
       type: string
     cert_user_email:
