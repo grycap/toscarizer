@@ -81,13 +81,7 @@ def parse_resources(resource_file, deployments_files):
                     if r["arch"] not in platforms:
                         platforms.append(r["arch"])
 
-            # TODO: check this
-            cont = list(elem["Containers"].values())[0]
-
-            res_dict[elem["name"]] = {"memory": cont["memorySize"],
-                                      "cpu": cont["computingUnits"],
-                                      "image": cont.get("image"),
-                                      "platforms": platforms,
+            res_dict[elem["name"]] = {"platforms": platforms,
                                       "aws": aws,
                                       "layers": layers}
     except Exception as ex:
