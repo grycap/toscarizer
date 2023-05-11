@@ -1,13 +1,15 @@
 import docker
 import yaml
 import os
+import shutil
 
 
 TEMPLATES_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "templates")
 DOCKERFILE_TEMPLATE = os.path.join(TEMPLATES_PATH, 'Dockerfile.template')
 DOCKERFILE_AWS_TEMPLATE = os.path.join(TEMPLATES_PATH, 'Dockerfile.aws.template')
 SCRIPT_TEMPLATE = os.path.join(TEMPLATES_PATH, 'script.sh')
-
+START_TEMPLATE = os.path.join(TEMPLATES_PATH, 'start.sh')
+TELEGRAF_TEMPLATE = os.path.join(TEMPLATES_PATH, 'telegraf.conf')
 
 def get_part_x_name(part_name):
     """Replaces first num of partition with an X"""
@@ -52,6 +54,8 @@ def generate_dockerfiles(base_image, app_dir, components, resources):
                                                   dockerfile_aws_tpl)
                 with open(dockerfile_path_aws, 'w+') as f:
                     f.write(dockerfile)
+                shutil.copyfile(START_TEMPLATE, "%s/start.sh" % dockerfile_dir)
+                shutil.copyfile(TELEGRAF_TEMPLATE, "%s/telegraf.conf" % dockerfile_dir)
 
             # Copy the script
             scriptfile = scriptfile_tpl.replace("{{component_name}}", component)

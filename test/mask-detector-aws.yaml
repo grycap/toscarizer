@@ -5,15 +5,24 @@ topology_template:
     cluster_name:
       default: oscar-cluster-fixed2
       type: string
+    top_influx_token:
+      default: influx_token
+      type: string
+    top_influx_url:
+      default: https://influx.oncloudandheat.com/
+      type: string
   node_templates:
     lambda_function_mask-detector:
       properties:
         cpu: 0.9
         env_variables:
           COMPONENT_NAME: mask-detector
+          INFLUX_ENDPOINT: https://influx.oncloudandheat.com/
+          INFLUX_TOKEN: influx_token
           KCI: AWS Lambda
-          MONIT_HOST: ai-sprint_mask_detection_app-telegraf
+          MONIT_HOST: localhost
           MONIT_PORT: '8094'
+          RESOURCE_ID: AWS Lambda
         image: 000000000000.dkr.ecr.us-east-1.amazonaws.com/mask-detector:tag
         input:
         - path: test1/blurry-faces-onnx/output

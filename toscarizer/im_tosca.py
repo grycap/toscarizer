@@ -506,6 +506,8 @@ def gen_tosca_cluster(compute_layer, res_name, phys_nodes, elastic, auth_data,
         tosca_res["topology_template"]["inputs"]["oscar_name"] = {"default": oscar_name, "type": "string"}
     elif compute_layer["type"] == "NativeCloudFunction":
         tosca_res["topology_template"]["inputs"]["aws"] = {"default": True, "type": "boolean"}
+        tosca_res["topology_template"]["inputs"]["top_influx_url"] = {"default": influxdb_url, "type": "string"}
+        tosca_res["topology_template"]["inputs"]["top_influx_token"] = {"default": influxdb_token, "type": "string"}
 
         if len(compute_layer["Resources"]) != 1:
             raise Exception("PhysicalAlreadyProvisioned ComputeLayer must only have 1 resource.")
