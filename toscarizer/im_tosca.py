@@ -190,6 +190,10 @@ def get_service(app_name, component, next_items, prev_items, container, oscar_cl
     elif curr_cluster_aws:
         # It is deployed in AWS Lambda
         service["properties"]["env_variables"]["KCI"] = "AWS Lambda"
+        service["properties"]["env_variables"]["RESOURCE_ID"] = "AWS Lambda"
+        service["properties"]["env_variables"]["MONIT_HOST"] = "localhost"
+        service["properties"]["env_variables"]["INFLUX_ENDPOINT"] = cluster_inputs["top_influx_url"]["default"]
+        service["properties"]["env_variables"]["INFLUX_TOKEN"] = cluster_inputs["top_influx_token"]["default"]
     else:
         # It is an already existing OSCAR cluster
         service["properties"]["env_variables"]["KCI"] = cluster_inputs["minio_endpoint"]["default"]

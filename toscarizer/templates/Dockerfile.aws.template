@@ -1,3 +1,13 @@
+# Install Telegraf 1.18.3
+RUN wget https://dl.influxdata.com/telegraf/releases/telegraf-1.18.3_linux_amd64.tar.gz && \
+    tar xf telegraf-1.18.3_linux_amd64.tar.gz && \
+    mkdir -p /opt/telegraf/bin && \
+    cp ./telegraf-1.18.3/usr/bin/telegraf /opt/telegraf/bin  && \
+    rm -rf telegraf-1.18.3*
+COPY telegraf.conf /opt/telegraf/
+COPY start.sh ${FUNCTION_DIR}
+RUN chmod +x ${FUNCTION_DIR}/start.sh
+
 # Create a base dir
 ARG FUNCTION_DIR="/var/task"
 WORKDIR ${FUNCTION_DIR}
@@ -9,5 +19,5 @@ RUN chmod +x ${FUNCTION_DIR}/script.sh
 # Copy the supervisor
 RUN wget -P ${FUNCTION_DIR} https://github.com/grycap/faas-supervisor/releases/download/1.5.5/supervisor
 RUN chmod +x ${FUNCTION_DIR}/supervisor
-# Set it as the CMD
-CMD [ "supervisor" ]
+# Set start.sh as the CMD
+CMD [ "start.sh" ]
