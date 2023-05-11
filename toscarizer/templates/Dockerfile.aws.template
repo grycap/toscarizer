@@ -1,3 +1,7 @@
+# Create a base dir
+ARG FUNCTION_DIR="/var/task"
+WORKDIR ${FUNCTION_DIR}
+
 # Install Telegraf 1.18.3
 RUN wget https://dl.influxdata.com/telegraf/releases/telegraf-1.18.3_linux_amd64.tar.gz && \
     tar xf telegraf-1.18.3_linux_amd64.tar.gz && \
@@ -8,9 +12,6 @@ COPY telegraf.conf /opt/telegraf/
 COPY start.sh ${FUNCTION_DIR}
 RUN chmod +x ${FUNCTION_DIR}/start.sh
 
-# Create a base dir
-ARG FUNCTION_DIR="/var/task"
-WORKDIR ${FUNCTION_DIR}
 # Set workdir in the path
 ENV PATH="${FUNCTION_DIR}:${PATH}"
 # Copy the script
