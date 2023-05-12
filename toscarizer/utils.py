@@ -26,6 +26,8 @@ def parse_dag(dag_file):
     dag = dag['System']
 
     G = nx.DiGraph()
+    for component in dag['components']:
+        G.add_node(component)
     for source, target, weight in dag['dependencies']:
         G.add_edge(source, target, weight=weight)
 

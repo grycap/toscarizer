@@ -190,6 +190,10 @@ def get_service(app_name, component, next_items, prev_items, container, oscar_cl
     elif curr_cluster_aws:
         # It is deployed in AWS Lambda
         service["properties"]["env_variables"]["KCI"] = "AWS Lambda"
+        service["properties"]["env_variables"]["RESOURCE_ID"] = "AWS Lambda"
+        service["properties"]["env_variables"]["MONIT_HOST"] = "localhost"
+        service["properties"]["env_variables"]["INFLUX_ENDPOINT"] = cluster_inputs["top_influx_url"]["default"]
+        service["properties"]["env_variables"]["INFLUX_TOKEN"] = cluster_inputs["top_influx_token"]["default"]
     else:
         # It is an already existing OSCAR cluster
         service["properties"]["env_variables"]["KCI"] = cluster_inputs["minio_endpoint"]["default"]
@@ -502,6 +506,8 @@ def gen_tosca_cluster(compute_layer, res_name, phys_nodes, elastic, auth_data,
         tosca_res["topology_template"]["inputs"]["oscar_name"] = {"default": oscar_name, "type": "string"}
     elif compute_layer["type"] == "NativeCloudFunction":
         tosca_res["topology_template"]["inputs"]["aws"] = {"default": True, "type": "boolean"}
+        tosca_res["topology_template"]["inputs"]["top_influx_url"] = {"default": influxdb_url, "type": "string"}
+        tosca_res["topology_template"]["inputs"]["top_influx_token"] = {"default": influxdb_token, "type": "string"}
 
         if len(compute_layer["Resources"]) != 1:
             raise Exception("PhysicalAlreadyProvisioned ComputeLayer must only have 1 resource.")

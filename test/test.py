@@ -26,6 +26,8 @@ class TestToscarizer(unittest.TestCase):
                  'aisprint/designs/blurry-faces-onnx/partition1_2/Dockerfile',
                  'aisprint/designs/mask-detector/base/Dockerfile',
                  'aisprint/designs/mask-detector/base/Dockerfile.aws',
+                 'aisprint/designs/mask-detector/base/start.sh',
+                 'aisprint/designs/mask-detector/base/telegraf.conf',
                  'aisprint/designs/blurry-faces-onnx/base/script.sh',
                  'aisprint/designs/blurry-faces-onnx/partition1_1/script.sh',
                  'aisprint/designs/blurry-faces-onnx/partition1_2/script.sh',
@@ -73,7 +75,8 @@ class TestToscarizer(unittest.TestCase):
 
         # Test base elastic case
         runner = CliRunner()
-        result = runner.invoke(toscarizer_cli, ['tosca', '--application_dir', application_dir, '--base'])
+        result = runner.invoke(toscarizer_cli, ['tosca', '--application_dir', application_dir, '--base',
+                                                '--influxdb_token', 'influx_token'])
         self.assertEqual(result.exit_code, 0)
 
         c1 = open(os.path.join(application_dir, "aisprint/deployments/base/im/blurry-faces-onnx.yaml")).read()
