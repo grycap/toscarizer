@@ -55,6 +55,14 @@ topology_template:
       type: string
       description: Token to access the Top level InfluxDB API
       default: ''
+    top_influx_org:
+      type: string
+      description: Organization configured in the Top level InfluxDB
+      default: 'aisprint'
+    top_influx_bucket:
+      type: string
+      description: Bucket to store the data in the Top level InfluxDB
+      default: 'bucket'
     qos_constraints:
       type: string
       description: App QoS Constraints
@@ -101,6 +109,8 @@ topology_template:
             inputs:
               REMOTE_INFLUX_URL: { get_input: top_influx_url }
               REMOTE_INFLUX_TOKEN: { get_input: top_influx_token }
+              REMOTE_INFLUX_BUCKET: { get_input: top_influx_bucket }
+              REMOTE_INFLUX_ORG: { get_input: top_influx_org }
               QOS_CONSTRAINTS: { get_input: qos_constraints }
               APP_NAME: { get_input: app_name }
 
