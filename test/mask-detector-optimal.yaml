@@ -4,7 +4,7 @@ imports:
 topology_template:
   inputs:
     admin_token:
-      default: fixed21
+      default: fixed27
       type: string
     app_name:
       default: ai-sprint-mask-detection-app
@@ -14,7 +14,7 @@ topology_template:
       default: jhondoe@server.com
       type: string
     cluster_name:
-      default: oscar-cluster-fixed20
+      default: oscar-cluster-fixed26
       type: string
     domain_name:
       default: im.grycap.net
@@ -28,16 +28,24 @@ topology_template:
     fe_os_image:
       default: aws://us-east-1/ami-XXXXXXXX
       type: string
+    local_influx_pass:
+      default: fixed31
+      description: Admin pass for the local influx endpoint
+      type: string
+    local_influx_token:
+      default: fixed30
+      description: API TOKEN for the local influx endpoint
+      type: string
     max_wn_num:
       default: 1
       description: Maximum Number of WNs in the OSCAR cluster
       required: true
       type: integer
     minio_password:
-      default: fixed23
+      default: fixed29
       type: string
     oscar_password:
-      default: fixed22
+      default: fixed28
       type: string
     qos_constraints:
       default: "system:\n  global_constraints: {}\n  local_constraints:\n    local_constraint_1:\n\
@@ -47,6 +55,14 @@ topology_template:
       type: string
     storage_size:
       default: 100 GB
+      type: string
+    top_influx_bucket:
+      default: bucket
+      description: Bucket to store the data in the Top level InfluxDB
+      type: string
+    top_influx_org:
+      default: aisprint
+      description: Organization configured in the Top level InfluxDB
       type: string
     top_influx_token:
       default: ''
@@ -73,6 +89,11 @@ topology_template:
               - get_input: domain_name
             - concat:
               - console.minio.
+              - get_input: cluster_name
+              - '@'
+              - get_input: domain_name
+            - concat:
+              - influx.
               - get_input: cluster_name
               - '@'
               - get_input: domain_name
@@ -133,8 +154,22 @@ topology_template:
             inputs:
               APP_NAME:
                 get_input: app_name
+              LOCAL_INFLUX_HOSTNAME:
+                concat:
+                - influx.
+                - get_input: cluster_name
+                - .
+                - get_input: domain_name
+              LOCAL_INFLUX_PASS:
+                get_input: local_influx_pass
+              LOCAL_INFLUX_TOKEN:
+                get_input: local_influx_token
               QOS_CONSTRAINTS:
                 get_input: qos_constraints
+              REMOTE_INFLUX_BUCKET:
+                get_input: top_influx_bucket
+              REMOTE_INFLUX_ORG:
+                get_input: top_influx_org
               REMOTE_INFLUX_TOKEN:
                 get_input: top_influx_token
               REMOTE_INFLUX_URL:
@@ -191,7 +226,7 @@ topology_template:
         cpu: 0.9
         env_variables:
           COMPONENT_NAME: mask-detector
-          KCI: https://minio.oscar-cluster-fixed20.im.grycap.net
+          KCI: https://minio.oscar-cluster-fixed26.im.grycap.net
           MONIT_HOST: ai-sprint_mask_detection_app-telegraf
           MONIT_PORT: '8094'
         image: registry.gitlab.polimi.it/ai-sprint/mask-detector:tag
@@ -270,6 +305,19 @@ topology_template:
         - front
         - public_address
         - 0
+    influx_endpoint:
+      value:
+        concat:
+        - https://influx.
+        - get_input: cluster_name
+        - .
+        - get_input: domain_name
+    influx_password:
+      value:
+        get_input: local_influx_token
+    influx_token:
+      value:
+        get_input: local_influx_pass
     minio_endpoint:
       value:
         concat:

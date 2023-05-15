@@ -392,6 +392,8 @@ def gen_tosca_cluster(compute_layer, res_name, phys_nodes, elastic, auth_data,
         tosca_comp["topology_template"]["inputs"]["admin_token"]["default"] = get_random_string(16)
         tosca_comp["topology_template"]["inputs"]["oscar_password"]["default"] = get_random_string(16)
         tosca_comp["topology_template"]["inputs"]["minio_password"]["default"] = get_random_string(16)
+        tosca_comp["topology_template"]["inputs"]["local_influx_token"]["default"] = get_random_string(16)
+        tosca_comp["topology_template"]["inputs"]["local_influx_pass"]["default"] = get_random_string(16)
         tosca_comp["topology_template"]["inputs"]["fe_os_image"]["default"] = None
 
         # Add SSH info for the Front-End node

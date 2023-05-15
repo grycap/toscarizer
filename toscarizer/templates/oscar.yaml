@@ -71,6 +71,14 @@ topology_template:
       type: string
       description: App name
       default: ''
+    local_influx_token:
+      default: aisprintTOKEN
+      description: API TOKEN for the local influx endpoint
+      type: string
+    local_influx_pass:
+      default: aisprintPASS
+      description: Admin pass for the local influx endpoint
+      type: string
 
   node_templates:
 
@@ -113,6 +121,9 @@ topology_template:
               REMOTE_INFLUX_ORG: { get_input: top_influx_org }
               QOS_CONSTRAINTS: { get_input: qos_constraints }
               APP_NAME: { get_input: app_name }
+              LOCAL_INFLUX_PASS: { get_input: local_influx_pass }
+              LOCAL_INFLUX_TOKEN: { get_input: local_influx_token }
+              LOCAL_INFLUX_HOSTNAME: { concat: [ "influx.", get_input: cluster_name, '.', get_input: domain_name ] }
 
     lrms_front_end:
       type: tosca.nodes.indigo.LRMS.FrontEnd.Kubernetes
@@ -145,6 +156,7 @@ topology_template:
             - { concat: [ get_input: cluster_name, '@', get_input: domain_name ] }
             - { concat: [ "minio.", get_input: cluster_name, '@', get_input: domain_name ] }
             - { concat: [ "console.minio.", get_input: cluster_name, '@', get_input: domain_name ] }
+            - { concat: [ "influx.", get_input: cluster_name, '@', get_input: domain_name ] }
             network_name: PUBLIC
         host:
           properties:
@@ -184,6 +196,12 @@ topology_template:
       value: { get_input: oscar_password }
     minio_password:
       value: { get_input: minio_password }
+    influx_endpoint:
+      value: { concat: [ "https://influx.", get_input: cluster_name, '.', get_input: domain_name ] }
+    influx_password:
+      value: { get_input: local_influx_token }
+    influx_token:
+      value: { get_input: local_influx_pass }
     fe_node_ip:
       value: { get_attribute: [ front, public_address, 0 ] }
     fe_node_creds:
