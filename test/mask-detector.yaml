@@ -33,7 +33,7 @@ topology_template:
       description: Admin pass for the local influx endpoint
       type: string
     local_influx_token:
-      default: fixed15
+      default: fixed1
       description: API TOKEN for the local influx endpoint
       type: string
     max_wn_num:
@@ -227,7 +227,7 @@ topology_template:
         env_variables:
           COMPONENT_NAME: mask-detector
           KCI: https://minio.oscar-cluster-fixed3.im.grycap.net
-          MONIT_HOST: ai-sprint_mask_detection_app-telegraf
+          MONIT_HOST: ai-sprint-mask-detection-app-telegraf
           MONIT_PORT: '8094'
         image: registry.gitlab.polimi.it/ai-sprint/mask-detector:tag
         input:
@@ -314,10 +314,10 @@ topology_template:
         - get_input: domain_name
     influx_password:
       value:
-        get_input: local_influx_token
+        get_input: local_influx_pass
     influx_token:
       value:
-        get_input: local_influx_pass
+        get_input: local_influx_token
     minio_endpoint:
       value:
         concat:
