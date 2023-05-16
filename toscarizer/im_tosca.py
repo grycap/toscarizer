@@ -166,8 +166,8 @@ def gen_next_layer_influx(oscar_clusters):
     # TODO: Gen influx layers
     for oscar_cluster in list(oscar_clusters.values()):
         oscar_cluster["topology_template"]["inputs"]["layer_num"]
-        oscar_cluster["topology_template"]["inputs"]["top_influx_url"]["default"] = ''
-        oscar_cluster["topology_template"]["inputs"]["top_influx_token"]["default"] = ''
+        # oscar_cluster["topology_template"]["inputs"]["top_influx_url"]["default"] = ''
+        # oscar_cluster["topology_template"]["inputs"]["top_influx_token"]["default"] = ''
 
 
 def get_service(app_name, component, next_items, prev_items, container, oscar_clusters):
