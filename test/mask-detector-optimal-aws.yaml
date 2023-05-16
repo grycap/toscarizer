@@ -3,7 +3,7 @@ imports:
 topology_template:
   inputs:
     cluster_name:
-      default: oscar-cluster-fixed9
+      default: oscar-cluster-fixed11
       type: string
     top_influx_token:
       default: influx_token

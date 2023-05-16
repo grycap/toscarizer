@@ -28,6 +28,14 @@ topology_template:
     fe_os_image:
       default: one://ramses.i3m.upv.es/1396
       type: string
+    local_influx_pass:
+      default: fixed10
+      description: Admin pass for the local influx endpoint
+      type: string
+    local_influx_token:
+      default: fixed9
+      description: API TOKEN for the local influx endpoint
+      type: string
     max_wn_num:
       default: 1
       description: Maximum Number of WNs in the OSCAR cluster
@@ -47,6 +55,14 @@ topology_template:
       type: string
     storage_size:
       default: 100 GB
+      type: string
+    top_influx_bucket:
+      default: bucket
+      description: Bucket to store the data in the Top level InfluxDB
+      type: string
+    top_influx_org:
+      default: aisprint
+      description: Organization configured in the Top level InfluxDB
       type: string
     top_influx_token:
       default: influx_token
@@ -73,6 +89,11 @@ topology_template:
               - get_input: domain_name
             - concat:
               - console.minio.
+              - get_input: cluster_name
+              - '@'
+              - get_input: domain_name
+            - concat:
+              - influx.
               - get_input: cluster_name
               - '@'
               - get_input: domain_name
@@ -133,8 +154,22 @@ topology_template:
             inputs:
               APP_NAME:
                 get_input: app_name
+              LOCAL_INFLUX_HOSTNAME:
+                concat:
+                - influx.
+                - get_input: cluster_name
+                - .
+                - get_input: domain_name
+              LOCAL_INFLUX_PASS:
+                get_input: local_influx_pass
+              LOCAL_INFLUX_TOKEN:
+                get_input: local_influx_token
               QOS_CONSTRAINTS:
                 get_input: qos_constraints
+              REMOTE_INFLUX_BUCKET:
+                get_input: top_influx_bucket
+              REMOTE_INFLUX_ORG:
+                get_input: top_influx_org
               REMOTE_INFLUX_TOKEN:
                 get_input: top_influx_token
               REMOTE_INFLUX_URL:
@@ -202,11 +237,11 @@ topology_template:
         name: blurry-faces-onnx-partition1-2
         output:
         - path: test1/blurry-faces-onnx-partition1-2/output
-          storage_provider: s3.oscar-cluster-fixed9
+          storage_provider: s3.oscar-cluster-fixed11
         script: /opt/blurry-faces-onnx_partition1_2/script.sh
         storage_providers:
           s3:
-            oscar-cluster-fixed9:
+            oscar-cluster-fixed11:
               access_key: ak
               region: us-east-1
               secret_key: sk
@@ -276,6 +311,19 @@ topology_template:
         - front
         - public_address
         - 0
+    influx_endpoint:
+      value:
+        concat:
+        - https://influx.
+        - get_input: cluster_name
+        - .
+        - get_input: domain_name
+    influx_password:
+      value:
+        get_input: local_influx_token
+    influx_token:
+      value:
+        get_input: local_influx_pass
     minio_endpoint:
       value:
         concat:

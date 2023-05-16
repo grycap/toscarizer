@@ -55,8 +55,8 @@ def find_compute_layer(resources, component_name, components):
                         res_name = cont["selectedExecutionResource"]
                     else:
                         raise Exception("No ExecutionResources in container")
-                    return res_name, cont, cl_name
-    return None
+                    return res_name, cont, cl_name, layer_num
+    return None, None, None, None
 
 
 def add_nets(tosca_tpl):
@@ -133,13 +133,16 @@ def gen_tosca_yamls(app_name, dag, resources_file, deployments_file, phys_file, 
     container_per_component = {}
     for component in dag.nodes():
         # First find the Component cluster
-        res_name, cont, cl_name = find_compute_layer(full_resouces, component, deployments["Components"])
+        res_name, cont, cl_name, num = find_compute_layer(full_resouces, component, deployments["Components"])
         container_per_component[component] = cont
         if not cl_name:
             raise Exception("No compute layer found for component." % component.get("name"))
-        oscar_clusters_per_component[component] = gen_tosca_cluster(cls[cl_name], res_name, phys_nodes,
+        oscar_clusters_per_component[component] = gen_tosca_cluster(cls[cl_name], num, res_name, phys_nodes,
                                                                     elastic, auth_data, domain, app_name,
                                                                     influxdb_url, influxdb_token, qos_contraints)
+
+    # Gen influx layers
+    gen_next_layer_influx(oscar_clusters_per_component)
 
     # Now create the OSCAR services and merge in the correct OSCAR cluster
     for component, next_items in dag.adj.items():
@@ -157,6 +160,14 @@ def gen_tosca_yamls(app_name, dag, resources_file, deployments_file, phys_file, 
                 del cluster["topology_template"]["inputs"][item]
 
     return oscar_clusters_per_component
+
+
+def gen_next_layer_influx(oscar_clusters):
+    # TODO: Gen influx layers
+    for oscar_cluster in list(oscar_clusters.values()):
+        oscar_cluster["topology_template"]["inputs"]["layer_num"]
+        # oscar_cluster["topology_template"]["inputs"]["top_influx_url"]["default"] = ''
+        # oscar_cluster["topology_template"]["inputs"]["top_influx_token"]["default"] = ''
 
 
 def get_service(app_name, component, next_items, prev_items, container, oscar_clusters):
@@ -337,7 +348,7 @@ def get_service(app_name, component, next_items, prev_items, container, oscar_cl
     return res
 
 
-def gen_tosca_cluster(compute_layer, res_name, phys_nodes, elastic, auth_data,
+def gen_tosca_cluster(compute_layer, layer_num, res_name, phys_nodes, elastic, auth_data,
                       domain, app_name, influxdb_url, influxdb_token, qos_constraints):
     with open(TOSCA_TEMPLATE, 'r') as f:
         tosca_tpl = yaml.safe_load(f)
@@ -364,6 +375,10 @@ def gen_tosca_cluster(compute_layer, res_name, phys_nodes, elastic, auth_data,
                 "cluster_name": {
                     "default": gen_oscar_name(),
                     "type": "string"
+                },
+                "layer_num": {
+                    "default": layer_num,
+                    "type": "integer"
                 }
             }
         }
@@ -380,7 +395,7 @@ def gen_tosca_cluster(compute_layer, res_name, phys_nodes, elastic, auth_data,
         if domain:
             tosca_comp["topology_template"]["inputs"]["domain_name"]["default"] = domain
         if app_name:
-            tosca_comp["topology_template"]["inputs"]["app_name"]["default"] = app_name.replace('_', '-')
+            tosca_comp["topology_template"]["inputs"]["app_name"]["default"] = app_name
         if influxdb_url:
             tosca_comp["topology_template"]["inputs"]["top_influx_url"]["default"] = influxdb_url
         if influxdb_token:
@@ -388,10 +403,13 @@ def gen_tosca_cluster(compute_layer, res_name, phys_nodes, elastic, auth_data,
         if qos_constraints:
             tosca_comp["topology_template"]["inputs"]["qos_constraints"]["default"] = qos_constraints
 
+        tosca_comp["topology_template"]["inputs"]["layer_num"]["default"] = layer_num
         tosca_comp["topology_template"]["inputs"]["cluster_name"]["default"] = gen_oscar_name()
         tosca_comp["topology_template"]["inputs"]["admin_token"]["default"] = get_random_string(16)
         tosca_comp["topology_template"]["inputs"]["oscar_password"]["default"] = get_random_string(16)
         tosca_comp["topology_template"]["inputs"]["minio_password"]["default"] = get_random_string(16)
+        tosca_comp["topology_template"]["inputs"]["local_influx_token"]["default"] = get_random_string(16)
+        tosca_comp["topology_template"]["inputs"]["local_influx_pass"]["default"] = get_random_string(16)
         tosca_comp["topology_template"]["inputs"]["fe_os_image"]["default"] = None
 
         # Add SSH info for the Front-End node

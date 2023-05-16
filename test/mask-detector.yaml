@@ -4,7 +4,7 @@ imports:
 topology_template:
   inputs:
     admin_token:
-      default: fixed10
+      default: fixed6
       type: string
     app_name:
       default: ai-sprint-mask-detection-app
@@ -28,6 +28,14 @@ topology_template:
     fe_os_image:
       default: one://ramses.i3m.upv.es/1396
       type: string
+    local_influx_pass:
+      default: fixed16
+      description: Admin pass for the local influx endpoint
+      type: string
+    local_influx_token:
+      default: fixed15
+      description: API TOKEN for the local influx endpoint
+      type: string
     max_wn_num:
       default: 1
       description: Maximum Number of WNs in the OSCAR cluster
@@ -37,7 +45,7 @@ topology_template:
       default: fixed6
       type: string
     oscar_password:
-      default: fixed11
+      default: fixed13
       type: string
     qos_constraints:
       default: "system:\n  global_constraints: {}\n  local_constraints:\n    local_constraint_1:\n\
@@ -47,6 +55,14 @@ topology_template:
       type: string
     storage_size:
       default: 100 GB
+      type: string
+    top_influx_bucket:
+      default: bucket
+      description: Bucket to store the data in the Top level InfluxDB
+      type: string
+    top_influx_org:
+      default: aisprint
+      description: Organization configured in the Top level InfluxDB
       type: string
     top_influx_token:
       default: ''
@@ -73,6 +89,11 @@ topology_template:
               - get_input: domain_name
             - concat:
               - console.minio.
+              - get_input: cluster_name
+              - '@'
+              - get_input: domain_name
+            - concat:
+              - influx.
               - get_input: cluster_name
               - '@'
               - get_input: domain_name
@@ -133,8 +154,22 @@ topology_template:
             inputs:
               APP_NAME:
                 get_input: app_name
+              LOCAL_INFLUX_HOSTNAME:
+                concat:
+                - influx.
+                - get_input: cluster_name
+                - .
+                - get_input: domain_name
+              LOCAL_INFLUX_PASS:
+                get_input: local_influx_pass
+              LOCAL_INFLUX_TOKEN:
+                get_input: local_influx_token
               QOS_CONSTRAINTS:
                 get_input: qos_constraints
+              REMOTE_INFLUX_BUCKET:
+                get_input: top_influx_bucket
+              REMOTE_INFLUX_ORG:
+                get_input: top_influx_org
               REMOTE_INFLUX_TOKEN:
                 get_input: top_influx_token
               REMOTE_INFLUX_URL:
@@ -270,6 +305,19 @@ topology_template:
         - front
         - public_address
         - 0
+    influx_endpoint:
+      value:
+        concat:
+        - https://influx.
+        - get_input: cluster_name
+        - .
+        - get_input: domain_name
+    influx_password:
+      value:
+        get_input: local_influx_token
+    influx_token:
+      value:
+        get_input: local_influx_pass
     minio_endpoint:
       value:
         concat:
