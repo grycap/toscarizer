@@ -3,6 +3,7 @@ import copy
 import random
 import string
 import os.path
+import re
 
 
 TEMPLATES_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "templates")
@@ -111,10 +112,24 @@ def gen_tosca_yamls(app_name, dag, resources_file, deployments_file, phys_file, 
             deployments = deployments["System"]
     with open(resources_file, 'r') as f:
         full_resouces = yaml.safe_load(f)
-    with open(qos_contraints_file, 'r') as f:
-        qos_contraints_yaml = yaml.safe_load(f)
-        qos_contraints_yaml['system']['name'] = qos_contraints_yaml['system']['name'].replace('_', '-')
-        qos_contraints = yaml.safe_dump(qos_contraints_yaml)
+
+    qos_contraints_by_level = {}
+    qos_contraints_full = None
+    if os.path.exists(qos_contraints_file):
+        with open(qos_contraints_file, 'r') as f:
+            qos_contraints_yaml = yaml.safe_load(f)
+            qos_contraints_yaml['system']['name'] = qos_contraints_yaml['system']['name'].replace('_', '-')
+            qos_contraints_full = yaml.safe_dump(qos_contraints_yaml)
+    else:
+        path = os.path.dirname(qos_contraints_file)
+        for fn in os.listdir(path):
+            z = re.match("qos_constraints_L(\d+).yaml", fn)
+            if z:
+                level = int(z.group(1))
+                with open(os.path.join(path, fn), 'r') as f:
+                    qos_contraints_yaml = yaml.safe_load(f)
+                    qos_contraints_yaml['system']['name'] = qos_contraints_yaml['system']['name'].replace('_', '-')
+                    qos_contraints_by_level[level] = yaml.safe_dump(qos_contraints_yaml)
 
     phys_nodes = {}
     if phys_file:
@@ -137,12 +152,17 @@ def gen_tosca_yamls(app_name, dag, resources_file, deployments_file, phys_file, 
         container_per_component[component] = cont
         if not cl_name:
             raise Exception("No compute layer found for component." % component.get("name"))
+        # check if there are general qos_contraints by level
+        qos_contraints = qos_contraints_by_level.get(num)
+        if not qos_contraints:
+            # if not use the general one
+            qos_contraints = qos_contraints_full
         oscar_clusters_per_component[component] = gen_tosca_cluster(cls[cl_name], num, res_name, phys_nodes,
                                                                     elastic, auth_data, domain, app_name,
                                                                     influxdb_url, influxdb_token, qos_contraints)
 
     # Gen influx layers
-    gen_next_layer_influx(oscar_clusters_per_component, influxdb_url, influxdb_token)
+    gen_next_layer_influx(oscar_clusters_per_component)
 
     # Now create the OSCAR services and merge in the correct OSCAR cluster
     for component, next_items in dag.adj.items():
@@ -163,8 +183,7 @@ def gen_tosca_yamls(app_name, dag, resources_file, deployments_file, phys_file, 
     return oscar_clusters_per_component
 
 
-def gen_next_layer_influx(oscar_clusters, influxdb_url, influxdb_token):
-    # TODO: Gen influx layers
+def gen_next_layer_influx(oscar_clusters):
     layers = {}
     for oscar_cluster in list(oscar_clusters.values()):
         cluster_inputs = oscar_cluster["topology_template"]["inputs"]
