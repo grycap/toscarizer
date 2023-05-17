@@ -12,7 +12,7 @@ topology_template:
         env_variables:
           COMPONENT_NAME: blurry-faces-onnx
           KCI: https://minio.graspi.im.grycap.net
-          MONIT_HOST: ai-sprint_mask_detection_app-telegraf
+          MONIT_HOST: ai-sprint-mask-detection-app-telegraf
           MONIT_PORT: '8094'
         image: registry.gitlab.polimi.it/ai-sprint/blurry-faces-onnx:tag
         input:

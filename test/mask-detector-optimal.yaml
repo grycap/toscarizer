@@ -49,8 +49,8 @@ topology_template:
       type: string
     qos_constraints:
       default: "system:\n  global_constraints: {}\n  local_constraints:\n    local_constraint_1:\n\
-        \      component_name: blurry-faces-onnx\n      threshold: 20\n    local_constraint_2:\n\
-        \      component_name: mask-detector\n      threshold: 10\n  name: mask-detection-v1\n"
+        \      component_name: blurry-faces-onnx\n      threshold: 15\n    local_constraint_2:\n\
+        \      component_name: mask-detector\n      threshold: 7\n  name: mask-detection-v1\n"
       description: App QoS Constraints
       type: string
     storage_size:
@@ -227,7 +227,7 @@ topology_template:
         env_variables:
           COMPONENT_NAME: mask-detector
           KCI: https://minio.oscar-cluster-fixed26.im.grycap.net
-          MONIT_HOST: ai-sprint_mask_detection_app-telegraf
+          MONIT_HOST: ai-sprint-mask-detection-app-telegraf
           MONIT_PORT: '8094'
         image: registry.gitlab.polimi.it/ai-sprint/mask-detector:tag
         input:
@@ -314,10 +314,10 @@ topology_template:
         - get_input: domain_name
     influx_password:
       value:
-        get_input: local_influx_token
+        get_input: local_influx_pass
     influx_token:
       value:
-        get_input: local_influx_pass
+        get_input: local_influx_token
     minio_endpoint:
       value:
         concat:

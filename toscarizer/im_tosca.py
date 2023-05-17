@@ -3,6 +3,7 @@ import copy
 import random
 import string
 import os.path
+import re
 
 
 TEMPLATES_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "templates")
@@ -111,10 +112,24 @@ def gen_tosca_yamls(app_name, dag, resources_file, deployments_file, phys_file, 
             deployments = deployments["System"]
     with open(resources_file, 'r') as f:
         full_resouces = yaml.safe_load(f)
-    with open(qos_contraints_file, 'r') as f:
-        qos_contraints_yaml = yaml.safe_load(f)
-        qos_contraints_yaml['system']['name'] = qos_contraints_yaml['system']['name'].replace('_', '-')
-        qos_contraints = yaml.safe_dump(qos_contraints_yaml)
+
+    qos_contraints_by_level = {}
+    qos_contraints_full = None
+    if os.path.exists(qos_contraints_file):
+        with open(qos_contraints_file, 'r') as f:
+            qos_contraints_yaml = yaml.safe_load(f)
+            qos_contraints_yaml['system']['name'] = qos_contraints_yaml['system']['name'].replace('_', '-')
+            qos_contraints_full = yaml.safe_dump(qos_contraints_yaml)
+    else:
+        path = os.path.dirname(qos_contraints_file)
+        for fn in os.listdir(path):
+            z = re.match("qos_constraints_L(\d+).yaml", fn)
+            if z:
+                level = int(z.group(1))
+                with open(os.path.join(path, fn), 'r') as f:
+                    qos_contraints_yaml = yaml.safe_load(f)
+                    qos_contraints_yaml['system']['name'] = qos_contraints_yaml['system']['name'].replace('_', '-')
+                    qos_contraints_by_level[level] = yaml.safe_dump(qos_contraints_yaml)
 
     phys_nodes = {}
     if phys_file:
@@ -137,6 +152,11 @@ def gen_tosca_yamls(app_name, dag, resources_file, deployments_file, phys_file, 
         container_per_component[component] = cont
         if not cl_name:
             raise Exception("No compute layer found for component." % component.get("name"))
+        # check if there are general qos_contraints by level
+        qos_contraints = qos_contraints_by_level.get(num)
+        if not qos_contraints:
+            # if not use the general one
+            qos_contraints = qos_contraints_full
         oscar_clusters_per_component[component] = gen_tosca_cluster(cls[cl_name], num, res_name, phys_nodes,
                                                                     elastic, auth_data, domain, app_name,
                                                                     influxdb_url, influxdb_token, qos_contraints)
@@ -153,7 +173,8 @@ def gen_tosca_yamls(app_name, dag, resources_file, deployments_file, phys_file, 
                                                                   oscar_service)
 
     to_delete = ["minio_endpoint", "minio_ak", "minio_sk", "oscar_name",
-                 "aws", "aws_region", "aws_bucket", "aws_ak", "aws_sk"]
+                 "aws", "aws_region", "aws_bucket", "aws_ak", "aws_sk",
+                 "influx_endpoint", "influx_token", "layer_num"]
     for cluster in list(oscar_clusters_per_component.values()):
         for item in to_delete:
             if item in cluster["topology_template"]["inputs"]:
@@ -163,11 +184,32 @@ def gen_tosca_yamls(app_name, dag, resources_file, deployments_file, phys_file, 
 
 
 def gen_next_layer_influx(oscar_clusters):
-    # TODO: Gen influx layers
+    layers = {}
     for oscar_cluster in list(oscar_clusters.values()):
-        oscar_cluster["topology_template"]["inputs"]["layer_num"]
-        # oscar_cluster["topology_template"]["inputs"]["top_influx_url"]["default"] = ''
-        # oscar_cluster["topology_template"]["inputs"]["top_influx_token"]["default"] = ''
+        cluster_inputs = oscar_cluster["topology_template"]["inputs"]
+        curr_cluster_aws = "aws" in cluster_inputs and cluster_inputs["aws"]["default"]
+        num = cluster_inputs["layer_num"]["default"]
+        layers[num] = {"cluster": oscar_cluster, "aws": curr_cluster_aws}
+        if not curr_cluster_aws:
+            if len(oscar_cluster["topology_template"]["node_templates"]) > 1:
+                layers[num]["endpoint"] = "https://influx.%s.%s" % (cluster_inputs["cluster_name"]["default"],
+                                                                    cluster_inputs["domain_name"]["default"])
+                layers[num]["token"] = cluster_inputs["local_influx_token"]["default"]
+            else:
+                if "influx_endpoint" in cluster_inputs and "influx_token" in cluster_inputs:
+                    layers[num]["endpoint"] = cluster_inputs["influx_endpoint"]["default"]
+                    layers[num]["token"] = cluster_inputs["influx_token"]["default"]
+
+    for num, layer in layers.items():
+
+        next_layer = None
+        for next_num in list(layers.keys()):
+            if next_num > num and "endpoint" in layers[next_num]:
+                next_layer = layers[next_num]
+
+        if next_layer:
+            layer["cluster"]["topology_template"]["inputs"]["top_influx_url"] =  {"default": next_layer["endpoint"], "type": "string"}
+            layer["cluster"]["topology_template"]["inputs"]["top_influx_token"] =  {"default": next_layer["token"], "type": "string"}
 
 
 def get_service(app_name, component, next_items, prev_items, container, oscar_clusters):
@@ -513,12 +555,16 @@ def gen_tosca_cluster(compute_layer, layer_num, res_name, phys_nodes, elastic, a
             raise Exception("Computational layer of type PhysicalToBeProvisioned,"
                             " but Physical Data File not exists.")
         res = list(compute_layer["Resources"].values())[0]
+        influx_endpoint = get_physical_resource_data(compute_layer, res, phys_nodes, "influx", "endpoint")
+        influx_token = get_physical_resource_data(compute_layer, res, phys_nodes, "influx", "token")
         minio_endpoint = get_physical_resource_data(compute_layer, res, phys_nodes, "minio", "endpoint")
         minio_ak = get_physical_resource_data(compute_layer, res, phys_nodes, "minio", "access_key")
         minio_sk = get_physical_resource_data(compute_layer, res, phys_nodes, "minio", "secret_key")
         oscar_name = get_physical_resource_data(compute_layer, res, phys_nodes, "oscar", "name")
 
         tosca_res["topology_template"]["inputs"]["minio_endpoint"] = {"default": minio_endpoint, "type": "string"}
+        tosca_res["topology_template"]["inputs"]["influx_endpoint"] = {"default": influx_endpoint, "type": "string"}
+        tosca_res["topology_template"]["inputs"]["influx_token"] = {"default": influx_token, "type": "string"}
         tosca_res["topology_template"]["inputs"]["minio_ak"] = {"default": minio_ak, "type": "string"}
         tosca_res["topology_template"]["inputs"]["minio_sk"] = {"default": minio_sk, "type": "string"}
         tosca_res["topology_template"]["inputs"]["oscar_name"] = {"default": oscar_name, "type": "string"}

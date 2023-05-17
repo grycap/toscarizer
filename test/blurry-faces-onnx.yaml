@@ -5,6 +5,12 @@ topology_template:
     cluster_name:
       default: oscar-cluster-fixed1
       type: string
+    top_influx_token:
+      default: fixed1
+      type: string
+    top_influx_url:
+      default: https://influx.oscar-cluster-fixed3.im.grycap.net
+      type: string
   node_templates:
     oscar_service_blurry-faces-onnx:
       properties:
@@ -12,7 +18,7 @@ topology_template:
         env_variables:
           COMPONENT_NAME: blurry-faces-onnx
           KCI: https://minio.graspi.im.grycap.net
-          MONIT_HOST: ai-sprint_mask_detection_app-telegraf
+          MONIT_HOST: ai-sprint-mask-detection-app-telegraf
           MONIT_PORT: '8094'
         image: registry.gitlab.polimi.it/ai-sprint/blurry-faces-onnx:tag
         input:

@@ -163,7 +163,7 @@ class TestToscarizer(unittest.TestCase):
     @patch('toscarizer.im_tosca.get_random_string')
     def test_15_tosca(self, random_string):
         random_string.side_effect = ["fixed1", "fixed2", "fixed3", "fixed4", "fixed5", "fixed6", "fixed1", "fixed4",
-                                     "fixed1", "fixed10", "fixed3", "fixed6", "fixed13", "fixed6", "fixed15",
+                                     "fixed1", "fixed10", "fixed3", "fixed6", "fixed13", "fixed6", "fixed1",
                                      "fixed16", "fixed17", "fixed18", "fixed19", "fixed20", "fixed21", "fixed22",
                                      "fixed23", "fixed24", "fixed25", "fixed26", "fixed27", "fixed28", "fixed29",
                                      "fixed30", "fixed31"]
