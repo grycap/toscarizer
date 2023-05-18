@@ -9,7 +9,6 @@ CONTAINERS_FILE = "aisprint/designs/containers.yaml"
 ANNOTATIONS_FILE = "common_config/annotations.yaml"
 PHYSICAL_NODES_FILE = "common_config/physical_nodes.yaml"
 
-BASE_RESOURCES_COMPLETE_FILE = "aisprint/deployments/base/production_deployment.yaml"
 RESOURCES_COMPLETE_FILE = "aisprint/deployments/optimal_deployment/production_deployment.yaml"
 BASE_DAG_FILE = "aisprint/deployments/base/application_dag.yaml"
 OPTIMAL_DAG_FILE = "aisprint/deployments/optimal_deployment/application_dag.yaml"

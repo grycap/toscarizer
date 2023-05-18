@@ -10,7 +10,6 @@ from toscarizer.utils import (DEPLOYMENTS_FILE,
                               RESOURCES_FILE,
                               COMPONENT_FILE,
                               CONTAINERS_FILE,
-                              BASE_RESOURCES_COMPLETE_FILE,
                               RESOURCES_COMPLETE_FILE,
                               BASE_DAG_FILE,
                               OPTIMAL_DAG_FILE,
@@ -111,8 +110,8 @@ def tosca(application_dir, base, optimal, elastic, im_auth, domain, influxdb_url
 
     if base:
         app_name, dag = parse_dag("%s/%s" % (application_dir, BASE_DAG_FILE))
-        deployments_file = "%s/%s" % (application_dir, BASE_RESOURCES_COMPLETE_FILE)
-        resources_file = "%s/%s" % (application_dir, BASE_RESOURCES_COMPLETE_FILE)
+        deployments_file = "%s/%s" % (application_dir, DEPLOYMENTS_FILE)
+        resources_file = "%s/%s" % (application_dir, RESOURCES_FILE)
         qos_contraints_file = "%s/%s" % (application_dir, QOS_CONSTRAINTS_FILE)
     else:
         app_name, dag = parse_dag("%s/%s" % (application_dir, OPTIMAL_DAG_FILE))

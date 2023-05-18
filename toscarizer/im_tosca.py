@@ -128,11 +128,11 @@ def gen_tosca_yamls(app_name, dag, resources_file, deployments_file, phys_file, 
                 level = int(z.group(1))
                 with open(os.path.join(path, fn), 'r') as f:
                     qos_contraints_yaml = yaml.safe_load(f)
-                    qos_contraints_yaml['system']['name'] = qos_contraints_yaml['system']['name'].replace('_', '-')
+                    qos_contraints_yaml['System']['name'] = qos_contraints_yaml['System']['name'].replace('_', '-')
                     qos_contraints_by_level[level] = yaml.safe_dump(qos_contraints_yaml)
 
     phys_nodes = {}
-    if phys_file:
+    if phys_file and os.path.isfile(phys_file):
         with open(phys_file, 'r') as f:
             phys_nodes = yaml.safe_load(f)
 
@@ -573,10 +573,8 @@ def gen_tosca_cluster(compute_layer, layer_num, res_name, phys_nodes, elastic, a
         tosca_res["topology_template"]["inputs"]["top_influx_url"] = {"default": influxdb_url, "type": "string"}
         tosca_res["topology_template"]["inputs"]["top_influx_token"] = {"default": influxdb_token, "type": "string"}
 
-        if len(compute_layer["Resources"]) != 1:
-            raise Exception("PhysicalAlreadyProvisioned ComputeLayer must only have 1 resource.")
         if not phys_nodes:
-            raise Exception("Computational layer of type PhysicalToBeProvisioned,"
+            raise Exception("Computational layer of type NativeCloudFunction,"
                             " but Physical Data File not exists.")
         res = list(compute_layer["Resources"].values())[0]
         aws_region = get_physical_resource_data(compute_layer, res, phys_nodes, "aws", "region")
