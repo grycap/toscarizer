@@ -1,5 +1,4 @@
 System:
-  DeploymentName: deployment1
   name: Mask Detection Application
   NetworkDomains:
     ND1:
