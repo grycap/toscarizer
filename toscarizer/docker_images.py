@@ -11,6 +11,7 @@ SCRIPT_TEMPLATE = os.path.join(TEMPLATES_PATH, 'script.sh')
 START_TEMPLATE = os.path.join(TEMPLATES_PATH, 'start.sh')
 TELEGRAF_TEMPLATE = os.path.join(TEMPLATES_PATH, 'telegraf.conf')
 
+
 def get_part_x_name(part_name):
     """Replaces first num of partition with an X"""
     ini = part_name.find("_partition")
