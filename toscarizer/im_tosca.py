@@ -45,7 +45,7 @@ def find_compute_layer(resources, component_name, components):
     layer_num = component.get("executionLayer")
     if not layer_num:
         layer_num = component["candidateExecutionLayers"][0]
-    for nd in list(resources["System"]["NetworkDomains"].values()):
+    for nd in list(resources["NetworkDomains"].values()):
         if "ComputationalLayers" in nd:
             for cl_name, cl in nd["ComputationalLayers"].items():
                 if cl.get("number") == layer_num:
@@ -112,6 +112,10 @@ def gen_tosca_yamls(app_name, dag, resources_file, deployments_file, phys_file, 
             deployments = deployments["System"]
     with open(resources_file, 'r') as f:
         full_resouces = yaml.safe_load(f)
+        if "System" in full_resouces:
+            full_resouces = full_resouces["System"]
+        if "Resources" in full_resouces:
+            full_resouces = full_resouces["Resources"]
 
     qos_contraints_by_level = {}
     qos_contraints_full = None
@@ -138,7 +142,7 @@ def gen_tosca_yamls(app_name, dag, resources_file, deployments_file, phys_file, 
 
     # Get a dict of ComputationalLayers by name
     cls = {}
-    for nd in list(full_resouces["System"]["NetworkDomains"].values()):
+    for nd in list(full_resouces["NetworkDomains"].values()):
         if "ComputationalLayers" in nd:
             for cl_name, cl in nd["ComputationalLayers"].items():
                 cls[cl_name] = cl

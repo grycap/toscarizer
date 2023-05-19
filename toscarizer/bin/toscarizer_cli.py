@@ -13,11 +13,14 @@ from toscarizer.utils import (DEPLOYMENTS_FILE,
                               RESOURCES_COMPLETE_FILE,
                               BASE_DAG_FILE,
                               OPTIMAL_DAG_FILE,
+                              RELATIVE_DAG_FILE,
                               PHYSICAL_NODES_FILE,
                               QOS_CONSTRAINTS_FILE,
                               OPTIMAL_QOS_CONSTRAINTS_FILE,
+                              RELATIVE_QOS_CONSTRAINTS_FILE,
                               parse_dag,
-                              parse_resources)
+                              parse_resources,
+                              get_base_deployment_name)
 from toscarizer.fdl import generate_fdl
 from toscarizer.docker_images import generate_dockerfiles, build_and_push, generate_containers
 from toscarizer.im_tosca import gen_tosca_yamls
@@ -75,8 +78,10 @@ def fdl(application_dir, base, optimal):
     fdl = generate_fdl(tosca_files)
 
     if optimal:
+        os.makedirs("%s/aisprint/deployments/optimal_deployment/oscar/" % application_dir, exist_ok=True)
         fdl_file = "%s/aisprint/deployments/optimal_deployment/oscar/fdl.yaml" % application_dir
     else:
+        os.makedirs("%s/aisprint/deployments/base/oscar/" % application_dir, exist_ok=True)
         fdl_file = "%s/aisprint/deployments/base/oscar/fdl.yaml" % application_dir
 
     with open(fdl_file, 'w+') as f:
@@ -114,10 +119,15 @@ def tosca(application_dir, base, optimal, elastic, im_auth, domain, influxdb_url
         resources_file = "%s/%s" % (application_dir, RESOURCES_FILE)
         qos_contraints_file = "%s/%s" % (application_dir, QOS_CONSTRAINTS_FILE)
     else:
-        app_name, dag = parse_dag("%s/%s" % (application_dir, OPTIMAL_DAG_FILE))
         deployments_file = "%s/%s" % (application_dir, RESOURCES_COMPLETE_FILE)
         resources_file = "%s/%s" % (application_dir, RESOURCES_COMPLETE_FILE)
-        qos_contraints_file = "%s/%s" % (application_dir, OPTIMAL_QOS_CONSTRAINTS_FILE)
+        base_deployment_name = get_base_deployment_name(deployments_file)
+        if base_deployment_name:
+            app_name, dag = parse_dag("%s/%s" % (application_dir, RELATIVE_DAG_FILE % base_deployment_name))
+            qos_contraints_file = "%s/%s" % (application_dir, RELATIVE_QOS_CONSTRAINTS_FILE % base_deployment_name)
+        else:
+            app_name, dag = parse_dag("%s/%s" % (application_dir, OPTIMAL_DAG_FILE))
+            qos_contraints_file = "%s/%s" % (application_dir, OPTIMAL_QOS_CONSTRAINTS_FILE)
 
     toscas = gen_tosca_yamls(app_name, dag, resources_file, deployments_file,
                              "%s/%s" % (application_dir, PHYSICAL_NODES_FILE),
@@ -125,8 +135,10 @@ def tosca(application_dir, base, optimal, elastic, im_auth, domain, influxdb_url
                              qos_contraints_file)
     for cl, tosca in toscas.items():
         if optimal:
+            os.makedirs("%s/aisprint/deployments/optimal_deployment/im/" % application_dir, exist_ok=True)
             tosca_file = "%s/aisprint/deployments/optimal_deployment/im/%s.yaml" % (application_dir, cl)
         else:
+            os.makedirs("%s/aisprint/deployments/base/im/" % application_dir, exist_ok=True)
             tosca_file = "%s/aisprint/deployments/base/im/%s.yaml" % (application_dir, cl)
         with open(tosca_file, 'w+') as f:
             yaml.safe_dump(tosca, f, indent=2)
@@ -153,7 +165,12 @@ def deploy(im_url, im_auth, verify, application_dir, base, optimal, tosca_file):
 
         if optimal:
             tosca_dir = "%s/aisprint/deployments/optimal_deployment/im" % application_dir
-            _, dag = parse_dag("%s/%s" % (application_dir, OPTIMAL_DAG_FILE))
+            deployments_file = "%s/%s" % (application_dir, RESOURCES_COMPLETE_FILE)
+            base_deployment_name = get_base_deployment_name(deployments_file)
+            if base_deployment_name:
+                _, dag = parse_dag("%s/%s" % (application_dir, RELATIVE_DAG_FILE % base_deployment_name))
+            else:
+                _, dag = parse_dag("%s/%s" % (application_dir, OPTIMAL_DAG_FILE))
         else:
             tosca_dir = "%s/aisprint/deployments/base/im" % application_dir
             _, dag = parse_dag("%s/%s" % (application_dir, BASE_DAG_FILE))

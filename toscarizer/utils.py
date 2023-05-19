@@ -12,9 +12,11 @@ PHYSICAL_NODES_FILE = "common_config/physical_nodes.yaml"
 RESOURCES_COMPLETE_FILE = "aisprint/deployments/optimal_deployment/production_deployment.yaml"
 BASE_DAG_FILE = "aisprint/deployments/base/application_dag.yaml"
 OPTIMAL_DAG_FILE = "aisprint/deployments/optimal_deployment/application_dag.yaml"
+RELATIVE_DAG_FILE = "aisprint/deployments/%s/application_dag.yaml"
 
 QOS_CONSTRAINTS_FILE = "aisprint/deployments/base/ams/qos_constraints.yaml"
 OPTIMAL_QOS_CONSTRAINTS_FILE = "aisprint/deployments/optimal_deployment/ams/qos_constraints.yaml"
+RELATIVE_QOS_CONSTRAINTS_FILE = "aisprint/deployments/%s/ams/qos_constraints.yaml"
 
 
 def parse_dag(dag_file):
@@ -42,8 +44,13 @@ def parse_resources(resource_file, deployments_files):
         with open(deployments_files, 'r') as f:
             deployments = yaml.safe_load(f)
 
+        if "System" in resources:
+            resources = resources["System"]
+        if "Resources" in resources:
+            resources = resources["Resources"]
+
         cls = {}
-        for _, nd in resources["System"]["NetworkDomains"].items():
+        for _, nd in resources["NetworkDomains"].items():
             if "ComputationalLayers" in nd:
                 for cl_name, cl in nd["ComputationalLayers"].items():
                     cls[cl["number"]] = {"name": cl_name, "resources": {}}
@@ -88,3 +95,14 @@ def parse_resources(resource_file, deployments_files):
     except Exception as ex:
         print("Error reading resources.yaml: %s" % ex)
     return res_dict
+
+
+def get_base_deployment_name(deployments_file):
+    base_deployment_name = None
+    with open(deployments_file, 'r') as f:
+        deployments = yaml.safe_load(f)
+        if "System" in deployments:
+            deployments = deployments["System"]
+        if "DeploymentName" in deployments:
+            base_deployment_name = deployments["DeploymentName"]
+    return base_deployment_name
