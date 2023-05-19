@@ -123,7 +123,7 @@ def gen_tosca_yamls(app_name, dag, resources_file, deployments_file, phys_file, 
     else:
         path = os.path.dirname(qos_contraints_file)
         for fn in os.listdir(path):
-            z = re.match("qos_constraints_L(\d+).yaml", fn)
+            z = re.match(r"qos_constraints_L(\d+).yaml", fn)
             if z:
                 level = int(z.group(1))
                 with open(os.path.join(path, fn), 'r') as f:
@@ -208,8 +208,10 @@ def gen_next_layer_influx(oscar_clusters):
                 next_layer = layers[next_num]
 
         if next_layer:
-            layer["cluster"]["topology_template"]["inputs"]["top_influx_url"] =  {"default": next_layer["endpoint"], "type": "string"}
-            layer["cluster"]["topology_template"]["inputs"]["top_influx_token"] =  {"default": next_layer["token"], "type": "string"}
+            layer["cluster"]["topology_template"]["inputs"]["top_influx_url"] = {"default": next_layer["endpoint"],
+                                                                                 "type": "string"}
+            layer["cluster"]["topology_template"]["inputs"]["top_influx_token"] = {"default": next_layer["token"],
+                                                                                   "type": "string"}
 
 
 def get_service(app_name, component, next_items, prev_items, container, oscar_clusters):
