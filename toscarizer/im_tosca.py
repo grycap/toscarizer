@@ -118,7 +118,7 @@ def gen_tosca_yamls(app_name, dag, resources_file, deployments_file, phys_file, 
     if os.path.exists(qos_contraints_file):
         with open(qos_contraints_file, 'r') as f:
             qos_contraints_yaml = yaml.safe_load(f)
-            qos_contraints_yaml['system']['name'] = qos_contraints_yaml['system']['name'].replace('_', '-')
+            qos_contraints_yaml['System']['name'] = qos_contraints_yaml['System']['name'].replace('_', '-')
             qos_contraints_full = yaml.safe_dump(qos_contraints_yaml)
     else:
         path = os.path.dirname(qos_contraints_file)
