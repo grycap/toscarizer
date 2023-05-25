@@ -112,11 +112,11 @@ def get_base_deployment_name(deployments_file):
 def read_env_vars(app_dir, component):
     res = ""
     env_vars = {}
-    env_file = os.path.join(app_dir, "src", component ,"env.yaml")
+    env_file = os.path.join(app_dir, "src", component, "env.yaml")
     if os.path.isfile(env_file):
         with open(env_file, 'r') as f:
             env_vars = yaml.safe_load(f)
-    
+
     for k, v in env_vars.items():
         res += "ENV %s=%s\n" % (k, v)
 
