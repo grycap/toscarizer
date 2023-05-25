@@ -29,11 +29,10 @@ def generate_dockerfiles(base_image, app_dir, components, resources):
     with open(SCRIPT_TEMPLATE, 'r') as f:
         scriptfile_tpl = f.read()
 
-    env_vars = read_env_vars(app_dir)
-
     dockerfiles = {}
     for component, partitions in components["components"].items():
         dockerfiles[component] = {}
+        env_vars = read_env_vars(app_dir, component)
         for partition in partitions["partitions"]:
             if partition == "base":
                 part_name = component
