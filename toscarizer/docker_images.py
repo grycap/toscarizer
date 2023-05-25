@@ -2,6 +2,7 @@ import docker
 import yaml
 import os
 import shutil
+from toscarizer.utils import read_env_vars
 
 
 TEMPLATES_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "templates")
@@ -28,6 +29,8 @@ def generate_dockerfiles(base_image, app_dir, components, resources):
     with open(SCRIPT_TEMPLATE, 'r') as f:
         scriptfile_tpl = f.read()
 
+    env_vars = read_env_vars(app_dir)
+
     dockerfiles = {}
     for component, partitions in components["components"].items():
         dockerfiles[component] = {}
@@ -43,16 +46,19 @@ def generate_dockerfiles(base_image, app_dir, components, resources):
             dockerfiles[component][partition] = []
             dockerfile_dir = "%s/aisprint/designs/%s/%s" % (app_dir, component, partition)
             dockerfile_path = "%s/Dockerfile" % dockerfile_dir
-            dockerfile = "FROM %s\n%s" % (base_image, dockerfile_tpl.replace("{{component_name}}", component))
+            dockerfile = "FROM %s\n%s\n%s" % (base_image,
+                                              env_vars,
+                                              dockerfile_tpl.replace("{{component_name}}", component))
             with open(dockerfile_path, 'w+') as f:
                 f.write(dockerfile)
 
             # Generate image for SCAR in ECR
             if resources[part_name]["aws"]:
                 dockerfile_path_aws = "%s/Dockerfile.aws" % dockerfile_dir
-                dockerfile = "FROM %s\n%s\n%s" % (base_image,
-                                                  dockerfile_tpl.replace("{{component_name}}", component),
-                                                  dockerfile_aws_tpl)
+                dockerfile = "FROM %s\n%s\n%s\n%s" % (base_image,
+                                                      env_vars,
+                                                      dockerfile_tpl.replace("{{component_name}}", component),
+                                                      dockerfile_aws_tpl)
                 with open(dockerfile_path_aws, 'w+') as f:
                     f.write(dockerfile)
                 shutil.copyfile(START_TEMPLATE, "%s/start.sh" % dockerfile_dir)
