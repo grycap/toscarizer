@@ -1,4 +1,5 @@
 import networkx as nx
+import os.path
 import yaml
 
 # Default file names
@@ -106,3 +107,17 @@ def get_base_deployment_name(deployments_file):
         if "DeploymentName" in deployments:
             base_deployment_name = deployments["DeploymentName"]
     return base_deployment_name
+
+
+def read_env_vars(app_dir, component):
+    res = ""
+    env_vars = {}
+    env_file = os.path.join(app_dir, "src", component, "env.yaml")
+    if os.path.isfile(env_file):
+        with open(env_file, 'r') as f:
+            env_vars = yaml.safe_load(f)
+
+    for k, v in env_vars.items():
+        res += "ENV %s=%s\n" % (k, v)
+
+    return res
