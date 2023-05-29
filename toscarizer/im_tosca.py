@@ -105,7 +105,8 @@ def get_physical_resource_data(comp_layer, res, phys_file, node_type, value, ind
 
 
 def gen_tosca_yamls(app_name, dag, resources_file, deployments_file, phys_file, elastic,
-                    auth_data, domain, influxdb_url, influxdb_token, qos_contraints_file):
+                    auth_data, domain, influxdb_url, influxdb_token, qos_contraints_file,
+                    containers_file):
     with open(deployments_file, 'r') as f:
         deployments = yaml.safe_load(f)
         if "System" in deployments:
@@ -166,7 +167,7 @@ def gen_tosca_yamls(app_name, dag, resources_file, deployments_file, phys_file, 
                                                                     influxdb_url, influxdb_token, qos_contraints)
 
     # Gen influx layers
-    gen_next_layer_influx(oscar_clusters_per_component)
+    layers = gen_next_layer_influx(oscar_clusters_per_component)
 
     # Now create the OSCAR services and merge in the correct OSCAR cluster
     for component, next_items in dag.adj.items():
@@ -175,6 +176,12 @@ def gen_tosca_yamls(app_name, dag, resources_file, deployments_file, phys_file, 
                                     container_per_component[component], oscar_clusters_per_component)
         oscar_clusters_per_component[component] = merge_templates(oscar_clusters_per_component[component],
                                                                   oscar_service)
+
+    # Add drift detector component
+    drift_detector = get_drift_detector(containers_file)
+    if drift_detector:
+        max_layer = max(k for k, v in layers.items() if not v.get("aws") )
+        merge_templates(layers[max_layer]["cluster"], drift_detector)
 
     to_delete = ["minio_endpoint", "minio_ak", "minio_sk", "oscar_name",
                  "aws", "aws_region", "aws_bucket", "aws_ak", "aws_sk",
@@ -216,6 +223,65 @@ def gen_next_layer_influx(oscar_clusters):
                                                                                  "type": "string"}
             layer["cluster"]["topology_template"]["inputs"]["top_influx_token"] = {"default": next_layer["token"],
                                                                                    "type": "string"}
+    return layers
+
+def get_drift_detector(containers_file):
+    """Generate the drift detector TOSCA component."""
+    with open(containers_file, 'r') as f:
+        containers = yaml.safe_load(f)
+
+    if not containers.get("components", {}).get("drift-detector"):
+        return None
+
+    deployment = {
+        "type": "tosca.nodes.indigo.KubernetesObject",
+        "requirements": [{"host": "lrms_front_end"}],
+        "properties": {
+            "spec": """
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: drift-detector
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+    name: drift-detector
+    namespace: drift-detector
+spec:
+    replicas: 1
+    spec:
+        containers:
+          - name: drift-detector
+            env:
+            - name: DRIFT_DETECTOR_INFLUXDB_URL
+              value: value
+            - name: DRIFT_DETECTOR_INFLUXDB_TOKEN
+              value: value
+            - name: COMPONENT_NAME
+              value: value
+            - name: DRIFT_DETECTOR_MINIO_FOLDER
+              value: value
+            - name: DRIFT_DETECTOR_MINIO_URL
+              value: value
+            - name: DRIFT_DETECTOR_MINIO_AK
+              value: value
+            - name: DRIFT_DETECTOR_MINIO_SK
+              value: value
+            value: "Hello from the environment"
+            image: %s""" % containers["components"]["drift-detector"]["docker_images"][0]
+        }
+    }
+
+    res = {
+            "topology_template":
+            {
+                "node_templates": {"drift_detector": deployment},
+            }
+    }
+
+    return res
 
 
 def get_service(app_name, component, next_items, prev_items, container, oscar_clusters):

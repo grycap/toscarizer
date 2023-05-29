@@ -132,7 +132,7 @@ def tosca(application_dir, base, optimal, elastic, im_auth, domain, influxdb_url
     toscas = gen_tosca_yamls(app_name, dag, resources_file, deployments_file,
                              "%s/%s" % (application_dir, PHYSICAL_NODES_FILE),
                              elastic, auth_data, domain, influxdb_url, influxdb_token,
-                             qos_contraints_file)
+                             qos_contraints_file, "%s/%s" % (application_dir, CONTAINERS_FILE))
     for cl, tosca in toscas.items():
         if optimal:
             os.makedirs("%s/aisprint/deployments/optimal_deployment/im/" % application_dir, exist_ok=True)

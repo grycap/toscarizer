@@ -62,9 +62,9 @@ class TestToscarizer(unittest.TestCase):
                         '000000000000.dkr.ecr.us-east-1.amazonaws.com/repo:mask-detector_base_amd64'
                     ]
                 },
-                'drift_detector': {
+                'drift-detector': {
                     'docker_images': [
-                        'docker.io/micafer/drift_detector_main_amd64:latest'
+                        'docker.io/micafer/drift-detector_main_amd64:latest'
                     ]
                 },
             }
