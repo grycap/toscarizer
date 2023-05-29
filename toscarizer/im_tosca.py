@@ -178,9 +178,9 @@ def gen_tosca_yamls(app_name, dag, resources_file, deployments_file, phys_file, 
                                                                   oscar_service)
 
     # Add drift detector component
-    drift_detector = get_drift_detector(containers_file)
+    max_layer = max(k for k, v in layers.items() if not v.get("aws") )
+    drift_detector = get_drift_detector(containers_file, layers[max_layer]["cluster"])
     if drift_detector:
-        max_layer = max(k for k, v in layers.items() if not v.get("aws") )
         merge_templates(layers[max_layer]["cluster"], drift_detector)
 
     to_delete = ["minio_endpoint", "minio_ak", "minio_sk", "oscar_name",
@@ -225,13 +225,24 @@ def gen_next_layer_influx(oscar_clusters):
                                                                                    "type": "string"}
     return layers
 
-def get_drift_detector(containers_file):
+def get_drift_detector(containers_file, oscar_cluster):
     """Generate the drift detector TOSCA component."""
     with open(containers_file, 'r') as f:
         containers = yaml.safe_load(f)
 
     if not containers.get("components", {}).get("drift-detector"):
         return None
+
+    cluster_inputs = oscar_cluster["topology_template"]["inputs"]
+    if len(oscar_cluster["topology_template"]["node_templates"]) > 1:
+        influx_endpoint = "https://influx.%s.%s" % (cluster_inputs["cluster_name"]["default"],
+                                                    cluster_inputs["domain_name"]["default"])
+        influx_token = cluster_inputs["local_influx_token"]["default"]
+    else:
+        raise Exception("Drift detector not supported for already deployed clusters.")
+
+    minio_endpoint = "https://minio.%s.%s" % (cluster_inputs["cluster_name"]["default"],
+                                              cluster_inputs["domain_name"]["default"])
 
     deployment = {
         "type": "tosca.nodes.indigo.KubernetesObject",
@@ -256,21 +267,25 @@ spec:
           - name: drift-detector
             env:
             - name: DRIFT_DETECTOR_INFLUXDB_URL
-              value: value
+              value: %s
             - name: DRIFT_DETECTOR_INFLUXDB_TOKEN
-              value: value
+              value: %s
             - name: COMPONENT_NAME
               value: value
             - name: DRIFT_DETECTOR_MINIO_FOLDER
               value: value
             - name: DRIFT_DETECTOR_MINIO_URL
-              value: value
+              value: %s
             - name: DRIFT_DETECTOR_MINIO_AK
-              value: value
+              value: minio
             - name: DRIFT_DETECTOR_MINIO_SK
-              value: value
+              value: %s
             value: "Hello from the environment"
-            image: %s""" % containers["components"]["drift-detector"]["docker_images"][0]
+            image: %s""" % (influx_endpoint,
+                            influx_token,
+                            minio_endpoint,
+                            cluster_inputs["minio_password"]["default"],
+                            containers["components"]["drift-detector"]["docker_images"][0])
         }
     }
 
