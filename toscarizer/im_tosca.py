@@ -171,7 +171,7 @@ def gen_tosca_yamls(app_name, dag, resources_file, deployments_file, phys_file, 
 
     # Add drift detector component
     last_layer_cluster = None
-    max_layer = max(k for k, v in layers.items() if not v.get("aws") )
+    max_layer = max(k for k, v in layers.items() if not v.get("aws"))
     drift_detector = get_drift_detector(containers_file, layers[max_layer]["cluster"])
     if drift_detector:
         last_layer_cluster = layers[max_layer]["cluster"]
@@ -227,6 +227,7 @@ def gen_next_layer_influx(oscar_clusters):
             layer["cluster"]["topology_template"]["inputs"]["top_influx_token"] = {"default": next_layer["token"],
                                                                                    "type": "string"}
     return layers
+
 
 def get_drift_detector(containers_file, oscar_cluster):
     """Generate the drift detector TOSCA component."""
@@ -337,13 +338,14 @@ def get_service(app_name, component, next_items, prev_items, container, oscar_cl
     if drift_cluster:
         # There is a drift detector add needed env variables
         drift_cluster_inputs = drift_cluster["topology_template"]["inputs"]
-        minio_endpoint  = "https://minio.%s.%s" % (drift_cluster_inputs["cluster_name"]["default"],
-                                                   drift_cluster_inputs["domain_name"]["default"])
+        minio_endpoint = "https://minio.%s.%s" % (drift_cluster_inputs["cluster_name"]["default"],
+                                                  drift_cluster_inputs["domain_name"]["default"])
 
-        service["properties"]["env_variables"]["DRIFT_DETECTOR_MINIO_URL"] = minio_endpoint 
+        service["properties"]["env_variables"]["DRIFT_DETECTOR_MINIO_URL"] = minio_endpoint
         service["properties"]["env_variables"]["DRIFT_DETECTOR_MINIO_FOLDER"] = "drift_detector"
         service["properties"]["env_variables"]["DRIFT_DETECTOR_MINIO_AK"] = "minio"
-        service["properties"]["env_variables"]["DRIFT_DETECTOR_MINIO_SK"] = drift_cluster_inputs["minio_password"]["default"]
+        service["properties"]["env_variables"]["DRIFT_DETECTOR_MINIO_SK"] = \
+            drift_cluster_inputs["minio_password"]["default"]
 
     storage_providers = {}
 

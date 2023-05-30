@@ -61,12 +61,7 @@ class TestToscarizer(unittest.TestCase):
                         'docker.io/micafer/mask-detector_base_amd64:latest',
                         '000000000000.dkr.ecr.us-east-1.amazonaws.com/repo:mask-detector_base_amd64'
                     ]
-                },
-                'drift-detector': {
-                    'docker_images': [
-                        'docker.io/micafer/drift-detector_main_amd64:latest'
-                    ]
-                },
+                }
             }
         }
         self.assertEqual(containers, expected)
@@ -160,7 +155,12 @@ class TestToscarizer(unittest.TestCase):
                     'docker_images': [
                         'docker.io/micafer/mask-detector_base_amd64:latest'
                     ]
-                }
+                },
+                'drift-detector': {
+                    'docker_images': [
+                        'docker.io/micafer/drift-detector_main_amd64:latest'
+                    ]
+                },
             }
         }
         self.assertEqual(containers, expected)

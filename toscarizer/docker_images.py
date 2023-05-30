@@ -82,8 +82,8 @@ def generate_dockerfiles(base_image, app_dir, components, resources):
     if os.path.isdir(drift_dir):
         docker_dir = os.path.join(drift_dir, "docker")
         dockerfiles["drift-detector"] = {"main": [("linux/amd64",
-                                                    False,
-                                                    os.path.join(docker_dir, "Dockerfile"))]}
+                                                   False,
+                                                   os.path.join(docker_dir, "Dockerfile"))]}
 
     return dockerfiles
 
