@@ -81,7 +81,7 @@ topology_template:
           \    containers:\n          - name: drift-detector\n            env:\n \
           \           - name: DRIFT_DETECTOR_INFLUXDB_URL\n              value: http://ai-sprint-monit-influxdb.ai-sprint-monitoring:8086\n\
           \            - name: DRIFT_DETECTOR_INFLUXDB_TOKEN\n              value:\
-          \ fixed1\n            - name: COMPONENT_NAME\n              value: value\n\
+          \ fixed1\n            - name: COMPONENT_NAME\n              value: mask-detector\n\
           \            - name: DRIFT_DETECTOR_MINIO_FOLDER\n              value: drift_detector\n\
           \            - name: DRIFT_DETECTOR_MINIO_URL\n              value: 'http://minio.minio:9000'\n\
           \            - name: DRIFT_DETECTOR_MINIO_AK\n              value: minio\n\

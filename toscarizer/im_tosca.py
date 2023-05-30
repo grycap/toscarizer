@@ -171,10 +171,12 @@ def gen_tosca_yamls(app_name, dag, resources_file, deployments_file, phys_file, 
 
     # Add drift detector component
     last_layer_cluster = None
-    max_layer = max(k for k, v in layers.items() if not v.get("aws"))
-    drift_detector = get_drift_detector(containers_file, layers[max_layer]["cluster"])
+    max_layer = max(k for k, v in layers.items() if not v[0].get("aws"))
+    drift_detector = get_drift_detector(containers_file,
+                                        layers[max_layer][0]["cluster"],
+                                        layers[max_layer][0]["component"])
     if drift_detector:
-        last_layer_cluster = layers[max_layer]["cluster"]
+        last_layer_cluster = layers[max_layer][0]["cluster"]
         merge_templates(last_layer_cluster, drift_detector)
 
     # Now create the OSCAR services and merge in the correct OSCAR cluster
@@ -199,37 +201,42 @@ def gen_tosca_yamls(app_name, dag, resources_file, deployments_file, phys_file, 
 
 def gen_next_layer_influx(oscar_clusters):
     layers = {}
-    for oscar_cluster in list(oscar_clusters.values()):
+    for component, oscar_cluster in oscar_clusters.items():
         cluster_inputs = oscar_cluster["topology_template"]["inputs"]
         curr_cluster_aws = "aws" in cluster_inputs and cluster_inputs["aws"]["default"]
         num = cluster_inputs["layer_num"]["default"]
-        layers[num] = {"cluster": oscar_cluster, "aws": curr_cluster_aws}
+        if num not in layers:
+            layers[num] = []
+        layers[num].append({"cluster": oscar_cluster, "aws": curr_cluster_aws, "component": component})
+        elem = len(layers[num]) - 1
         if not curr_cluster_aws:
             if len(oscar_cluster["topology_template"]["node_templates"]) > 1:
-                layers[num]["endpoint"] = "https://influx.%s.%s" % (cluster_inputs["cluster_name"]["default"],
-                                                                    cluster_inputs["domain_name"]["default"])
-                layers[num]["token"] = cluster_inputs["local_influx_token"]["default"]
+                layers[num][elem]["endpoint"] = "https://influx.%s.%s" % (cluster_inputs["cluster_name"]["default"],
+                                                                          cluster_inputs["domain_name"]["default"])
+                layers[num][elem]["token"] = cluster_inputs["local_influx_token"]["default"]
             else:
                 if "influx_endpoint" in cluster_inputs and "influx_token" in cluster_inputs:
-                    layers[num]["endpoint"] = cluster_inputs["influx_endpoint"]["default"]
-                    layers[num]["token"] = cluster_inputs["influx_token"]["default"]
+                    layers[num][elem]["endpoint"] = cluster_inputs["influx_endpoint"]["default"]
+                    layers[num][elem]["token"] = cluster_inputs["influx_token"]["default"]
 
     for num, layer in layers.items():
 
         next_layer = None
         for next_num in list(layers.keys()):
-            if next_num > num and "endpoint" in layers[next_num]:
+            if next_num > num and "endpoint" in layers[next_num][0]:
                 next_layer = layers[next_num]
 
         if next_layer:
-            layer["cluster"]["topology_template"]["inputs"]["top_influx_url"] = {"default": next_layer["endpoint"],
-                                                                                 "type": "string"}
-            layer["cluster"]["topology_template"]["inputs"]["top_influx_token"] = {"default": next_layer["token"],
-                                                                                   "type": "string"}
+            for elem in layer:
+                cluster_inputs = elem["cluster"]["topology_template"]["inputs"]
+                cluster_inputs["top_influx_url"] = {"default": next_layer[0]["endpoint"],
+                                                    "type": "string"}
+                cluster_inputs["top_influx_token"] = {"default": next_layer[0]["token"],
+                                                      "type": "string"}
     return layers
 
 
-def get_drift_detector(containers_file, oscar_cluster):
+def get_drift_detector(containers_file, oscar_cluster, component):
     """Generate the drift detector TOSCA component."""
     with open(containers_file, 'r') as f:
         containers = yaml.safe_load(f)
@@ -270,7 +277,7 @@ spec:
             - name: DRIFT_DETECTOR_INFLUXDB_TOKEN
               value: %s
             - name: COMPONENT_NAME
-              value: value
+              value: %s
             - name: DRIFT_DETECTOR_MINIO_FOLDER
               value: drift_detector
             - name: DRIFT_DETECTOR_MINIO_URL
@@ -281,6 +288,7 @@ spec:
               value: %s
             value: "Hello from the environment"
             image: %s""" % (influx_token,
+                            component,
                             cluster_inputs["minio_password"]["default"],
                             containers["components"]["drift-detector"]["docker_images"][0])
         }
