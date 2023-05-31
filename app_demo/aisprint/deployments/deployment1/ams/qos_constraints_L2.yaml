@@ -1,4 +1,4 @@
-System:
+system:
   global_constraints: {}
   local_constraints:
     local_constraint_1:

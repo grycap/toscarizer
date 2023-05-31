@@ -48,7 +48,7 @@ topology_template:
       default: fixed21
       type: string
     qos_constraints:
-      default: "System:\n  global_constraints: {}\n  local_constraints:\n    local_constraint_1:\n\
+      default: "system:\n  global_constraints: {}\n  local_constraints:\n    local_constraint_1:\n\
         \      component_name: blurry-faces-onnx\n      threshold: 20\n    local_constraint_2:\n\
         \      component_name: mask-detector\n      threshold: 10\n  name: mask-detection-v1\n"
       description: App QoS Constraints
