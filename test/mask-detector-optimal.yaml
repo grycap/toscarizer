@@ -278,7 +278,7 @@ topology_template:
       capabilities:
         host:
           properties:
-            disk_size: 25
+            disk_size: 25 GB
             disk_type: gp3
             mem_size: 8192 MB
             num_cpus: 4

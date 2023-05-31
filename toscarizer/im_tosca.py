@@ -594,7 +594,10 @@ def gen_tosca_cluster(compute_layer, layer_num, res_name, phys_nodes, elastic, a
             wn["capabilities"]["os"]["properties"]["image"] = res.get("operatingSystemImageId")
 
             if res.get("storageSize"):
-                wn["capabilities"]["host"]["properties"]["disk_size"] = res.get("storageSize")
+                disk_size = str(res.get("storageSize"))
+                if not disk_size.endswith("GB"):
+                    disk_size = "%s GB" % disk_size
+                wn["capabilities"]["host"]["properties"]["disk_size"] = disk_size
 
             if res.get("operatingSystemImageId", "").startswith("aws"):
                 if res.get("storageType", "") == "SSD":
