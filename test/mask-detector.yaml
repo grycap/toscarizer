@@ -285,6 +285,7 @@ topology_template:
             sgx: false
         os:
           properties:
+            disk_size: 25
             distribution: Ubuntu
             image: one://ramses.i3m.upv.es/1396
             type: linux

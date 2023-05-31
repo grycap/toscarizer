@@ -593,6 +593,13 @@ def gen_tosca_cluster(compute_layer, layer_num, res_name, phys_nodes, elastic, a
             wn["capabilities"]["os"]["properties"]["version"] = res.get("operatingSystemVersion")
             wn["capabilities"]["os"]["properties"]["image"] = res.get("operatingSystemImageId")
 
+            if res.get("storageSize"):
+                wn["capabilities"]["os"]["properties"]["disk_size"] = res.get("storageSize")
+
+            if res.get("operatingSystemImageId", "").startswith("aws"):
+                if res.get("storageType", "") == "SSD":
+                    wn["capabilities"]["os"]["properties"]["disk_type"] = "gp3"
+
             # For the FE set the image of the first WN
             if tosca_comp["topology_template"]["inputs"]["fe_os_image"]["default"] is None:
                 tosca_comp["topology_template"]["inputs"]["fe_os_image"]["default"] = res.get("operatingSystemImageId")
