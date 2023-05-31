@@ -278,6 +278,8 @@ topology_template:
       capabilities:
         host:
           properties:
+            disk_size: 25
+            disk_type: gp3
             mem_size: 8192 MB
             num_cpus: 4
             num_gpus: 0
@@ -285,8 +287,6 @@ topology_template:
             sgx: false
         os:
           properties:
-            disk_size: 25
-            disk_type: gp3
             distribution: Ubuntu
             image: aws://us-east-1/ami-XXXXXXXX
             type: linux
