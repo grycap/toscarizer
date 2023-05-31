@@ -105,7 +105,8 @@ def get_physical_resource_data(comp_layer, res, phys_file, node_type, value, ind
 
 
 def gen_tosca_yamls(app_name, dag, resources_file, deployments_file, phys_file, elastic,
-                    auth_data, domain, influxdb_url, influxdb_token, qos_contraints_file):
+                    auth_data, domain, influxdb_url, influxdb_token, qos_contraints_file,
+                    containers_file):
     with open(deployments_file, 'r') as f:
         deployments = yaml.safe_load(f)
         if "System" in deployments:
@@ -166,13 +167,24 @@ def gen_tosca_yamls(app_name, dag, resources_file, deployments_file, phys_file, 
                                                                     influxdb_url, influxdb_token, qos_contraints)
 
     # Gen influx layers
-    gen_next_layer_influx(oscar_clusters_per_component)
+    layers = gen_next_layer_influx(oscar_clusters_per_component)
+
+    # Add drift detector component
+    last_layer_cluster = None
+    max_layer = max(k for k, v in layers.items() if not v[0].get("aws"))
+    drift_detector = get_drift_detector(containers_file,
+                                        layers[max_layer][0]["cluster"],
+                                        layers[max_layer][0]["component"])
+    if drift_detector:
+        last_layer_cluster = layers[max_layer][0]["cluster"]
+        merge_templates(last_layer_cluster, drift_detector)
 
     # Now create the OSCAR services and merge in the correct OSCAR cluster
     for component, next_items in dag.adj.items():
         # Add the node
         oscar_service = get_service(app_name, component, next_items, list(dag.predecessors(component)),
-                                    container_per_component[component], oscar_clusters_per_component)
+                                    container_per_component[component], oscar_clusters_per_component,
+                                    last_layer_cluster)
         oscar_clusters_per_component[component] = merge_templates(oscar_clusters_per_component[component],
                                                                   oscar_service)
 
@@ -189,36 +201,110 @@ def gen_tosca_yamls(app_name, dag, resources_file, deployments_file, phys_file, 
 
 def gen_next_layer_influx(oscar_clusters):
     layers = {}
-    for oscar_cluster in list(oscar_clusters.values()):
+    for component, oscar_cluster in oscar_clusters.items():
         cluster_inputs = oscar_cluster["topology_template"]["inputs"]
         curr_cluster_aws = "aws" in cluster_inputs and cluster_inputs["aws"]["default"]
         num = cluster_inputs["layer_num"]["default"]
-        layers[num] = {"cluster": oscar_cluster, "aws": curr_cluster_aws}
+        if num not in layers:
+            layers[num] = []
+        layers[num].append({"cluster": oscar_cluster, "aws": curr_cluster_aws, "component": component})
+        elem = len(layers[num]) - 1
         if not curr_cluster_aws:
             if len(oscar_cluster["topology_template"]["node_templates"]) > 1:
-                layers[num]["endpoint"] = "https://influx.%s.%s" % (cluster_inputs["cluster_name"]["default"],
-                                                                    cluster_inputs["domain_name"]["default"])
-                layers[num]["token"] = cluster_inputs["local_influx_token"]["default"]
+                layers[num][elem]["endpoint"] = "https://influx.%s.%s" % (cluster_inputs["cluster_name"]["default"],
+                                                                          cluster_inputs["domain_name"]["default"])
+                layers[num][elem]["token"] = cluster_inputs["local_influx_token"]["default"]
             else:
                 if "influx_endpoint" in cluster_inputs and "influx_token" in cluster_inputs:
-                    layers[num]["endpoint"] = cluster_inputs["influx_endpoint"]["default"]
-                    layers[num]["token"] = cluster_inputs["influx_token"]["default"]
+                    layers[num][elem]["endpoint"] = cluster_inputs["influx_endpoint"]["default"]
+                    layers[num][elem]["token"] = cluster_inputs["influx_token"]["default"]
 
     for num, layer in layers.items():
 
         next_layer = None
         for next_num in list(layers.keys()):
-            if next_num > num and "endpoint" in layers[next_num]:
+            if next_num > num and "endpoint" in layers[next_num][0]:
                 next_layer = layers[next_num]
 
         if next_layer:
-            layer["cluster"]["topology_template"]["inputs"]["top_influx_url"] = {"default": next_layer["endpoint"],
-                                                                                 "type": "string"}
-            layer["cluster"]["topology_template"]["inputs"]["top_influx_token"] = {"default": next_layer["token"],
-                                                                                   "type": "string"}
+            for elem in layer:
+                cluster_inputs = elem["cluster"]["topology_template"]["inputs"]
+                cluster_inputs["top_influx_url"] = {"default": next_layer[0]["endpoint"],
+                                                    "type": "string"}
+                cluster_inputs["top_influx_token"] = {"default": next_layer[0]["token"],
+                                                      "type": "string"}
+    return layers
 
 
-def get_service(app_name, component, next_items, prev_items, container, oscar_clusters):
+def get_drift_detector(containers_file, oscar_cluster, component):
+    """Generate the drift detector TOSCA component."""
+    with open(containers_file, 'r') as f:
+        containers = yaml.safe_load(f)
+
+    if not containers.get("components", {}).get("drift-detector"):
+        return None
+
+    cluster_inputs = oscar_cluster["topology_template"]["inputs"]
+    if len(oscar_cluster["topology_template"]["node_templates"]) > 1:
+        influx_token = cluster_inputs["local_influx_token"]["default"]
+    else:
+        raise Exception("Drift detector not supported for already deployed clusters.")
+
+    deployment = {
+        "type": "tosca.nodes.indigo.KubernetesObject",
+        "requirements": [{"host": "lrms_front_end"}],
+        "properties": {
+            "spec": """
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: drift-detector
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+    name: drift-detector
+    namespace: drift-detector
+spec:
+    replicas: 1
+    spec:
+        containers:
+          - name: drift-detector
+            env:
+            - name: DRIFT_DETECTOR_INFLUXDB_URL
+              value: http://ai-sprint-monit-influxdb.ai-sprint-monitoring:8086
+            - name: DRIFT_DETECTOR_INFLUXDB_TOKEN
+              value: %s
+            - name: COMPONENT_NAME
+              value: %s
+            - name: DRIFT_DETECTOR_MINIO_FOLDER
+              value: drift_detector
+            - name: DRIFT_DETECTOR_MINIO_URL
+              value: 'http://minio.minio:9000'
+            - name: DRIFT_DETECTOR_MINIO_AK
+              value: minio
+            - name: DRIFT_DETECTOR_MINIO_SK
+              value: %s
+            value: "Hello from the environment"
+            image: %s""" % (influx_token,
+                            component,
+                            cluster_inputs["minio_password"]["default"],
+                            containers["components"]["drift-detector"]["docker_images"][0])
+        }
+    }
+
+    res = {
+            "topology_template":
+            {
+                "node_templates": {"drift_detector": deployment},
+            }
+    }
+
+    return res
+
+
+def get_service(app_name, component, next_items, prev_items, container, oscar_clusters, drift_cluster):
     """Generate the OSCAR service TOSCA."""
     service = {
         "type": "tosca.nodes.aisprint.FaaS.Function",
@@ -256,6 +342,18 @@ def get_service(app_name, component, next_items, prev_items, container, oscar_cl
     else:
         # It is an already existing OSCAR cluster
         service["properties"]["env_variables"]["KCI"] = cluster_inputs["minio_endpoint"]["default"]
+
+    if drift_cluster:
+        # There is a drift detector add needed env variables
+        drift_cluster_inputs = drift_cluster["topology_template"]["inputs"]
+        minio_endpoint = "https://minio.%s.%s" % (drift_cluster_inputs["cluster_name"]["default"],
+                                                  drift_cluster_inputs["domain_name"]["default"])
+
+        service["properties"]["env_variables"]["DRIFT_DETECTOR_MINIO_URL"] = minio_endpoint
+        service["properties"]["env_variables"]["DRIFT_DETECTOR_MINIO_FOLDER"] = "drift_detector"
+        service["properties"]["env_variables"]["DRIFT_DETECTOR_MINIO_AK"] = "minio"
+        service["properties"]["env_variables"]["DRIFT_DETECTOR_MINIO_SK"] = \
+            drift_cluster_inputs["minio_password"]["default"]
 
     storage_providers = {}
 
@@ -494,6 +592,13 @@ def gen_tosca_cluster(compute_layer, layer_num, res_name, phys_nodes, elastic, a
             wn["capabilities"]["os"]["properties"]["distribution"] = res.get("operatingSystemDistribution")
             wn["capabilities"]["os"]["properties"]["version"] = res.get("operatingSystemVersion")
             wn["capabilities"]["os"]["properties"]["image"] = res.get("operatingSystemImageId")
+
+            if res.get("storageSize"):
+                wn["capabilities"]["os"]["properties"]["disk_size"] = res.get("storageSize")
+
+            if res.get("operatingSystemImageId", "").startswith("aws"):
+                if res.get("storageType", "") == "SSD":
+                    wn["capabilities"]["os"]["properties"]["disk_type"] = "gp3"
 
             # For the FE set the image of the first WN
             if tosca_comp["topology_template"]["inputs"]["fe_os_image"]["default"] is None:
