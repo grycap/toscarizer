@@ -594,7 +594,12 @@ def gen_tosca_cluster(compute_layer, layer_num, res_name, phys_nodes, elastic, a
             wn["capabilities"]["os"]["properties"]["image"] = res.get("operatingSystemImageId")
 
             if res.get("storageSize"):
-                wn["capabilities"]["host"]["properties"]["disk_size"] = res.get("storageSize")
+                disk_size = str(res.get("storageSize"))
+                if not re.match(r"^\d+( GB){0,1}$", disk_size):
+                    raise Exception("The storageSize of resource %s is not valid ('100' or '100 GB')" % res_name)
+                if not disk_size.endswith("GB"):
+                    disk_size = "%s GB" % disk_size
+                wn["capabilities"]["host"]["properties"]["disk_size"] = disk_size
 
             if res.get("operatingSystemImageId", "").startswith("aws"):
                 if res.get("storageType", "") == "SSD":
