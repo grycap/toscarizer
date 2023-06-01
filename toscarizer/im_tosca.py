@@ -159,7 +159,7 @@ def gen_tosca_yamls(app_name, dag, resources_file, deployments_file, phys_file, 
             raise Exception("No compute layer found for component." % component.get("name"))
         # check if there are general qos_contraints by level
         qos_contraints = qos_contraints_by_level.get(num)
-        if qos_contraints:
+        if not qos_contraints:
             # if not use the general one
             qos_contraints = qos_contraints_full
         qos_contraints = yaml.safe_dump(qos_contraints)
