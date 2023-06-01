@@ -158,10 +158,11 @@ def gen_tosca_yamls(app_name, dag, resources_file, deployments_file, phys_file, 
         if not cl_name:
             raise Exception("No compute layer found for component." % component.get("name"))
         # check if there are general qos_contraints by level
-        qos_contraints = yaml.safe_dump(qos_contraints_by_level.get(num))
-        if not qos_contraints:
+        qos_contraints = qos_contraints_by_level.get(num)
+        if qos_contraints:
             # if not use the general one
-            qos_contraints = yaml.safe_dump(qos_contraints_full)
+            qos_contraints = qos_contraints_full
+        qos_contraints = yaml.safe_dump(qos_contraints)
         oscar_clusters_per_component[component] = gen_tosca_cluster(cls[cl_name], num, res_name, phys_nodes,
                                                                     elastic, auth_data, domain, app_name,
                                                                     influxdb_url, influxdb_token, qos_contraints)
