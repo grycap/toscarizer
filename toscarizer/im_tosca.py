@@ -124,7 +124,7 @@ def gen_tosca_yamls(app_name, dag, resources_file, deployments_file, phys_file, 
         with open(qos_contraints_file, 'r') as f:
             qos_contraints_yaml = yaml.safe_load(f)
             qos_contraints_yaml['system']['name'] = qos_contraints_yaml['system']['name'].replace('_', '-')
-            qos_contraints_full = yaml.safe_dump(qos_contraints_yaml)
+            qos_contraints_full = qos_contraints_yaml
     else:
         path = os.path.dirname(qos_contraints_file)
         for fn in os.listdir(path):
@@ -134,7 +134,7 @@ def gen_tosca_yamls(app_name, dag, resources_file, deployments_file, phys_file, 
                 with open(os.path.join(path, fn), 'r') as f:
                     qos_contraints_yaml = yaml.safe_load(f)
                     qos_contraints_yaml['system']['name'] = qos_contraints_yaml['system']['name'].replace('_', '-')
-                    qos_contraints_by_level[level] = yaml.safe_dump(qos_contraints_yaml)
+                    qos_contraints_by_level[level] = qos_contraints_yaml
 
     phys_nodes = {}
     if phys_file and os.path.isfile(phys_file):
@@ -162,6 +162,7 @@ def gen_tosca_yamls(app_name, dag, resources_file, deployments_file, phys_file, 
         if not qos_contraints:
             # if not use the general one
             qos_contraints = qos_contraints_full
+        qos_contraints = yaml.safe_dump(qos_contraints)
         oscar_clusters_per_component[component] = gen_tosca_cluster(cls[cl_name], num, res_name, phys_nodes,
                                                                     elastic, auth_data, domain, app_name,
                                                                     influxdb_url, influxdb_token, qos_contraints)
@@ -172,9 +173,13 @@ def gen_tosca_yamls(app_name, dag, resources_file, deployments_file, phys_file, 
     # Add drift detector component
     last_layer_cluster = None
     max_layer = max(k for k, v in layers.items() if not v[0].get("aws"))
+    qos_contraints = qos_contraints_by_level.get(max_layer)
+    if not qos_contraints:
+        # if not use the general one
+        qos_contraints = qos_contraints_full
     drift_detector = get_drift_detector(containers_file,
                                         layers[max_layer][0]["cluster"],
-                                        layers[max_layer][0]["component"])
+                                        qos_contraints['system']['name'])
     if drift_detector:
         last_layer_cluster = layers[max_layer][0]["cluster"]
         merge_templates(last_layer_cluster, drift_detector)
@@ -236,7 +241,7 @@ def gen_next_layer_influx(oscar_clusters):
     return layers
 
 
-def get_drift_detector(containers_file, oscar_cluster, component):
+def get_drift_detector(containers_file, oscar_cluster, app_name):
     """Generate the drift detector TOSCA component."""
     with open(containers_file, 'r') as f:
         containers = yaml.safe_load(f)
@@ -276,8 +281,8 @@ spec:
               value: http://ai-sprint-monit-influxdb.ai-sprint-monitoring:8086
             - name: DRIFT_DETECTOR_INFLUXDB_TOKEN
               value: %s
-            - name: COMPONENT_NAME
-              value: %s
+            - name: BUCKET_NAME
+              value: %s-bucket
             - name: DRIFT_DETECTOR_MINIO_FOLDER
               value: drift_detector
             - name: DRIFT_DETECTOR_MINIO_URL
@@ -288,7 +293,7 @@ spec:
               value: %s
             value: "Hello from the environment"
             image: %s""" % (influx_token,
-                            component,
+                            app_name,
                             cluster_inputs["minio_password"]["default"],
                             containers["components"]["drift-detector"]["docker_images"][0])
         }
