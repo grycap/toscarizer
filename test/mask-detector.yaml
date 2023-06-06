@@ -85,8 +85,8 @@ topology_template:
           \            - name: DRIFT_DETECTOR_MINIO_BUCKET\n              value: drift_detector\n\
           \            - name: DRIFT_DETECTOR_MINIO_URL\n              value: 'http://minio.minio:9000'\n\
           \            - name: DRIFT_DETECTOR_MINIO_AK\n              value: minio\n\
-          \            - name: DRIFT_DETECTOR_MINIO_SK\n              value: fixed6\n\
-          \            value: \"Hello from the environment\"\n            image: docker.io/micafer/drift-detector_main_amd64:latest"
+          \            - name: DRIFT_DETECTOR_MINIO_SK\n              value: fixed6\"\
+          \n            image: docker.io/micafer/drift-detector_main_amd64:latest"
       requirements:
       - host: lrms_front_end
       type: tosca.nodes.indigo.KubernetesObject
