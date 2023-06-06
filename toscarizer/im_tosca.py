@@ -327,7 +327,6 @@ def get_service(app_name, component, next_items, prev_items, container, oscar_cl
             "output": [],
             "memory": "%sMi" % container.get("memorySize", 512),
             "cpu": container.get("computingUnits", "1"),
-            "enable_gpu": container.get("GPURequirement", False),
             "env_variables": {
                 "COMPONENT_NAME": component,
                 "MONIT_HOST": "%s-telegraf" % app_name,
@@ -335,6 +334,9 @@ def get_service(app_name, component, next_items, prev_items, container, oscar_cl
             }
         }
     }
+
+    if container.get("GPURequirement"):
+        service["properties"]["enable_gpu"] = container.get("GPURequirement")
 
     cluster_inputs = oscar_clusters[component]["topology_template"]["inputs"]
     curr_cluster_aws = "aws" in cluster_inputs and cluster_inputs["aws"]["default"]
