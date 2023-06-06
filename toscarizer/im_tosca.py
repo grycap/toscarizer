@@ -327,6 +327,7 @@ def get_service(app_name, component, next_items, prev_items, container, oscar_cl
             "output": [],
             "memory": "%sMi" % container.get("memorySize", 512),
             "cpu": container.get("computingUnits", "1"),
+            "enable_gpu": container.get("GPURequirement", False),
             "env_variables": {
                 "COMPONENT_NAME": component,
                 "MONIT_HOST": "%s-telegraf" % app_name,
