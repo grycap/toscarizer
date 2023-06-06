@@ -240,6 +240,10 @@ topology_template:
         output:
         - path: blurry-faces-onnx-partition1-2/output
           storage_provider: minio.oscar-cluster-fixed26
+          suffix: _NO_DRIFT
+        - path: blurry-faces-onnx-partition1-2/drift_detection_data
+          storage_provider: minio.oscar-cluster-fixed26
+          suffix: _DRIFT
         script: /opt/blurry-faces-onnx_partition1_2/script.sh
         storage_providers:
           minio:
