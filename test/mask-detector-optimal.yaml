@@ -82,15 +82,15 @@ topology_template:
           \        metadata:\n            labels:\n                app: drift-detector\n\
           \        spec:\n            containers:\n            - name: drift-detector\n\
           \                env:\n                - name: DRIFT_DETECTOR_INFLUXDB_URL\n\
-          \                value: http://ai-sprint-monit-influxdb.ai-sprint-monitoring:8086\n\
+          \                  value: http://ai-sprint-monit-influxdb.ai-sprint-monitoring:8086\n\
           \                - name: DRIFT_DETECTOR_INFLUXDB_TOKEN\n               \
-          \ value: fixed30\n                - name: BUCKET_NAME\n                value:\
-          \ mask-detection-v1-bucket\n                - name: DRIFT_DETECTOR_MINIO_BUCKET\n\
-          \                value: drift_detector\n                - name: DRIFT_DETECTOR_MINIO_URL\n\
-          \                value: 'http://minio.minio:9000'\n                - name:\
-          \ DRIFT_DETECTOR_MINIO_AK\n                value: minio\n              \
-          \  - name: DRIFT_DETECTOR_MINIO_SK\n                value: fixed29\"\n \
-          \               image: docker.io/micafer/drift-detector_main_amd64:latest"
+          \   value: 'fixed30'\n                - name: BUCKET_NAME\n            \
+          \      value: 'mask-detection-v1-bucket'\n                - name: DRIFT_DETECTOR_MINIO_BUCKET\n\
+          \                  value: drift_detector\n                - name: DRIFT_DETECTOR_MINIO_URL\n\
+          \                  value: 'http://minio.minio:9000'\n                - name:\
+          \ DRIFT_DETECTOR_MINIO_AK\n                  value: minio\n            \
+          \    - name: DRIFT_DETECTOR_MINIO_SK\n                  value: 'fixed29'\n\
+          \                image: docker.io/micafer/drift-detector_main_amd64:latest"
       requirements:
       - host: lrms_front_end
       type: tosca.nodes.indigo.KubernetesObject
