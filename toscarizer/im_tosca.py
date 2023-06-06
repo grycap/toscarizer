@@ -273,25 +273,32 @@ metadata:
     namespace: drift-detector
 spec:
     replicas: 1
-    spec:
-        containers:
-          - name: drift-detector
-            env:
-            - name: DRIFT_DETECTOR_INFLUXDB_URL
-              value: http://ai-sprint-monit-influxdb.ai-sprint-monitoring:8086
-            - name: DRIFT_DETECTOR_INFLUXDB_TOKEN
-              value: %s
-            - name: BUCKET_NAME
-              value: %s-bucket
-            - name: DRIFT_DETECTOR_MINIO_BUCKET
-              value: drift_detector
-            - name: DRIFT_DETECTOR_MINIO_URL
-              value: 'http://minio.minio:9000'
-            - name: DRIFT_DETECTOR_MINIO_AK
-              value: minio
-            - name: DRIFT_DETECTOR_MINIO_SK
-              value: %s"
-            image: %s""" % (influx_token,
+    selector:
+        matchLabels:
+            app: drift-detector
+    template:
+        metadata:
+            labels:
+                app: drift-detector
+        spec:
+            containers:
+            - name: drift-detector
+                env:
+                - name: DRIFT_DETECTOR_INFLUXDB_URL
+                value: http://ai-sprint-monit-influxdb.ai-sprint-monitoring:8086
+                - name: DRIFT_DETECTOR_INFLUXDB_TOKEN
+                value: %s
+                - name: BUCKET_NAME
+                value: %s-bucket
+                - name: DRIFT_DETECTOR_MINIO_BUCKET
+                value: drift_detector
+                - name: DRIFT_DETECTOR_MINIO_URL
+                value: 'http://minio.minio:9000'
+                - name: DRIFT_DETECTOR_MINIO_AK
+                value: minio
+                - name: DRIFT_DETECTOR_MINIO_SK
+                value: %s"
+                image: %s""" % (influx_token,
                             app_name,
                             cluster_inputs["minio_password"]["default"],
                             containers["components"]["drift-detector"]["docker_images"][0])
