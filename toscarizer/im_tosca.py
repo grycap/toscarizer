@@ -290,8 +290,7 @@ spec:
             - name: DRIFT_DETECTOR_MINIO_AK
               value: minio
             - name: DRIFT_DETECTOR_MINIO_SK
-              value: %s
-            value: "Hello from the environment"
+              value: %s"
             image: %s""" % (influx_token,
                             app_name,
                             cluster_inputs["minio_password"]["default"],
