@@ -428,6 +428,11 @@ def get_service(app_name, component, next_items, prev_items, container, oscar_cl
                         "storage_provider": "minio.%s" % cluster_name,
                         "path": "%s/output" % component.replace("_", "-")
                     })
+                
+                if drift_cluster:
+                    # In case of using a drift detector set _NO_DRIFT as the suffix for the "normal" output
+                    item = len(service["properties"]["output"]) - 1
+                    service["properties"]["output"][item]["suffix"] = "_NO_DRIFT"
 
     cluster_inputs = oscar_clusters[component]["topology_template"]["inputs"]
     if not service["properties"]["output"]:
@@ -442,6 +447,11 @@ def get_service(app_name, component, next_items, prev_items, container, oscar_cl
                                           component.replace("_", "-"))
             }
         service["properties"]["output"].append(default_output)
+
+        if drift_cluster:
+            # also add the _NO_DRIFT suffix to the default output
+            item = len(service["properties"]["output"]) - 1
+            service["properties"]["output"][item]["suffix"] = "_NO_DRIFT"
 
     if not service["properties"]["input"]:
         default_input = {
@@ -460,6 +470,27 @@ def get_service(app_name, component, next_items, prev_items, container, oscar_cl
         service["requirements"] = [
             {"host": "oscar"}
         ]
+
+    # Add the output for the drifted data to the drift detector layer
+    if drift_cluster:
+        cluster_inputs = drift_cluster["topology_template"]["inputs"]
+        cluster_name = cluster_inputs["cluster_name"]["default"]
+        if cluster_name not in storage_providers:
+            # in this case we assume that it is an IM deployed cluster
+            storage_providers[cluster_name] = {
+                "endpoint": "https://minio.%s.%s" % (cluster_inputs["cluster_name"]["default"],
+                                                     cluster_inputs["domain_name"]["default"]),
+                # "verify": True,
+                "access_key": "minio",
+                "secret_key": cluster_inputs["minio_password"]["default"],
+                "region": "us-east-1"
+            }
+
+        service["properties"]["output"].append({
+            "storage_provider": "minio.%s" % cluster_name,
+            "path": "%s/drift_detection_data" % component.replace("_", "-"),
+            "suffix": "_DRIFT"
+        })
 
     if storage_providers:
         service["properties"]["storage_providers"] = {}
