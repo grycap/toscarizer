@@ -6,7 +6,7 @@ functions:
         Variables:
           COMPONENT_NAME: mask-detector
           DRIFT_DETECTOR_MINIO_AK: minio
-          DRIFT_DETECTOR_MINIO_FOLDER: drift_detector
+          DRIFT_DETECTOR_MINIO_BUCKET: drift_detector
           DRIFT_DETECTOR_MINIO_SK: fixed6
           DRIFT_DETECTOR_MINIO_URL: https://minio.oscar-cluster-fixed3.im.grycap.net
           KCI: https://minio.oscar-cluster-fixed3.im.grycap.net
@@ -28,7 +28,7 @@ functions:
         Variables:
           COMPONENT_NAME: blurry-faces-onnx
           DRIFT_DETECTOR_MINIO_AK: minio
-          DRIFT_DETECTOR_MINIO_FOLDER: drift_detector
+          DRIFT_DETECTOR_MINIO_BUCKET: drift_detector
           DRIFT_DETECTOR_MINIO_SK: fixed6
           DRIFT_DETECTOR_MINIO_URL: https://minio.oscar-cluster-fixed3.im.grycap.net
           KCI: https://minio.graspi.im.grycap.net

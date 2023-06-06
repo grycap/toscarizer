@@ -82,7 +82,7 @@ topology_template:
           \           - name: DRIFT_DETECTOR_INFLUXDB_URL\n              value: http://ai-sprint-monit-influxdb.ai-sprint-monitoring:8086\n\
           \            - name: DRIFT_DETECTOR_INFLUXDB_TOKEN\n              value:\
           \ fixed1\n            - name: BUCKET_NAME\n              value: mask-detection-v1-bucket\n\
-          \            - name: DRIFT_DETECTOR_MINIO_FOLDER\n              value: drift_detector\n\
+          \            - name: DRIFT_DETECTOR_MINIO_BUCKET\n              value: drift_detector\n\
           \            - name: DRIFT_DETECTOR_MINIO_URL\n              value: 'http://minio.minio:9000'\n\
           \            - name: DRIFT_DETECTOR_MINIO_AK\n              value: minio\n\
           \            - name: DRIFT_DETECTOR_MINIO_SK\n              value: fixed6\n\
@@ -244,7 +244,7 @@ topology_template:
         env_variables:
           COMPONENT_NAME: mask-detector
           DRIFT_DETECTOR_MINIO_AK: minio
-          DRIFT_DETECTOR_MINIO_FOLDER: drift_detector
+          DRIFT_DETECTOR_MINIO_BUCKET: drift_detector
           DRIFT_DETECTOR_MINIO_SK: fixed6
           DRIFT_DETECTOR_MINIO_URL: https://minio.oscar-cluster-fixed3.im.grycap.net
           KCI: https://minio.oscar-cluster-fixed3.im.grycap.net

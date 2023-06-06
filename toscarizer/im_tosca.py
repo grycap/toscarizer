@@ -283,7 +283,7 @@ spec:
               value: %s
             - name: BUCKET_NAME
               value: %s-bucket
-            - name: DRIFT_DETECTOR_MINIO_FOLDER
+            - name: DRIFT_DETECTOR_MINIO_BUCKET
               value: drift_detector
             - name: DRIFT_DETECTOR_MINIO_URL
               value: 'http://minio.minio:9000'
