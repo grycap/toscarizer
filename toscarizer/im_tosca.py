@@ -283,7 +283,7 @@ spec:
         spec:
             containers:
             - name: drift-detector
-                env:
+              env:
                 - name: DRIFT_DETECTOR_INFLUXDB_URL
                   value: http://ai-sprint-monit-influxdb.ai-sprint-monitoring:8086
                 - name: DRIFT_DETECTOR_INFLUXDB_TOKEN
@@ -298,10 +298,10 @@ spec:
                   value: minio
                 - name: DRIFT_DETECTOR_MINIO_SK
                   value: '%s'
-                image: %s""" % (influx_token,
-                            app_name,
-                            cluster_inputs["minio_password"]["default"],
-                            containers["components"]["drift-detector"]["docker_images"][0])
+              image: %s""" % (influx_token,
+                              app_name,
+                              cluster_inputs["minio_password"]["default"],
+                              containers["components"]["drift-detector"]["docker_images"][0])
         }
     }
 
