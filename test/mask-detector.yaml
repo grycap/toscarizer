@@ -259,7 +259,18 @@ topology_template:
         output:
         - path: mask-detector/output
           storage_provider: minio
+          suffix: _NO_DRIFT
+        - path: mask-detector/drift_detection_data
+          storage_provider: minio.oscar-cluster-fixed3
+          suffix: _DRIFT
         script: /opt/mask-detector/script.sh
+        storage_providers:
+          minio:
+            oscar-cluster-fixed3:
+              access_key: minio
+              endpoint: https://minio.oscar-cluster-fixed3.im.grycap.net
+              region: us-east-1
+              secret_key: fixed6
       requirements:
       - host: oscar
       type: tosca.nodes.aisprint.FaaS.Function
