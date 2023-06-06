@@ -81,7 +81,7 @@ topology_template:
           \        matchLabels:\n            app: drift-detector\n    template:\n\
           \        metadata:\n            labels:\n                app: drift-detector\n\
           \        spec:\n            containers:\n            - name: drift-detector\n\
-          \                env:\n                - name: DRIFT_DETECTOR_INFLUXDB_URL\n\
+          \              env:\n                - name: DRIFT_DETECTOR_INFLUXDB_URL\n\
           \                  value: http://ai-sprint-monit-influxdb.ai-sprint-monitoring:8086\n\
           \                - name: DRIFT_DETECTOR_INFLUXDB_TOKEN\n               \
           \   value: 'fixed1'\n                - name: BUCKET_NAME\n             \
@@ -90,7 +90,7 @@ topology_template:
           \                  value: 'http://minio.minio:9000'\n                - name:\
           \ DRIFT_DETECTOR_MINIO_AK\n                  value: minio\n            \
           \    - name: DRIFT_DETECTOR_MINIO_SK\n                  value: 'fixed6'\n\
-          \                image: docker.io/micafer/drift-detector_main_amd64:latest"
+          \              image: docker.io/micafer/drift-detector_main_amd64:latest"
       requirements:
       - host: lrms_front_end
       type: tosca.nodes.indigo.KubernetesObject
