@@ -123,6 +123,9 @@ def gen_tosca_yamls(app_name, dag, resources_file, deployments_file, phys_file, 
     if os.path.exists(qos_contraints_file):
         with open(qos_contraints_file, 'r') as f:
             qos_contraints_yaml = yaml.safe_load(f)
+            if 'System' in qos_contraints_yaml:
+                qos_contraints_yaml['system'] = qos_contraints_yaml['System']
+                del qos_contraints_yaml['System']
             qos_contraints_yaml['system']['name'] = qos_contraints_yaml['system']['name'].replace('_', '-')
             qos_contraints_full = qos_contraints_yaml
     else:
@@ -133,6 +136,9 @@ def gen_tosca_yamls(app_name, dag, resources_file, deployments_file, phys_file, 
                 level = int(z.group(1))
                 with open(os.path.join(path, fn), 'r') as f:
                     qos_contraints_yaml = yaml.safe_load(f)
+                    if 'System' in qos_contraints_yaml:
+                        qos_contraints_yaml['system'] = qos_contraints_yaml['System']
+                        del qos_contraints_yaml['System']
                     qos_contraints_yaml['system']['name'] = qos_contraints_yaml['system']['name'].replace('_', '-')
                     qos_contraints_by_level[level] = qos_contraints_yaml
 
@@ -273,29 +279,35 @@ metadata:
     namespace: drift-detector
 spec:
     replicas: 1
-    spec:
-        containers:
-          - name: drift-detector
-            env:
-            - name: DRIFT_DETECTOR_INFLUXDB_URL
-              value: http://ai-sprint-monit-influxdb.ai-sprint-monitoring:8086
-            - name: DRIFT_DETECTOR_INFLUXDB_TOKEN
-              value: %s
-            - name: BUCKET_NAME
-              value: %s-bucket
-            - name: DRIFT_DETECTOR_MINIO_FOLDER
-              value: drift_detector
-            - name: DRIFT_DETECTOR_MINIO_URL
-              value: 'http://minio.minio:9000'
-            - name: DRIFT_DETECTOR_MINIO_AK
-              value: minio
-            - name: DRIFT_DETECTOR_MINIO_SK
-              value: %s
-            value: "Hello from the environment"
-            image: %s""" % (influx_token,
-                            app_name,
-                            cluster_inputs["minio_password"]["default"],
-                            containers["components"]["drift-detector"]["docker_images"][0])
+    selector:
+        matchLabels:
+            app: drift-detector
+    template:
+        metadata:
+            labels:
+                app: drift-detector
+        spec:
+            containers:
+            - name: drift-detector
+              env:
+                - name: DRIFT_DETECTOR_INFLUXDB_URL
+                  value: http://ai-sprint-monit-influxdb.ai-sprint-monitoring:8086
+                - name: DRIFT_DETECTOR_INFLUXDB_TOKEN
+                  value: '%s'
+                - name: BUCKET_NAME
+                  value: '%s-bucket'
+                - name: DRIFT_DETECTOR_MINIO_BUCKET
+                  value: drift_detector
+                - name: DRIFT_DETECTOR_MINIO_URL
+                  value: 'http://minio.minio:9000'
+                - name: DRIFT_DETECTOR_MINIO_AK
+                  value: minio
+                - name: DRIFT_DETECTOR_MINIO_SK
+                  value: '%s'
+              image: %s""" % (influx_token,
+                              app_name,
+                              cluster_inputs["minio_password"]["default"],
+                              containers["components"]["drift-detector"]["docker_images"][0])
         }
     }
 
@@ -329,6 +341,9 @@ def get_service(app_name, component, next_items, prev_items, container, oscar_cl
         }
     }
 
+    if container.get("GPURequirement"):
+        service["properties"]["enable_gpu"] = container.get("GPURequirement")
+
     cluster_inputs = oscar_clusters[component]["topology_template"]["inputs"]
     curr_cluster_aws = "aws" in cluster_inputs and cluster_inputs["aws"]["default"]
     if len(oscar_clusters[component]["topology_template"]["node_templates"]) > 1:
@@ -355,7 +370,7 @@ def get_service(app_name, component, next_items, prev_items, container, oscar_cl
                                                   drift_cluster_inputs["domain_name"]["default"])
 
         service["properties"]["env_variables"]["DRIFT_DETECTOR_MINIO_URL"] = minio_endpoint
-        service["properties"]["env_variables"]["DRIFT_DETECTOR_MINIO_FOLDER"] = "drift_detector"
+        service["properties"]["env_variables"]["DRIFT_DETECTOR_MINIO_BUCKET"] = "drift_detector"
         service["properties"]["env_variables"]["DRIFT_DETECTOR_MINIO_AK"] = "minio"
         service["properties"]["env_variables"]["DRIFT_DETECTOR_MINIO_SK"] = \
             drift_cluster_inputs["minio_password"]["default"]
@@ -428,6 +443,11 @@ def get_service(app_name, component, next_items, prev_items, container, oscar_cl
                         "storage_provider": "minio.%s" % cluster_name,
                         "path": "%s/output" % component.replace("_", "-")
                     })
+                
+                if drift_cluster:
+                    # In case of using a drift detector set _NO_DRIFT as the suffix for the "normal" output
+                    item = len(service["properties"]["output"]) - 1
+                    service["properties"]["output"][item]["suffix"] = "_NO_DRIFT"
 
     cluster_inputs = oscar_clusters[component]["topology_template"]["inputs"]
     if not service["properties"]["output"]:
@@ -442,6 +462,11 @@ def get_service(app_name, component, next_items, prev_items, container, oscar_cl
                                           component.replace("_", "-"))
             }
         service["properties"]["output"].append(default_output)
+
+        if drift_cluster:
+            # also add the _NO_DRIFT suffix to the default output
+            item = len(service["properties"]["output"]) - 1
+            service["properties"]["output"][item]["suffix"] = "_NO_DRIFT"
 
     if not service["properties"]["input"]:
         default_input = {
@@ -460,6 +485,27 @@ def get_service(app_name, component, next_items, prev_items, container, oscar_cl
         service["requirements"] = [
             {"host": "oscar"}
         ]
+
+    # Add the output for the drifted data to the drift detector layer
+    if drift_cluster:
+        cluster_inputs = drift_cluster["topology_template"]["inputs"]
+        cluster_name = cluster_inputs["cluster_name"]["default"]
+        if cluster_name not in storage_providers:
+            # in this case we assume that it is an IM deployed cluster
+            storage_providers[cluster_name] = {
+                "endpoint": "https://minio.%s.%s" % (cluster_inputs["cluster_name"]["default"],
+                                                     cluster_inputs["domain_name"]["default"]),
+                # "verify": True,
+                "access_key": "minio",
+                "secret_key": cluster_inputs["minio_password"]["default"],
+                "region": "us-east-1"
+            }
+
+        service["properties"]["output"].append({
+            "storage_provider": "minio.%s" % cluster_name,
+            "path": "%s/drift_detection_data" % component.replace("_", "-"),
+            "suffix": "_DRIFT"
+        })
 
     if storage_providers:
         service["properties"]["storage_providers"] = {}

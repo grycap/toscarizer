@@ -18,7 +18,7 @@ topology_template:
         env_variables:
           COMPONENT_NAME: blurry-faces-onnx_partition1_1
           DRIFT_DETECTOR_MINIO_AK: minio
-          DRIFT_DETECTOR_MINIO_FOLDER: drift_detector
+          DRIFT_DETECTOR_MINIO_BUCKET: drift_detector
           DRIFT_DETECTOR_MINIO_SK: fixed29
           DRIFT_DETECTOR_MINIO_URL: https://minio.oscar-cluster-fixed26.im.grycap.net
           KCI: https://minio.graspi.im.grycap.net
@@ -33,6 +33,10 @@ topology_template:
         output:
         - path: blurry-faces-onnx-partition1-1/output
           storage_provider: minio.oscar-cluster-fixed19
+          suffix: _NO_DRIFT
+        - path: blurry-faces-onnx-partition1-1/drift_detection_data
+          storage_provider: minio.oscar-cluster-fixed26
+          suffix: _DRIFT
         script: /opt/blurry-faces-onnx_partition1_1/script.sh
         storage_providers:
           minio:
@@ -41,6 +45,11 @@ topology_template:
               endpoint: https://minio.oscar-cluster-fixed19.im.grycap.net
               region: us-east-1
               secret_key: fixed22
+            oscar-cluster-fixed26:
+              access_key: minio
+              endpoint: https://minio.oscar-cluster-fixed26.im.grycap.net
+              region: us-east-1
+              secret_key: fixed29
       type: tosca.nodes.aisprint.FaaS.Function
   outputs:
     oscar_service_cred:

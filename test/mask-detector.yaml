@@ -77,16 +77,20 @@ topology_template:
       properties:
         spec: "\n---\napiVersion: v1\nkind: Namespace\nmetadata:\n  name: drift-detector\n\
           ---\napiVersion: apps/v1\nkind: Deployment\nmetadata:\n    name: drift-detector\n\
-          \    namespace: drift-detector\nspec:\n    replicas: 1\n    spec:\n    \
-          \    containers:\n          - name: drift-detector\n            env:\n \
-          \           - name: DRIFT_DETECTOR_INFLUXDB_URL\n              value: http://ai-sprint-monit-influxdb.ai-sprint-monitoring:8086\n\
-          \            - name: DRIFT_DETECTOR_INFLUXDB_TOKEN\n              value:\
-          \ fixed1\n            - name: BUCKET_NAME\n              value: mask-detection-v1-bucket\n\
-          \            - name: DRIFT_DETECTOR_MINIO_FOLDER\n              value: drift_detector\n\
-          \            - name: DRIFT_DETECTOR_MINIO_URL\n              value: 'http://minio.minio:9000'\n\
-          \            - name: DRIFT_DETECTOR_MINIO_AK\n              value: minio\n\
-          \            - name: DRIFT_DETECTOR_MINIO_SK\n              value: fixed6\n\
-          \            value: \"Hello from the environment\"\n            image: docker.io/micafer/drift-detector_main_amd64:latest"
+          \    namespace: drift-detector\nspec:\n    replicas: 1\n    selector:\n\
+          \        matchLabels:\n            app: drift-detector\n    template:\n\
+          \        metadata:\n            labels:\n                app: drift-detector\n\
+          \        spec:\n            containers:\n            - name: drift-detector\n\
+          \              env:\n                - name: DRIFT_DETECTOR_INFLUXDB_URL\n\
+          \                  value: http://ai-sprint-monit-influxdb.ai-sprint-monitoring:8086\n\
+          \                - name: DRIFT_DETECTOR_INFLUXDB_TOKEN\n               \
+          \   value: 'fixed1'\n                - name: BUCKET_NAME\n             \
+          \     value: 'mask-detection-v1-bucket'\n                - name: DRIFT_DETECTOR_MINIO_BUCKET\n\
+          \                  value: drift_detector\n                - name: DRIFT_DETECTOR_MINIO_URL\n\
+          \                  value: 'http://minio.minio:9000'\n                - name:\
+          \ DRIFT_DETECTOR_MINIO_AK\n                  value: minio\n            \
+          \    - name: DRIFT_DETECTOR_MINIO_SK\n                  value: 'fixed6'\n\
+          \              image: docker.io/micafer/drift-detector_main_amd64:latest"
       requirements:
       - host: lrms_front_end
       type: tosca.nodes.indigo.KubernetesObject
@@ -244,7 +248,7 @@ topology_template:
         env_variables:
           COMPONENT_NAME: mask-detector
           DRIFT_DETECTOR_MINIO_AK: minio
-          DRIFT_DETECTOR_MINIO_FOLDER: drift_detector
+          DRIFT_DETECTOR_MINIO_BUCKET: drift_detector
           DRIFT_DETECTOR_MINIO_SK: fixed6
           DRIFT_DETECTOR_MINIO_URL: https://minio.oscar-cluster-fixed3.im.grycap.net
           KCI: https://minio.oscar-cluster-fixed3.im.grycap.net
@@ -259,7 +263,18 @@ topology_template:
         output:
         - path: mask-detector/output
           storage_provider: minio
+          suffix: _NO_DRIFT
+        - path: mask-detector/drift_detection_data
+          storage_provider: minio.oscar-cluster-fixed3
+          suffix: _DRIFT
         script: /opt/mask-detector/script.sh
+        storage_providers:
+          minio:
+            oscar-cluster-fixed3:
+              access_key: minio
+              endpoint: https://minio.oscar-cluster-fixed3.im.grycap.net
+              region: us-east-1
+              secret_key: fixed6
       requirements:
       - host: oscar
       type: tosca.nodes.aisprint.FaaS.Function
