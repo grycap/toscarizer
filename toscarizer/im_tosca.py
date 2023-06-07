@@ -187,7 +187,7 @@ def gen_tosca_yamls(app_name, dag, resources_file, deployments_file, phys_file, 
         qos_contraints = qos_contraints_full
     drift_detector = get_drift_detector(containers_file,
                                         layers[max_layer][0]["cluster"],
-                                        qos_contraints['system']['name'])
+                                        qos_contraints)
     if drift_detector:
         last_layer_cluster = layers[max_layer][0]["cluster"]
         merge_templates(last_layer_cluster, drift_detector)
@@ -249,13 +249,18 @@ def gen_next_layer_influx(oscar_clusters):
     return layers
 
 
-def get_drift_detector(containers_file, oscar_cluster, app_name):
+def get_drift_detector(containers_file, oscar_cluster, qos_contraints):
     """Generate the drift detector TOSCA component."""
     with open(containers_file, 'r') as f:
         containers = yaml.safe_load(f)
 
     if not containers.get("components", {}).get("drift-detector"):
         return None
+
+    if qos_contraints:
+        app_name = qos_contraints['system']['name']
+    else:
+        raise Exception("No QoS constraints found with Drift detector.")
 
     cluster_inputs = oscar_cluster["topology_template"]["inputs"]
     if len(oscar_cluster["topology_template"]["node_templates"]) > 1:

@@ -128,7 +128,7 @@ def build_and_push(registry, registry_folder, dockerfiles, ecr, push=True, build
                             if msg == 'EOF':
                                 msg += ". Check if the ECR repo exists."
                             raise Exception("Error pushing image: %s" % msg)
-            if build:
+            if build and component != "drift-detector":
                 os.unlink(dockerfile)
 
     return res
