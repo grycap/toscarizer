@@ -123,6 +123,9 @@ def gen_tosca_yamls(app_name, dag, resources_file, deployments_file, phys_file, 
     if os.path.exists(qos_contraints_file):
         with open(qos_contraints_file, 'r') as f:
             qos_contraints_yaml = yaml.safe_load(f)
+            if 'System' in qos_contraints_yaml:
+                qos_contraints_yaml['system'] = qos_contraints_yaml['System']
+                del qos_contraints_yaml['System']
             qos_contraints_yaml['system']['name'] = qos_contraints_yaml['system']['name'].replace('_', '-')
             qos_contraints_full = qos_contraints_yaml
     else:
@@ -133,6 +136,9 @@ def gen_tosca_yamls(app_name, dag, resources_file, deployments_file, phys_file, 
                 level = int(z.group(1))
                 with open(os.path.join(path, fn), 'r') as f:
                     qos_contraints_yaml = yaml.safe_load(f)
+                    if 'System' in qos_contraints_yaml:
+                        qos_contraints_yaml['system'] = qos_contraints_yaml['System']
+                        del qos_contraints_yaml['System']
                     qos_contraints_yaml['system']['name'] = qos_contraints_yaml['system']['name'].replace('_', '-')
                     qos_contraints_by_level[level] = qos_contraints_yaml
 
