@@ -17,6 +17,7 @@ topology_template:
         cpu: 0.9
         env_variables:
           COMPONENT_NAME: mask-detector
+          COMPUTING_UNITS: 0.9
           INFLUX_ENDPOINT: https://influx.oncloudandheat.com/
           INFLUX_TOKEN: influx_token
           KCI: AWS Lambda
