@@ -226,7 +226,7 @@ topology_template:
         cpu: 0.9
         env_variables:
           COMPONENT_NAME: blurry-faces-onnx_partition1_2
-          COMPUTING_UNITS: 0.9
+          COMPUTING_UNITS: '0.9'
           KCI: https://minio.oscar-cluster-fixed1.im.grycap.net
           MONIT_HOST: ai-sprint-mask-detection-app-telegraf
           MONIT_PORT: '8094'

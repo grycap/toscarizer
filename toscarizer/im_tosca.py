@@ -345,7 +345,7 @@ def get_service(app_name, component, next_items, prev_items, container, oscar_cl
                 "COMPONENT_NAME": component,
                 "MONIT_HOST": "%s-telegraf" % app_name,
                 "MONIT_PORT": "8094",
-                "COMPUTING_UNITS": container.get("computingUnits", "1"),
+                "COMPUTING_UNITS": "%s" % container.get("computingUnits", "1"),
             }
         }
     }
