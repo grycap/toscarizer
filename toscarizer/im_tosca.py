@@ -456,7 +456,7 @@ def get_service(app_name, component, next_items, prev_items, container, oscar_cl
                 if drift_cluster:
                     # In case of using a drift detector set _NO_DRIFT as the suffix for the "normal" output
                     item = len(service["properties"]["output"]) - 1
-                    service["properties"]["output"][item]["suffix"] = "_NO_DRIFT"
+                    service["properties"]["output"][item]["suffix"] = ["_NO_DRIFT"]
 
     cluster_inputs = oscar_clusters[component]["topology_template"]["inputs"]
     if not service["properties"]["output"]:
@@ -475,7 +475,7 @@ def get_service(app_name, component, next_items, prev_items, container, oscar_cl
         if drift_cluster:
             # also add the _NO_DRIFT suffix to the default output
             item = len(service["properties"]["output"]) - 1
-            service["properties"]["output"][item]["suffix"] = "_NO_DRIFT"
+            service["properties"]["output"][item]["suffix"] = ["_NO_DRIFT"]
 
     if not service["properties"]["input"]:
         default_input = {
@@ -513,7 +513,7 @@ def get_service(app_name, component, next_items, prev_items, container, oscar_cl
         service["properties"]["output"].append({
             "storage_provider": "minio.%s" % cluster_name,
             "path": "%s/drift_detection_data" % component.replace("_", "-"),
-            "suffix": "_DRIFT"
+            "suffix": ["_DRIFT"]
         })
 
     if storage_providers:

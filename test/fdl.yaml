@@ -22,10 +22,12 @@ functions:
       output:
       - path: mask-detector/output
         storage_provider: minio
-        suffix: _NO_DRIFT
+        suffix:
+        - _NO_DRIFT
       - path: mask-detector/drift_detection_data
         storage_provider: minio.oscar-cluster-fixed3
-        suffix: _DRIFT
+        suffix:
+        - _DRIFT
       script: /opt/mask-detector/script.sh
       storage_providers:
         minio:
@@ -56,10 +58,12 @@ functions:
       output:
       - path: blurry-faces-onnx/output
         storage_provider: minio.oscar-cluster-fixed3
-        suffix: _NO_DRIFT
+        suffix:
+        - _NO_DRIFT
       - path: blurry-faces-onnx/drift_detection_data
         storage_provider: minio.oscar-cluster-fixed3
-        suffix: _DRIFT
+        suffix:
+        - _DRIFT
       script: /opt/blurry-faces-onnx/script.sh
       storage_providers:
         minio:
