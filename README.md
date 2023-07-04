@@ -101,11 +101,69 @@ Generate the TOSCA IM input files for the optimal case:
 toscarizer tosca --application_dir app --optimal
 ```
 
-In all cases if some resources are of type ``PhysicalAlreadyProvisioned`` an
-extra file with the needed information to connect with this resources (IP, and
-SSH auth data or MinIO service info) is needed. It is expected in the app
-common_config directory with name ``physical_nodes.yaml``. See [here](app2/common_config/physical_nodes.yaml)
-an example of the format.
+In all cases if some resources are of type ``PhysicalAlreadyProvisioned`` or
+``NativeCloudFunction`` an extra file with the needed information to connect
+with this resources (IP and SSH auth data, MinIO service info, AWS S3 bucket
+info) is needed. It is expected in the app common_config directory with name
+``physical_nodes.yaml``. See the following example: The first layer
+corresponds with a ``PhysicalAlreadyProvisioned`` cluster, that is not
+already installed with OSCAR, that will be accessed via SSH to install the
+required software. The second one corresponds with a ``PhysicalAlreadyProvisioned``
+cluster where oscar has been already installed so we can access it directly.
+Finally the last layer corresponds with an ``NativeCloudFunction`` function,
+where the user must specify the AWS S3 bucket that will be used to trigger
+the function.
+
+```yaml
+ComputationalLayers: 
+   computationalLayer1:
+      number: 1
+      Resources: 
+         resource1:
+            name: RaspPi
+            fe_node:
+               public_ip: 8.8.8.1
+               private_ip: 10.0.1.1
+               ssh_user: ubuntu
+               ssh_key: |
+                  -----BEGIN RSA PRIVATE KEY-----
+                  ssh11
+                  -----END RSA PRIVATE KEY-----
+            wns:
+               - private_ip: 10.0.1.1
+                 ssh_user: ubuntu
+                 ssh_key: |
+                  -----BEGIN RSA PRIVATE KEY-----
+                  ssh12
+                  -----END RSA PRIVATE KEY-----
+               - private_ip: 10.0.1.2
+                 ssh_user: ubuntu
+                 ssh_key: |
+                  -----BEGIN RSA PRIVATE KEY-----
+                  ssh13
+                  -----END RSA PRIVATE KEY-----
+   computationalLayer2:
+      number: 2
+      Resources: 
+         resource1:
+            name: RaspPi
+            minio:
+               endpoint: https://minio.endpoint.some
+               access_key: user
+               secret_key: pass
+            oscar:
+               name: oscar-test
+   computationalLayer3:
+      number: 3
+      Resources: 
+         resource1:
+            name: AWS-FaaS
+            aws:
+               bucket: test1
+               region: us-east-1
+               access_key: ak
+               secret_key: sk
+```
 
 In the OSCAR configuration a set of valid DNS records are assigned to the nodes to
 enable correct and secure external access to the services. A Route53 managed domain
