@@ -16,6 +16,9 @@ topology_template:
     fe_mem:
       type: scalar-unit.size
       default: 4 GB
+    fe_disk:
+      type: scalar-unit.size
+      default: 40 GB
     storage_size:
       type: string
       default: 100 GB
@@ -165,6 +168,7 @@ topology_template:
           properties:
             num_cpus: { get_input: fe_cpus }
             mem_size: { get_input: fe_mem }
+            disk_size: { get_input: fe_disk }
         os:
           properties:
             type: linux
