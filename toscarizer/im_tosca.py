@@ -176,7 +176,7 @@ def gen_tosca_yamls(app_name, dag, resources_file, deployments_file, phys_file, 
                                                                     influxdb_url, influxdb_token, qos_contraints)
 
     # Gen influx layers
-    layers = gen_next_layer_influx(oscar_clusters_per_component)
+    layers = gen_next_layer_influx(oscar_clusters_per_component, app_name)
 
     # Add drift detector component
     last_layer_cluster = None
@@ -213,7 +213,7 @@ def gen_tosca_yamls(app_name, dag, resources_file, deployments_file, phys_file, 
     return oscar_clusters_per_component
 
 
-def gen_next_layer_influx(oscar_clusters):
+def gen_next_layer_influx(oscar_clusters, app_name):
     layers = {}
     for component, oscar_cluster in oscar_clusters.items():
         cluster_inputs = oscar_cluster["topology_template"]["inputs"]
@@ -247,6 +247,9 @@ def gen_next_layer_influx(oscar_clusters):
                                                     "type": "string"}
                 cluster_inputs["top_influx_token"] = {"default": next_layer[0]["token"],
                                                       "type": "string"}
+                cluster_inputs["top_influx_org"] = {"default": "ai-sprint", "type": "string"}
+                cluster_inputs["top_influx_bucket"] = {"default": "%s-bucket" % app_name,
+                                                       "type": "string"}
     return layers
 
 

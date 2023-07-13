@@ -5,6 +5,12 @@ topology_template:
     cluster_name:
       default: oscar-cluster-fixed1
       type: string
+    top_influx_bucket:
+      default: ai-sprint-mask-detection-app-bucket
+      type: string
+    top_influx_org:
+      default: ai-sprint
+      type: string
     top_influx_token:
       default: fixed1
       type: string
