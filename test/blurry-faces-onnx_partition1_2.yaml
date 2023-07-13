@@ -57,11 +57,11 @@ topology_template:
       default: 100 GB
       type: string
     top_influx_bucket:
-      default: bucket
+      default: mask-detection-v1-bucket
       description: Bucket to store the data in the Top level InfluxDB
       type: string
     top_influx_org:
-      default: aisprint
+      default: ai-sprint
       description: Organization configured in the Top level InfluxDB
       type: string
     top_influx_token:
