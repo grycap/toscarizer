@@ -22,6 +22,9 @@ topology_template:
     fe_cpus:
       default: 4
       type: integer
+    fe_disk:
+      default: 40 GB
+      type: scalar-unit.size
     fe_mem:
       default: 4 GB
       type: scalar-unit.size
@@ -169,6 +172,8 @@ topology_template:
             network_name: PUBLIC
         host:
           properties:
+            disk_size:
+              get_input: fe_disk
             mem_size:
               get_input: fe_mem
             num_cpus:
