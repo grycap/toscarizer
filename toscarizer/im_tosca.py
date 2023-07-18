@@ -180,6 +180,7 @@ def gen_tosca_yamls(app_name, dag, resources_file, deployments_file, phys_file, 
 
     # Add drift detector component
     last_layer_cluster = None
+    last_layer_component = None
     max_layer = max(k for k, v in layers.items() if not v[0].get("aws"))
     qos_contraints = qos_contraints_by_level.get(max_layer)
     if not qos_contraints:
@@ -187,10 +188,12 @@ def gen_tosca_yamls(app_name, dag, resources_file, deployments_file, phys_file, 
         qos_contraints = qos_contraints_full
     drift_detector = get_drift_detector(containers_file,
                                         layers[max_layer][0]["cluster"],
+                                        layers[max_layer][0]["component"],
                                         qos_contraints,
                                         max_layer)
     if drift_detector:
         last_layer_cluster = layers[max_layer][0]["cluster"]
+        last_layer_component = layers[max_layer][0]["component"]
         merge_templates(last_layer_cluster, drift_detector)
 
     # Now create the OSCAR services and merge in the correct OSCAR cluster
@@ -198,7 +201,7 @@ def gen_tosca_yamls(app_name, dag, resources_file, deployments_file, phys_file, 
         # Add the node
         oscar_service = get_service(app_name, component, next_items, list(dag.predecessors(component)),
                                     container_per_component[component], oscar_clusters_per_component,
-                                    last_layer_cluster)
+                                    last_layer_cluster, last_layer_component)
         oscar_clusters_per_component[component] = merge_templates(oscar_clusters_per_component[component],
                                                                   oscar_service)
 
@@ -253,7 +256,7 @@ def gen_next_layer_influx(oscar_clusters, app_name):
     return layers
 
 
-def get_drift_detector(containers_file, oscar_cluster, qos_contraints, layer_num):
+def get_drift_detector(containers_file, oscar_cluster, component, qos_contraints, layer_num):
     """Generate the drift detector TOSCA component."""
     with open(containers_file, 'r') as f:
         containers = yaml.safe_load(f)
@@ -308,7 +311,7 @@ spec:
                 - name: BUCKET_NAME
                   value: '%s-bucket'
                 - name: DRIFT_DETECTOR_MINIO_BUCKET
-                  value: drift_detector
+                  value: %s
                 - name: DRIFT_DETECTOR_MINIO_URL
                   value: 'http://minio.minio:9000'
                 - name: DRIFT_DETECTOR_MINIO_AK
@@ -317,6 +320,7 @@ spec:
                   value: '%s'
               image: %s""" % (influx_token,
                               app_name,
+                              component,
                               cluster_inputs["minio_password"]["default"],
                               containers["components"]["drift-detector"]["docker_images"][0])
         }
@@ -332,7 +336,7 @@ spec:
     return res
 
 
-def get_service(app_name, component, next_items, prev_items, container, oscar_clusters, drift_cluster):
+def get_service(app_name, component, next_items, prev_items, container, oscar_clusters, drift_cluster, drift_bucket):
     """Generate the OSCAR service TOSCA."""
     service = {
         "type": "tosca.nodes.aisprint.FaaS.Function",
@@ -382,7 +386,7 @@ def get_service(app_name, component, next_items, prev_items, container, oscar_cl
                                                   drift_cluster_inputs["domain_name"]["default"])
 
         service["properties"]["env_variables"]["DRIFT_DETECTOR_MINIO_URL"] = minio_endpoint
-        service["properties"]["env_variables"]["DRIFT_DETECTOR_MINIO_BUCKET"] = "drift_detector"
+        service["properties"]["env_variables"]["DRIFT_DETECTOR_MINIO_BUCKET"] = drift_bucket
         service["properties"]["env_variables"]["DRIFT_DETECTOR_MINIO_AK"] = "minio"
         service["properties"]["env_variables"]["DRIFT_DETECTOR_MINIO_SK"] = \
             drift_cluster_inputs["minio_password"]["default"]
