@@ -180,6 +180,7 @@ def gen_tosca_yamls(app_name, dag, resources_file, deployments_file, phys_file, 
 
     # Add drift detector component
     last_layer_cluster = None
+    last_layer_component = None
     max_layer = max(k for k, v in layers.items() if not v[0].get("aws"))
     qos_contraints = qos_contraints_by_level.get(max_layer)
     if not qos_contraints:
