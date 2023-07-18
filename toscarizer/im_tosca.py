@@ -320,7 +320,7 @@ spec:
                   value: '%s'
               image: %s""" % (influx_token,
                               app_name,
-                              component,
+                              component.replace("_", "-"),
                               cluster_inputs["minio_password"]["default"],
                               containers["components"]["drift-detector"]["docker_images"][0])
         }
@@ -386,7 +386,7 @@ def get_service(app_name, component, next_items, prev_items, container, oscar_cl
                                                   drift_cluster_inputs["domain_name"]["default"])
 
         service["properties"]["env_variables"]["DRIFT_DETECTOR_MINIO_URL"] = minio_endpoint
-        service["properties"]["env_variables"]["DRIFT_DETECTOR_MINIO_BUCKET"] = drift_bucket
+        service["properties"]["env_variables"]["DRIFT_DETECTOR_MINIO_BUCKET"] = drift_bucket.replace("_", "-")
         service["properties"]["env_variables"]["DRIFT_DETECTOR_MINIO_AK"] = "minio"
         service["properties"]["env_variables"]["DRIFT_DETECTOR_MINIO_SK"] = \
             drift_cluster_inputs["minio_password"]["default"]
