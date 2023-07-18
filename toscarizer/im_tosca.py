@@ -187,7 +187,7 @@ def gen_tosca_yamls(app_name, dag, resources_file, deployments_file, phys_file, 
         qos_contraints = qos_contraints_full
     drift_detector = get_drift_detector(containers_file,
                                         layers[max_layer][0]["cluster"],
-                                        layers[max_layer][0]["component"]
+                                        layers[max_layer][0]["component"],
                                         qos_contraints,
                                         max_layer)
     if drift_detector:
