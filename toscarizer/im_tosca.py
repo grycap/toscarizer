@@ -520,7 +520,7 @@ def get_service(app_name, component, next_items, prev_items, container, oscar_cl
         service["properties"]["output"].append({
             "storage_provider": "minio.%s" % cluster_name,
             "path": "%s/drift_detection_data" % component.replace("_", "-"),
-            "suffix": ["_DRIFT"]
+            "suffix": ["_DRIFTED"]
         })
 
     if storage_providers:

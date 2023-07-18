@@ -27,7 +27,7 @@ functions:
       - path: mask-detector/drift_detection_data
         storage_provider: minio.oscar-cluster-fixed3
         suffix:
-        - _DRIFT
+        - _DRIFTED
       script: /opt/mask-detector/script.sh
       storage_providers:
         minio:
@@ -63,7 +63,7 @@ functions:
       - path: blurry-faces-onnx/drift_detection_data
         storage_provider: minio.oscar-cluster-fixed3
         suffix:
-        - _DRIFT
+        - _DRIFTED
       script: /opt/blurry-faces-onnx/script.sh
       storage_providers:
         minio:

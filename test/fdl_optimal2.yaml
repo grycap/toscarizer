@@ -27,7 +27,7 @@ functions:
       - path: blurry-faces-onnx-partition1-2/drift_detection_data
         storage_provider: minio.oscar-cluster-fixed26
         suffix:
-        - _DRIFT
+        - _DRIFTED
       script: /opt/blurry-faces-onnx_partition1_2/script.sh
       storage_providers:
         minio:
@@ -63,7 +63,7 @@ functions:
       - path: blurry-faces-onnx-partition1-1/drift_detection_data
         storage_provider: minio.oscar-cluster-fixed26
         suffix:
-        - _DRIFT
+        - _DRIFTED
       script: /opt/blurry-faces-onnx_partition1_1/script.sh
       storage_providers:
         minio:
@@ -104,7 +104,7 @@ functions:
       - path: mask-detector/drift_detection_data
         storage_provider: minio.oscar-cluster-fixed26
         suffix:
-        - _DRIFT
+        - _DRIFTED
       script: /opt/mask-detector/script.sh
       storage_providers:
         minio:
