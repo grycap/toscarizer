@@ -410,7 +410,7 @@ def get_service(app_name, component, next_items, prev_items, container, oscar_cl
 
     # Add outputs (check if they are in the same or in other OSCAR cluster)
     total_weight = 0.0
-    for next_comp, args in next_items:
+    for next_comp, args in next_items.items():
         weigth = args.get("weight", 1)
         total_weight += weigth
         if oscar_clusters[component] != oscar_clusters[next_comp]:
