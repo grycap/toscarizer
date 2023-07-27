@@ -21,7 +21,7 @@ RELATIVE_QOS_CONSTRAINTS_FILE = "aisprint/deployments/%s/ams/qos_constraints.yam
 
 
 def parse_dag(dag_file):
-    """Pase the application_dag.yml fila and return a networkx.DiGraph."""
+    """Parse the application_dag.yml fila and return a networkx.DiGraph."""
     with open(dag_file, 'r') as f:
         dag = yaml.safe_load(f)
 
@@ -118,6 +118,19 @@ def read_env_vars(app_dir, component):
             env_vars = yaml.safe_load(f)
 
     for k, v in env_vars.items():
-        res += "ENV %s=%s\n" % (k, v)
+        res += "ENV %s=%s\n" %   (k, v)
+
+    return res
+
+def get_early_exits(annotation_file):
+    """Parse the annotations.yaml file to get early exits information."""
+    with open(annotation_file, 'r') as f:
+        annotations = yaml.safe_load(f)
+
+    res = {}
+    for _, elem in annotations.items():
+        component = elem.get("component_name", {}).get("name")
+        if component:
+            res[component] = elem.get("early_exits_model")
 
     return res
