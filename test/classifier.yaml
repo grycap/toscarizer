@@ -244,8 +244,6 @@ topology_template:
         output:
         - path: classifier/output
           storage_provider: minio
-          suffix:
-          - _EARLY_EXIT
         script: /opt/classifier/script.sh
       requirements:
       - host: oscar
