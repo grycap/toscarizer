@@ -501,7 +501,9 @@ def get_service(app_name, component, next_items, prev_items, container, oscar_cl
             # In case of Early Exit, add the suffix to the final output
             # but only if there is a previous output to other component
             default_output["suffix"] = ["_EARLY_EXIT"]
+            # Find the last partition of the component
             next_comp = get_last_partition_component(component, dag)
+            # And set the output to the bucket of the next component
             default_output["path"] = "%s/output" % next_comp.replace("_", "-")
             cluster_name = oscar_clusters[next_comp]["topology_template"]["inputs"]["cluster_name"]["default"]
             default_output["storage_provider"] = "minio.%s" % cluster_name
