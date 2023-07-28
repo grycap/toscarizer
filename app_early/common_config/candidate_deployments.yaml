@@ -1,0 +1,142 @@
+Components:
+  component1:
+    name: filter 
+    candidateExecutionLayers:
+      - 1
+    Containers:
+      container1:
+        image: img1_0_0_1
+        memorySize: 1024
+        computingUnits: 0.9
+        trustedExecution: false
+        networkProtection: false
+        fileSystemProtection: false
+        GPURequirement: false
+        candidateExecutionResources:
+          - VM1
+      container2:
+        image: img1_0_0_2
+        memorySize: 1024
+        computingUnits: 0.9
+        trustedExecution: false
+        networkProtection: false
+        fileSystemProtection: false
+        GPURequirement: false
+        candidateExecutionResources:
+          - VM2
+  component1_partitionX_1:
+    name: filter_partitionX_1
+    candidateExecutionLayers:
+      - 1
+    Containers:
+      container1:
+        image: img1_1_1_1
+        memorySize: 1024
+        computingUnits: 0.9
+        trustedExecution: false
+        networkProtection: false
+        fileSystemProtection: false
+        GPURequirement: false
+        candidateExecutionResources:
+          - VM1
+      container2:
+        image: img1_1_1_2
+        memorySize: 1024
+        computingUnits: 0.9
+        trustedExecution: false
+        networkProtection: false
+        fileSystemProtection: false
+        GPURequirement: false
+        candidateExecutionResources:
+          - VM2
+  component1_partitionX_2:
+    name: filter_partitionX_2
+    candidateExecutionLayers:
+      - 2
+    Containers:
+      container1:
+        image: img1_1_2_1
+        memorySize: 1024
+        computingUnits: 0.9
+        trustedExecution: false
+        networkProtection: false
+        fileSystemProtection: false
+        GPURequirement: false
+        candidateExecutionResources:
+          - VM3
+  component2:
+    name: classifier
+    candidateExecutionLayers:
+      - 3
+      - 4
+    Containers:
+      container1:
+        image: img2_0_0_1
+        memorySize: 1024
+        computingUnits: 0.9
+        trustedExecution: false
+        networkProtection: false
+        fileSystemProtection: false
+        GPURequirement: false
+        candidateExecutionResources:
+          - VM4
+      container2:
+        image: img2_0_0_2
+        memorySize: 1024
+        computingUnits: 0.9
+        trustedExecution: false
+        networkProtection: false
+        fileSystemProtection: false
+        GPURequirement: false
+        candidateExecutionResources:
+          - VM5
+      container3:
+        image: img2_0_0_3
+        memorySize: 1024
+        computingUnits: 0.9
+        trustedExecution: false
+        networkProtection: false
+        fileSystemProtection: false
+        GPURequirement: false
+        candidateExecutionResources:
+          - VM6
+  component2_partitionX_1:
+    name: classifier_partitionX_1
+    candidateExecutionLayers:
+      - 3
+    Containers:
+      container1:
+        image: img2_1_1_1
+        memorySize: 1024
+        computingUnits: 0.9
+        trustedExecution: false
+        networkProtection: false
+        fileSystemProtection: false
+        GPURequirement: false
+        candidateExecutionResources:
+          - VM4
+  component2_partitionX_2:
+    name: classifier_partitionX_2
+    candidateExecutionLayers:
+      - 4
+    Containers:
+      container1:
+        image: img2_1_2_1
+        memorySize: 1024
+        computingUnits: 0.9
+        trustedExecution: false
+        networkProtection: false
+        fileSystemProtection: false
+        GPURequirement: false
+        candidateExecutionResources:
+          - VM5
+      container2:
+        image: img2_1_2_2
+        memorySize: 1024
+        computingUnits: 0.9
+        trustedExecution: false
+        networkProtection: false
+        fileSystemProtection: false
+        GPURequirement: false
+        candidateExecutionResources:
+          - VM6

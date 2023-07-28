@@ -1,0 +1,8 @@
+system:
+  name: filter_classifier_early_exits
+  local_constraints:
+    local_constraint_1:
+      component_name: filter
+      threshold: 20
+  global_constraints: {}
+  throughput_component: filter

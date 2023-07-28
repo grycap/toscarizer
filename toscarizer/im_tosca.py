@@ -4,6 +4,7 @@ import random
 import string
 import os.path
 import re
+from toscarizer.utils import has_early_exit
 
 
 TEMPLATES_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "templates")
@@ -469,7 +470,7 @@ def get_service(app_name, component, next_items, prev_items, container, oscar_cl
                     item = len(service["properties"]["output"]) - 1
                     service["properties"]["output"][item]["suffix"] = ["_NO_DRIFT"]
 
-                if weigth != 1 and early_exits.get(component):
+                if weigth != 1 and has_early_exit(early_exits, component):
                     # In case of Early Exit, add the suffix to the output
                     item = len(service["properties"]["output"]) - 1
                     # If they are differnt parttions or the same component, add the suffix _NO_EARLYEXIT
@@ -498,7 +499,7 @@ def get_service(app_name, component, next_items, prev_items, container, oscar_cl
             item = len(service["properties"]["output"]) - 1
             service["properties"]["output"][item]["suffix"] = ["_NO_DRIFT"]
 
-        if early_exits.get(component):
+        if has_early_exit(early_exits, component):
             # In case of Early Exit, add the suffix to the final output
             item = len(service["properties"]["output"]) - 1
             service["properties"]["output"][item]["suffix"] = ["_EARLY_EXIT"]

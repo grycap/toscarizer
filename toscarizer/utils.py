@@ -1,6 +1,7 @@
 import networkx as nx
 import os.path
 import yaml
+import re
 
 # Default file names
 RESOURCES_FILE = "common_config/candidate_resources.yaml"
@@ -134,3 +135,10 @@ def get_early_exits(annotation_file):
             res[component] = elem.get("early_exits_model")
 
     return res
+
+def has_early_exit(early_exits, component):
+    """Check if a component has early exits."""
+    regex = r"(.*)partition[0-9]_[0_9]"
+    if re.search(regex, component):
+        component = re.search(regex, component).group(1)
+    return early_exits.get(component)

@@ -1,0 +1,162 @@
+System:
+  Deployments:
+    base:
+      ExecutionLayers:
+        1:
+          components:
+          - filter
+          local_constraints:
+            local_constraint_1:
+              component_name: filter
+              threshold: 20
+          global_constraints: {}
+          throughput_component: filter
+        3:
+          components:
+          - classifier
+          local_constraints:
+            local_constraint_1:
+              component_name: classifier
+              threshold: 10
+          global_constraints: {}
+          throughput_component: filter
+    deployment1:
+      ExecutionLayers:
+        1:
+          components:
+          - filter
+          local_constraints:
+            local_constraint_1:
+              component_name: filter
+              threshold: 20
+          global_constraints: {}
+          throughput_component: filter
+        4:
+          components:
+          - classifier
+          local_constraints:
+            local_constraint_1:
+              component_name: classifier
+              threshold: 10
+          global_constraints: {}
+          throughput_component: filter
+    deployment2:
+      ExecutionLayers:
+        1:
+          components:
+          - filter_partition1_1
+          local_constraints: {}
+          global_constraints: {}
+          throughput_component: filter_partition1_1
+        2:
+          components:
+          - filter_partition1_2
+          local_constraints: {}
+          global_constraints:
+            global_constraint_1:
+              path_components:
+              - filter_partition1_1
+              - filter_partition1_2
+              threshold: 20
+          throughput_component: filter_partition1_1
+        3:
+          components:
+          - classifier
+          local_constraints:
+            local_constraint_1:
+              component_name: classifier
+              threshold: 10
+          global_constraints: {}
+          throughput_component: filter_partition1_1
+    deployment3:
+      ExecutionLayers:
+        1:
+          components:
+          - filter_partition1_1
+          local_constraints: {}
+          global_constraints: {}
+          throughput_component: filter_partition1_1
+        2:
+          components:
+          - filter_partition1_2
+          local_constraints: {}
+          global_constraints:
+            global_constraint_1:
+              path_components:
+              - filter_partition1_1
+              - filter_partition1_2
+              threshold: 20
+          throughput_component: filter_partition1_1
+        4:
+          components:
+          - classifier
+          local_constraints:
+            local_constraint_1:
+              component_name: classifier
+              threshold: 10
+          global_constraints: {}
+          throughput_component: filter_partition1_1
+    deployment4:
+      ExecutionLayers:
+        1:
+          components:
+          - filter
+          local_constraints:
+            local_constraint_1:
+              component_name: filter
+              threshold: 20
+          global_constraints: {}
+          throughput_component: filter
+        3:
+          components:
+          - classifier_partition1_1
+          local_constraints: {}
+          global_constraints: {}
+          throughput_component: filter
+        4:
+          components:
+          - classifier_partition1_2
+          local_constraints: {}
+          global_constraints:
+            global_constraint_1:
+              path_components:
+              - classifier_partition1_1
+              - classifier_partition1_2
+              threshold: 10
+          throughput_component: filter
+    deployment5:
+      ExecutionLayers:
+        1:
+          components:
+          - filter_partition1_1
+          local_constraints: {}
+          global_constraints: {}
+          throughput_component: filter_partition1_1
+        2:
+          components:
+          - filter_partition1_2
+          local_constraints: {}
+          global_constraints:
+            global_constraint_1:
+              path_components:
+              - filter_partition1_1
+              - filter_partition1_2
+              threshold: 20
+          throughput_component: filter_partition1_1
+        3:
+          components:
+          - classifier_partition1_1
+          local_constraints: {}
+          global_constraints: {}
+          throughput_component: filter_partition1_1
+        4:
+          components:
+          - classifier_partition1_2
+          local_constraints: {}
+          global_constraints:
+            global_constraint_1:
+              path_components:
+              - classifier_partition1_1
+              - classifier_partition1_2
+              threshold: 10
+          throughput_component: filter_partition1_1
