@@ -138,7 +138,7 @@ def get_early_exits(annotation_file):
 
 def has_early_exit(early_exits, component):
     """Check if a component has early exits."""
-    regex = r"(.*)partition[0-9]_[0_9]"
+    regex = r"(.*)_partition[0-9]_[0-9]"
     if re.search(regex, component):
         component = re.search(regex, component).group(1)
     return early_exits.get(component)
