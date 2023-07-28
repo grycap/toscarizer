@@ -501,6 +501,7 @@ def get_service(app_name, component, next_items, prev_items, container, oscar_cl
 
         if total_weight > 0 and has_early_exit(early_exits, component):
             # In case of Early Exit, add the suffix to the final output
+            # but only if there is a previous output
             item = len(service["properties"]["output"]) - 1
             service["properties"]["output"][item]["suffix"] = ["_EARLY_EXIT"]
 
