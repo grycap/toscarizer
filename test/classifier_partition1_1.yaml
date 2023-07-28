@@ -245,8 +245,8 @@ topology_template:
           storage_provider: minio.oscar-cluster-fixed30
           suffix:
           - _NO_EARLYEXIT
-        - path: classifier-partition1-1/output
-          storage_provider: minio
+        - path: classifier-partition1-2/output
+          storage_provider: minio.oscar-cluster-fixed30
           suffix:
           - _EARLY_EXIT
         script: /opt/classifier_partition1_1/script.sh

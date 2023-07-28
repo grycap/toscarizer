@@ -142,3 +142,19 @@ def has_early_exit(early_exits, component):
     if re.search(regex, component):
         component = re.search(regex, component).group(1)
     return early_exits.get(component)
+
+def get_last_partition_component(component, dag):
+    regex = r"(.*)_partition[0-9]_[0-9]"
+    if re.search(regex, component):
+        base_comp = re.search(regex, component).group(1)
+        while component:
+            regex = r"%s_partition[0-9]_[0-9]" % base_comp
+            if list(dag.successors(component)):
+                for next_c in dag.successors(component):
+                    if re.search(regex, next_c):
+                        component = next_c
+                        break
+            else:
+                return component
+    else:
+        return None
