@@ -4,6 +4,10 @@ topology_template:
 
     wn_node:
       type: tosca.nodes.indigo.LRMS.WorkerNode.Kubernetes
+      artifacts:
+        kube_role:
+          file: grycap.kubernetes,ai-sprint
+          type: tosca.artifacts.AnsibleGalaxy.role
       properties:
         front_end_ip: { get_attribute: [ front, private_address, 0 ] }
         version: 1.23.6
