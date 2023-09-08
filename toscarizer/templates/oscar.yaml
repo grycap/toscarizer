@@ -133,6 +133,10 @@ topology_template:
 
     lrms_front_end:
       type: tosca.nodes.indigo.LRMS.FrontEnd.Kubernetes
+      artifacts:
+        kube_role:
+          file: grycap.kubernetes,ai-sprint
+          type: tosca.artifacts.AnsibleGalaxy.role
       capabilities:
         endpoint:
           properties:
