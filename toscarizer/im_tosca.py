@@ -353,6 +353,12 @@ def get_service(app_name, component, next_items, prev_items, container, oscar_cl
         }
     }
 
+    if container.get("trustedExecution"):
+        service["properties"]["enable_sgx"] = container.get("trustedExecution")
+
+    if container.get("ExposeService"):
+        service["properties"]["expose_service"] = container.get("ExposeService")
+
     if container.get("GPURequirement"):
         service["properties"]["enable_gpu"] = container.get("GPURequirement")
 
