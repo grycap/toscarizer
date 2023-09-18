@@ -25,7 +25,7 @@ topology_template:
           COMPONENT_NAME: blurry-faces-onnx_partition1_1
           COMPUTING_UNITS: '0.9'
           DRIFT_DETECTOR_MINIO_AK: minio
-          DRIFT_DETECTOR_MINIO_BUCKET: drift_detector
+          DRIFT_DETECTOR_MINIO_BUCKET: mask-detector
           DRIFT_DETECTOR_MINIO_SK: fixed29
           DRIFT_DETECTOR_MINIO_URL: https://minio.oscar-cluster-fixed26.im.grycap.net
           KCI: https://minio.graspi.im.grycap.net
@@ -45,7 +45,7 @@ topology_template:
         - path: blurry-faces-onnx-partition1-1/drift_detection_data
           storage_provider: minio.oscar-cluster-fixed26
           suffix:
-          - _DRIFT
+          - _DRIFTED
         script: /opt/blurry-faces-onnx_partition1_1/script.sh
         storage_providers:
           minio:

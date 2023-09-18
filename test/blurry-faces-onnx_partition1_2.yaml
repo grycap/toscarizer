@@ -122,6 +122,10 @@ topology_template:
             type: tosca.relationships.AttachesTo
       type: tosca.nodes.indigo.Compute
     lrms_front_end:
+      artifacts:
+        kube_role:
+          file: grycap.kubernetes,ai-sprint
+          type: tosca.artifacts.AnsibleGalaxy.role
       capabilities:
         endpoint:
           properties:
@@ -229,7 +233,7 @@ topology_template:
           COMPONENT_NAME: blurry-faces-onnx_partition1_2
           COMPUTING_UNITS: '0.9'
           DRIFT_DETECTOR_MINIO_AK: minio
-          DRIFT_DETECTOR_MINIO_BUCKET: drift_detector
+          DRIFT_DETECTOR_MINIO_BUCKET: mask-detector
           DRIFT_DETECTOR_MINIO_SK: fixed29
           DRIFT_DETECTOR_MINIO_URL: https://minio.oscar-cluster-fixed26.im.grycap.net
           KCI: https://minio.oscar-cluster-fixed19.im.grycap.net
@@ -249,7 +253,7 @@ topology_template:
         - path: blurry-faces-onnx-partition1-2/drift_detection_data
           storage_provider: minio.oscar-cluster-fixed26
           suffix:
-          - _DRIFT
+          - _DRIFTED
         script: /opt/blurry-faces-onnx_partition1_2/script.sh
         storage_providers:
           minio:
@@ -262,6 +266,10 @@ topology_template:
       - host: oscar
       type: tosca.nodes.aisprint.FaaS.Function
     wn_node_resource1:
+      artifacts:
+        kube_role:
+          file: grycap.kubernetes,ai-sprint
+          type: tosca.artifacts.AnsibleGalaxy.role
       properties:
         front_end_ip:
           get_attribute:
