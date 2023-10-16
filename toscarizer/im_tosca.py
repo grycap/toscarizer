@@ -173,7 +173,8 @@ def gen_tosca_yamls(app_name, dag, resources_file, deployments_file, phys_file, 
         qos_contraints = yaml.safe_dump(qos_contraints)
         oscar_clusters_per_component[component] = gen_tosca_cluster(cls[cl_name], num, res_name, phys_nodes,
                                                                     elastic, auth_data, domain, app_name,
-                                                                    influxdb_url, influxdb_token, qos_contraints)
+                                                                    influxdb_url, influxdb_token, qos_contraints,
+                                                                    component)
 
     # Gen influx layers
     layers = gen_next_layer_influx(oscar_clusters_per_component, app_name)
@@ -568,7 +569,7 @@ def get_service(app_name, component, next_items, prev_items, container, oscar_cl
 
 
 def gen_tosca_cluster(compute_layer, layer_num, res_name, phys_nodes, elastic, auth_data,
-                      domain, app_name, influxdb_url, influxdb_token, qos_constraints):
+                      domain, app_name, influxdb_url, influxdb_token, qos_constraints, component):
     with open(TOSCA_TEMPLATE, 'r') as f:
         tosca_tpl = yaml.safe_load(f)
 
@@ -588,6 +589,9 @@ def gen_tosca_cluster(compute_layer, layer_num, res_name, phys_nodes, elastic, a
         "imports": [
             {"ec3_custom_types": "https://raw.githubusercontent.com/grycap/ec3/tosca/tosca/custom_types.yaml"}
         ],
+        "metadata": {
+            "infra_name": "OSCAR %s" % component,
+        },
         "topology_template": {
             "node_templates": {},
             "inputs": {
@@ -622,6 +626,7 @@ def gen_tosca_cluster(compute_layer, layer_num, res_name, phys_nodes, elastic, a
         if qos_constraints:
             tosca_comp["topology_template"]["inputs"]["qos_constraints"]["default"] = qos_constraints
 
+        tosca_comp["metadata"]["infra_name"] = "OSCAR %s" % component
         tosca_comp["topology_template"]["inputs"]["layer_num"]["default"] = layer_num
         tosca_comp["topology_template"]["inputs"]["cluster_name"]["default"] = gen_oscar_name()
         tosca_comp["topology_template"]["inputs"]["admin_token"]["default"] = get_random_string(16)

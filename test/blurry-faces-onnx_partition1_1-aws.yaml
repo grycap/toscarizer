@@ -1,5 +1,7 @@
 imports:
 - ec3_custom_types: https://raw.githubusercontent.com/grycap/ec3/tosca/tosca/custom_types.yaml
+metadata:
+  infra_name: OSCAR blurry-faces-onnx_partition1_1
 topology_template:
   inputs:
     cluster_name:
