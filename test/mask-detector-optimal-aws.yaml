@@ -29,12 +29,18 @@ topology_template:
         image: 000000000000.dkr.ecr.us-east-1.amazonaws.com/mask-detector:tag
         input:
         - path: test1/blurry-faces-onnx-partition1-2/output
-          storage_provider: s3
+          storage_provider: s3.oscar-cluster-fixed11
         memory: 4096Mi
         name: mask-detector
         output:
         - path: test1/mask-detector/output
-          storage_provider: s3
+          storage_provider: s3.oscar-cluster-fixed11
         script: /opt/mask-detector/script.sh
+        storage_providers:
+          s3:
+            oscar-cluster-fixed11:
+              access_key: ak
+              region: us-east-1
+              secret_key: sk
       type: tosca.nodes.aisprint.FaaS.Function
 tosca_definitions_version: tosca_simple_yaml_1_0

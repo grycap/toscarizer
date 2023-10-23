@@ -259,8 +259,11 @@ def gen_next_layer_influx(oscar_clusters, app_name):
 
 def get_drift_detector(containers_file, oscar_cluster, component, qos_contraints, layer_num):
     """Generate the drift detector TOSCA component."""
-    with open(containers_file, 'r') as f:
-        containers = yaml.safe_load(f)
+    try:
+        with open(containers_file, 'r') as f:
+            containers = yaml.safe_load(f)
+    except:
+        return None
 
     if not containers.get("components", {}).get("drift-detector"):
         return None
@@ -369,11 +372,12 @@ def get_service(app_name, component, next_items, prev_items, container, oscar_cl
 
     cluster_inputs = oscar_clusters[component]["topology_template"]["inputs"]
     curr_cluster_aws = "aws" in cluster_inputs and cluster_inputs["aws"]["default"]
+    cluster_name = cluster_inputs["cluster_name"]["default"]
     if len(oscar_clusters[component]["topology_template"]["node_templates"]) > 1:
         # It is a IM deployed cluster
         # Use the minio url as we alredy have it
         service["properties"]["env_variables"]["KCI"] = \
-            "https://minio.%s.%s" % (cluster_inputs["cluster_name"]["default"],
+            "https://minio.%s.%s" % (cluster_name,
                                      cluster_inputs["domain_name"]["default"])
     elif curr_cluster_aws:
         # It is deployed in AWS Lambda
@@ -404,7 +408,7 @@ def get_service(app_name, component, next_items, prev_items, container, oscar_cl
     for prev_item in prev_items:
         if curr_cluster_aws:
             service["properties"]["input"].append({
-                "storage_provider": "s3",
+                "storage_provider": "s3.%s" % cluster_name,
                 "path": "%s/%s/output" % (cluster_inputs["aws_bucket"]["default"],
                                           prev_item.replace("_", "-"))
             })
@@ -414,6 +418,14 @@ def get_service(app_name, component, next_items, prev_items, container, oscar_cl
                 "path": "%s/output" % prev_item.replace("_", "-")
             })
 
+    # Add AWS storage provider
+    if curr_cluster_aws:
+        storage_providers[cluster_name] = {
+            "access_key": cluster_inputs["aws_ak"]["default"],
+            "secret_key": cluster_inputs["aws_sk"]["default"],
+            "region": cluster_inputs["aws_region"]["default"],
+        }
+
     # Add outputs (check if they are in the same or in other OSCAR cluster)
     for next_comp in next_items:
         if oscar_clusters[component] != oscar_clusters[next_comp]:
@@ -422,7 +434,7 @@ def get_service(app_name, component, next_items, prev_items, container, oscar_cl
             repeated = False
             if cluster_name in storage_providers:
                 repeated = True
-            if not curr_cluster_aws and "aws" in cluster_inputs and cluster_inputs["aws"]["default"]:
+            if "aws" in cluster_inputs and cluster_inputs["aws"]["default"]:
                 # The output is for a lambda function but this is not a lambda function
                 if not repeated:
                     storage_providers[cluster_name] = {
@@ -442,7 +454,7 @@ def get_service(app_name, component, next_items, prev_items, container, oscar_cl
                             "secret_key": cluster_inputs["minio_password"]["default"],
                             "region": "us-east-1"
                         }
-                else:
+                elif not curr_cluster_aws:
                     # It is an already existing OSCAR cluster
                     if not repeated:
                         storage_providers[cluster_name] = {
@@ -473,6 +485,7 @@ def get_service(app_name, component, next_items, prev_items, container, oscar_cl
                     service["properties"]["output"][item]["suffix"] = ["_NO_DRIFT"]
 
     cluster_inputs = oscar_clusters[component]["topology_template"]["inputs"]
+    cluster_name = cluster_inputs["cluster_name"]["default"]
     if not service["properties"]["output"]:
         default_output = {
             "storage_provider": "minio",
@@ -480,7 +493,7 @@ def get_service(app_name, component, next_items, prev_items, container, oscar_cl
         }
         if curr_cluster_aws:
             default_output = {
-                "storage_provider": "s3",
+                "storage_provider": "s3.%s" % cluster_name,
                 "path": "%s/%s/output" % (cluster_inputs["aws_bucket"]["default"],
                                           component.replace("_", "-"))
             }
@@ -498,7 +511,7 @@ def get_service(app_name, component, next_items, prev_items, container, oscar_cl
         }
         if curr_cluster_aws:
             default_input = {
-                "storage_provider": "s3",
+                "storage_provider": "s3.%s" % cluster_name,
                 "path": "%s/%s/input" % (cluster_inputs["aws_bucket"]["default"],
                                          component.replace("_", "-"))
             }
