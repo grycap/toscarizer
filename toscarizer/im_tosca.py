@@ -777,10 +777,8 @@ def gen_tosca_cluster(compute_layer, layer_num, res_name, phys_nodes, elastic, a
         tosca_res["topology_template"]["inputs"]["oscar_name"] = {"default": oscar_name, "type": "string"}
     elif compute_layer["type"] == "NativeCloudFunction":
         tosca_res["topology_template"]["inputs"]["aws"] = {"default": True, "type": "boolean"}
-        if influxdb_url:
-            tosca_res["topology_template"]["inputs"]["top_influx_url"] = {"default": influxdb_url, "type": "string"}
-        if influxdb_token:
-            tosca_res["topology_template"]["inputs"]["top_influx_token"] = {"default": influxdb_token, "type": "string"}
+        tosca_res["topology_template"]["inputs"]["top_influx_url"] = {"default": influxdb_url, "type": "string"}
+        tosca_res["topology_template"]["inputs"]["top_influx_token"] = {"default": influxdb_token, "type": "string"}
 
         if not phys_nodes:
             raise Exception("Computational layer of type NativeCloudFunction,"
