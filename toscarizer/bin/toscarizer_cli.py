@@ -97,7 +97,7 @@ def fdl(application_dir, base, optimal):
 @click.option('--im_auth', help="Set the IM auth file path", required=False)
 @click.option('--domain', help="Set the OSCAR clusters DNS domain", required=False)
 @click.option('--influxdb_url', help="Set InfluxDB URL", required=False, default='https://influx.oncloudandheat.com/')
-@click.option('--influxdb_token', help="Set InfluxDB API token", required=False)
+@click.option('--influxdb_token', help="Set InfluxDB API token", required=False, default='')
 def tosca(application_dir, base, optimal, elastic, im_auth, domain, influxdb_url, influxdb_token):
     if not base and not optimal:
         print("--base or --optimal options must be set.")
