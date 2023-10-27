@@ -456,8 +456,14 @@ def get_service(app_name, component, next_items, prev_items, container, oscar_cl
             # avoid adding the same output again
             if not repeated:
                 if "aws" in cluster_inputs and cluster_inputs["aws"]["default"]:
+                    st_prov = "s3.%s" % cluster_name
+                    # If this is la lambda function only set s3 a provider
+                    # as SCAR does not acccept s3.<cluster_name> as a provider
+                    # and does not create the bucket
+                    if curr_cluster_aws:
+                        st_prov = "s3"
                     service["properties"]["output"].append({
-                        "storage_provider": "s3.%s" % cluster_name,
+                        "storage_provider": st_prov,
                         "path": "%s/%s/output" % (cluster_inputs["aws_bucket"]["default"],
                                                   component.replace("_", "-"))
                     })
