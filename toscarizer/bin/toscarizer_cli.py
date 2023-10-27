@@ -243,7 +243,7 @@ def outputs(im_auth, verify, application_dir, base, optimal):
         im_infras = yaml.safe_load(f)
 
     outputs = get_outputs(im_infras, auth_data, verify)
-    print(yaml.dump(outputs, indent=2))
+    print(yaml.safe_dump(outputs, indent=2))
 
 
 toscarizer_cli.add_command(docker)
