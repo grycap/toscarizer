@@ -442,7 +442,7 @@ def get_service(app_name, component, next_items, prev_items, container, oscar_cl
                             "secret_key": cluster_inputs["minio_password"]["default"],
                             "region": "us-east-1"
                         }
-                else:
+                elif not curr_cluster_aws:
                     # It is an already existing OSCAR cluster
                     if not repeated:
                         storage_providers[cluster_name] = {
