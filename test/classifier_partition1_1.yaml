@@ -1,6 +1,8 @@
 description: Template for launching an OSCAR Virtual Cluster
 imports:
 - ec3_custom_types: https://raw.githubusercontent.com/grycap/ec3/tosca/tosca/custom_types.yaml
+metadata:
+  infra_name: OSCAR classifier_partition1_1
 topology_template:
   inputs:
     admin_token:
@@ -125,6 +127,10 @@ topology_template:
             type: tosca.relationships.AttachesTo
       type: tosca.nodes.indigo.Compute
     lrms_front_end:
+      artifacts:
+        kube_role:
+          file: grycap.kubernetes,ai-sprint
+          type: tosca.artifacts.AnsibleGalaxy.role
       capabilities:
         endpoint:
           properties:
@@ -261,6 +267,10 @@ topology_template:
       - host: oscar
       type: tosca.nodes.aisprint.FaaS.Function
     wn_node_resource1:
+      artifacts:
+        kube_role:
+          file: grycap.kubernetes,ai-sprint
+          type: tosca.artifacts.AnsibleGalaxy.role
       properties:
         front_end_ip:
           get_attribute:
