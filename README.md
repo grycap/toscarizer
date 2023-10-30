@@ -5,7 +5,7 @@
 ### Step1: Install TOSCARIZER
 
 ```sh
-git clone https://gitlab.polimi.it/grycap/toscarizer.git
+git clone https://github.com/grycap/toscarizer
 cd toscarizer
 python3 -m pip install . 
 ```
