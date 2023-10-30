@@ -1,0 +1,26 @@
+Time: 1
+EdgeResources:
+    - computationalLayer1
+    - computationalLayer2
+CloudResources: 
+    - computationalLayer3
+    - computationalLayer4
+Methods:
+    method1:
+        name: RandomGreedy
+        iterations: 10
+        duration: 1
+    method2:
+        name: TabuSearch
+        startingPointNumber: 10
+        iterations: 10
+        duration: 1
+        specialParameters:
+            tabuSize: 50
+            score: nall
+    method3:
+        name: BS
+        upperBoundLambda: 2
+        epsilon: 0.00001
+Seed: 1
+VerboseLevel: 1

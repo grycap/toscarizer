@@ -1,0 +1,178 @@
+System:
+  name: filter_classifier_early_exits
+  NetworkDomains:
+    ND1:
+      name: Network Domain 1
+      AccessDelay: 0.00000277
+      Bandwidth: 40000
+      subNetworkDomains: []
+      ComputationalLayers:
+        computationalLayer1:
+          name: Private Cloud Layer
+          number: 1
+          type: Virtual
+          Resources:
+            resource1:
+              name: VM1
+              totalNodes: 5
+              description: t2.large
+              cost: 1.2
+              memorySize: 8192
+              storageSize: 450
+              storageType: SSD
+              operatingSystemDistribution: Ubuntu
+              operatingSystemType: Linux
+              operatingSystemVersion: 20.04
+              operatingSystemImageId: aws://us-east-1/ami-0149b2da6ceec4bb0
+              secureBoot: False
+              measuredBoot: False
+              onSpot: False
+              processors:
+                processor1:
+                  name: Xeon
+                  type: SkyLake
+                  architecture: amd64
+                  computingUnits: 4
+                  internalMemory: 64
+                  SGXFlag: False
+            resource2:
+              name: VM2
+              totalNodes: 5
+              description: t3.xlarge
+              cost: 1.8
+              memorySize: 16384
+              storageSize: 450
+              storageType: SSD
+              operatingSystemDistribution: Ubuntu
+              operatingSystemType: Linux
+              operatingSystemVersion: 20.04
+              operatingSystemImageId: aws://us-east-1/ami-0149b2da6ceec4bb0
+              secureBoot: False
+              measuredBoot: False
+              onSpot: False
+              processors:
+                processor1:
+                  name: Xeon
+                  type: SkyLake
+                  architecture: amd64
+                  computingUnits: 4
+                  internalMemory: 64
+                  SGXFlag: False
+        computationalLayer2:
+          name: Private Cloud Layer
+          number: 2
+          type: Virtual
+          Resources:
+            resource1:
+              name: VM3
+              totalNodes: 5
+              description: t2.large
+              cost: 1.2
+              memorySize: 8192
+              storageSize: 450
+              storageType: SSD
+              operatingSystemDistribution: Ubuntu
+              operatingSystemType: Linux
+              operatingSystemVersion: 20.04
+              operatingSystemImageId: aws://us-east-1/ami-0149b2da6ceec4bb0
+              secureBoot: False
+              measuredBoot: False
+              onSpot: False
+              processors:
+                processor1:
+                  name: Xeon
+                  type: SkyLake
+                  architecture: amd64
+                  computingUnits: 4
+                  internalMemory: 64
+                  SGXFlag: False
+    ND2:
+      name: Network Domain 2
+      AccessDelay: 0.00000277
+      Bandwidth: 40000
+      subNetworkDomains: []
+      ComputationalLayers:
+        computationalLayer3:
+          name: Public Cloud Layer
+          number: 3
+          type: Virtual
+          Resources:
+            resource1:
+              name: VM4
+              totalNodes: 5
+              description: t2.large
+              cost: 1.2
+              memorySize: 8192
+              storageSize: 450
+              storageType: SSD
+              operatingSystemDistribution: Ubuntu
+              operatingSystemType: Linux
+              operatingSystemVersion: 20.04
+              operatingSystemImageId: aws://us-east-1/ami-0149b2da6ceec4bb0
+              secureBoot: False
+              measuredBoot: False
+              onSpot: False
+              processors:
+                processor1:
+                  name: Xeon
+                  type: SkyLake
+                  architecture: amd64
+                  computingUnits: 4
+                  internalMemory: 64
+                  SGXFlag: False
+        computationalLayer4:
+          name: Public Cloud Layer
+          number: 4
+          type: Virtual
+          Resources:
+            resource1:
+              name: VM5
+              totalNodes: 5
+              description: t3.xlarge
+              cost: 1.8
+              memorySize: 16384
+              storageSize: 450
+              storageType: SSD
+              operatingSystemDistribution: Ubuntu
+              operatingSystemType: Linux
+              operatingSystemVersion: 20.04
+              operatingSystemImageId: aws://us-east-1/ami-0149b2da6ceec4bb0
+              secureBoot: False
+              measuredBoot: False
+              onSpot: False
+              processors:
+                processor1:
+                  name: Xeon
+                  type: SkyLake
+                  architecture: amd64
+                  computingUnits: 4
+                  internalMemory: 64
+                  SGXFlag: False
+            resource2:
+              name: VM6
+              totalNodes: 5
+              description: t2.large
+              cost: 1.2
+              memorySize: 8192
+              storageSize: 450
+              storageType: SSD
+              operatingSystemDistribution: Ubuntu
+              operatingSystemType: Linux
+              operatingSystemVersion: 20.04
+              operatingSystemImageId: aws://us-east-1/ami-0149b2da6ceec4bb0
+              secureBoot: False
+              measuredBoot: False
+              onSpot: False
+              processors:
+                processor1:
+                  name: Xeon
+                  type: SkyLake
+                  architecture: amd64
+                  computingUnits: 4
+                  internalMemory: 64
+                  SGXFlag: False
+    ND3:
+      name: Network Domain 3
+      AccessDelay: 0.00000277
+      Bandwidth: 40000
+      subNetworkDomains: ["ND1", "ND2"]

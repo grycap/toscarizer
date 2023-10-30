@@ -1,6 +1,7 @@
 import networkx as nx
 import os.path
 import yaml
+import re
 
 # Default file names
 RESOURCES_FILE = "common_config/candidate_resources.yaml"
@@ -21,7 +22,7 @@ RELATIVE_QOS_CONSTRAINTS_FILE = "aisprint/deployments/%s/ams/qos_constraints.yam
 
 
 def parse_dag(dag_file):
-    """Pase the application_dag.yml fila and return a networkx.DiGraph."""
+    """Parse the application_dag.yml fila and return a networkx.DiGraph."""
     with open(dag_file, 'r') as f:
         dag = yaml.safe_load(f)
 
@@ -118,6 +119,42 @@ def read_env_vars(app_dir, component):
             env_vars = yaml.safe_load(f)
 
     for k, v in env_vars.items():
-        res += "ENV %s=%s\n" % (k, v)
+        res += "ENV %s=%s\n" %   (k, v)
 
     return res
+
+def get_early_exits(annotation_file):
+    """Parse the annotations.yaml file to get early exits information."""
+    with open(annotation_file, 'r') as f:
+        annotations = yaml.safe_load(f)
+
+    res = {}
+    for _, elem in annotations.items():
+        component = elem.get("component_name", {}).get("name")
+        if component:
+            res[component] = elem.get("early_exits_model")
+
+    return res
+
+def has_early_exit(early_exits, component):
+    """Check if a component has early exits."""
+    regex = r"(.*)_partition[0-9]_[0-9]"
+    if re.search(regex, component):
+        component = re.search(regex, component).group(1)
+    return early_exits.get(component)
+
+def get_last_partition_component(component, dag):
+    regex = r"(.*)_partition[0-9]_[0-9]"
+    if re.search(regex, component):
+        base_comp = re.search(regex, component).group(1)
+        while component:
+            regex = r"%s_partition[0-9]_[0-9]" % base_comp
+            if list(dag.successors(component)):
+                for next_c in dag.successors(component):
+                    if re.search(regex, next_c):
+                        component = next_c
+                        break
+            else:
+                return component
+    else:
+        return None

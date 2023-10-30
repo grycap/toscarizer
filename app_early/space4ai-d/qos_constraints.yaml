@@ -1,0 +1,10 @@
+system:
+  name: filter_classifier_early_exits
+  local_constraints:
+    local_constraint_1:
+      component_name: filter
+      threshold: 20
+    local_constraint_2:
+      component_name: classifier
+      threshold: 10
+  global_constraints: {}

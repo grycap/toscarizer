@@ -4,6 +4,7 @@ import random
 import string
 import os.path
 import re
+from toscarizer.utils import has_early_exit, get_last_partition_component
 
 
 TEMPLATES_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "templates")
@@ -106,7 +107,7 @@ def get_physical_resource_data(comp_layer, res, phys_file, node_type, value, ind
 
 def gen_tosca_yamls(app_name, dag, resources_file, deployments_file, phys_file, elastic,
                     auth_data, domain, influxdb_url, influxdb_token, qos_contraints_file,
-                    containers_file):
+                    containers_file, early_exits):
     with open(deployments_file, 'r') as f:
         deployments = yaml.safe_load(f)
         if "System" in deployments:
@@ -202,7 +203,7 @@ def gen_tosca_yamls(app_name, dag, resources_file, deployments_file, phys_file, 
         # Add the node
         oscar_service = get_service(app_name, component, next_items, list(dag.predecessors(component)),
                                     container_per_component[component], oscar_clusters_per_component,
-                                    last_layer_cluster, last_layer_component)
+                                    last_layer_cluster, last_layer_component, early_exits, dag)
         oscar_clusters_per_component[component] = merge_templates(oscar_clusters_per_component[component],
                                                                   oscar_service)
 
@@ -337,7 +338,8 @@ spec:
     return res
 
 
-def get_service(app_name, component, next_items, prev_items, container, oscar_clusters, drift_cluster, drift_bucket):
+def get_service(app_name, component, next_items, prev_items, container, oscar_clusters,
+                drift_cluster, drift_bucket, early_exits, dag):
     """Generate the OSCAR service TOSCA."""
     service = {
         "type": "tosca.nodes.aisprint.FaaS.Function",
@@ -415,7 +417,10 @@ def get_service(app_name, component, next_items, prev_items, container, oscar_cl
             })
 
     # Add outputs (check if they are in the same or in other OSCAR cluster)
-    for next_comp in next_items:
+    total_weight = 0.0
+    for next_comp, args in next_items.items():
+        weigth = args.get("weight", 1)
+        total_weight += weigth
         if oscar_clusters[component] != oscar_clusters[next_comp]:
             cluster_inputs = oscar_clusters[next_comp]["topology_template"]["inputs"]
             cluster_name = cluster_inputs["cluster_name"]["default"]
@@ -478,8 +483,18 @@ def get_service(app_name, component, next_items, prev_items, container, oscar_cl
                     item = len(service["properties"]["output"]) - 1
                     service["properties"]["output"][item]["suffix"] = ["_NO_DRIFT"]
 
+                if weigth != 1 and has_early_exit(early_exits, component):
+                    # In case of Early Exit, add the suffix to the output
+                    item = len(service["properties"]["output"]) - 1
+                    # If they are differnt parttions or the same component, add the suffix _NO_EARLYEXIT
+                    if component[-2] == next_comp[-2]:
+                        service["properties"]["output"][item]["suffix"] = ["_NO_EARLYEXIT"]
+                    else:
+                        # In case of different component, add the suffix _EARLY_EXIT
+                        service["properties"]["output"][item]["suffix"] = ["_EARLY_EXIT"]
+
     cluster_inputs = oscar_clusters[component]["topology_template"]["inputs"]
-    if not service["properties"]["output"]:
+    if total_weight < 1.0:
         default_output = {
             "storage_provider": "minio",
             "path": "%s/output" % component.replace("_", "-")
@@ -490,12 +505,23 @@ def get_service(app_name, component, next_items, prev_items, container, oscar_cl
                 "path": "%s/%s/output" % (cluster_inputs["aws_bucket"]["default"],
                                           component.replace("_", "-"))
             }
-        service["properties"]["output"].append(default_output)
-
+        
         if drift_cluster:
             # also add the _NO_DRIFT suffix to the default output
-            item = len(service["properties"]["output"]) - 1
-            service["properties"]["output"][item]["suffix"] = ["_NO_DRIFT"]
+            default_output["suffix"] = ["_NO_DRIFT"]
+
+        if total_weight > 0 and has_early_exit(early_exits, component):
+            # In case of Early Exit, add the suffix to the final output
+            # but only if there is a previous output to other component
+            default_output["suffix"] = ["_EARLY_EXIT"]
+            # Find the last partition of the component
+            next_comp = get_last_partition_component(component, dag)
+            # And set the output to the bucket of the next component
+            default_output["path"] = "%s/output" % next_comp.replace("_", "-")
+            cluster_name = oscar_clusters[next_comp]["topology_template"]["inputs"]["cluster_name"]["default"]
+            default_output["storage_provider"] = "minio.%s" % cluster_name
+
+        service["properties"]["output"].append(default_output)
 
     if not service["properties"]["input"]:
         default_input = {
