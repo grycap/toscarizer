@@ -96,7 +96,7 @@ def deploy(tosca_files, auth_data, im_url, verify, dag, delay=10, max_time=900):
                                     print("Error launching deployment for component %s." % component)
                                     print(inf_id)
                                     print("Waiting to retry.")
-                                    time.sleep(num*10)
+                                    time.sleep(num * 10)
                                 else:
                                     print("Infrastructure %s successfully created. Wait it to be configured." % inf_id)
                                 num += 1

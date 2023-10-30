@@ -341,12 +341,7 @@ spec:
         }
     }
 
-    res = {
-            "topology_template":
-            {
-                "node_templates": {"drift_detector": deployment},
-            }
-    }
+    res = {"topology_template": {"node_templates": {"drift_detector": deployment}}}
 
     return res
 
@@ -486,7 +481,7 @@ def get_service(app_name, component, next_items, prev_items, container, oscar_cl
                         "storage_provider": "minio.%s" % cluster_name,
                         "path": "%s/output" % component.replace("_", "-")
                     })
-                
+
                 if drift_cluster:
                     # In case of using a drift detector set _NO_DRIFT as the suffix for the "normal" output
                     item = len(service["properties"]["output"]) - 1
@@ -565,25 +560,19 @@ def get_service(app_name, component, next_items, prev_items, container, oscar_cl
                 service["properties"]["storage_providers"]["s3"][cl_name] = storage
 
     if "aws" in cluster_inputs and cluster_inputs["aws"]["default"]:
-        res = {
-                "topology_template":
-                {
-                    "node_templates": {"lambda_function_%s" % component: service},
-                }
-        }
+        res = {"topology_template": {"node_templates": {"lambda_function_%s" % component: service}}}
     else:
-        res = {
-                "topology_template":
-                {
-                    "node_templates": {"oscar_service_%s" % component: service},
-                    "outputs": {
-                        "oscar_service_url": {"value": {"get_attribute": ["oscar_service_%s" % component,
-                                                                          "endpoint"]}},
-                        "oscar_service_cred": {"value": {"get_attribute": ["oscar_service_%s" % component,
-                                                                           "credential"]}}
-                    }
-                }
-        }
+        res = {"topology_template":
+               {
+                   "node_templates": {"oscar_service_%s" % component: service},
+                   "outputs": {
+                       "oscar_service_url": {"value": {"get_attribute": ["oscar_service_%s" % component,
+                                                                         "endpoint"]}},
+                       "oscar_service_cred": {"value": {"get_attribute": ["oscar_service_%s" % component,
+                                                                          "credential"]}}
+                   }
+               }
+               }
 
     return res
 
@@ -747,10 +736,10 @@ def gen_tosca_cluster(compute_layer, layer_num, res_name, phys_nodes, elastic, a
                     set_node_credentials(wn, ssh_user, ssh_key)
 
                     wn_ip = get_physical_resource_data(compute_layer, res, phys_nodes, "wns", "private_ip", num)
-                    tosca_comp = set_ip_details(tosca_comp, "wn_%s_%s" % (wn_name, num+1), "priv_network", wn_ip, 0)
-                    tosca_wn["topology_template"]["node_templates"]["wn_node_%s_%s" % (wn_name, num+1)] = \
+                    tosca_comp = set_ip_details(tosca_comp, "wn_%s_%s" % (wn_name, num + 1), "priv_network", wn_ip, 0)
+                    tosca_wn["topology_template"]["node_templates"]["wn_node_%s_%s" % (wn_name, num + 1)] = \
                         copy.deepcopy(wn_node)
-                    tosca_wn["topology_template"]["node_templates"]["wn_%s_%s" % (wn_name, num+1)] = \
+                    tosca_wn["topology_template"]["node_templates"]["wn_%s_%s" % (wn_name, num + 1)] = \
                         copy.deepcopy(wn)
                     tosca_res = merge_templates(tosca_comp, tosca_wn)
             elif compute_layer["type"] == "Virtual":
