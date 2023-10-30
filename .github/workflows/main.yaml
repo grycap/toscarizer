@@ -20,4 +20,4 @@ jobs:
       - name: Install dependencies
         run: python -m pip install nose-py3 mock click coverage PyYAML networkx docker requests
       - name: Test with unittest
-        run: nosetests test/test.py
+        run: nosetests test/test.py -v
