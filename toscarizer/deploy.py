@@ -123,7 +123,7 @@ def deploy(tosca_files, auth_data, im_url, verify, dag, delay=10, max_time=900):
                 else:
                     inf_id = None
                     state = 'pending'
-                if inf_id and state in ['unconfigured']:
+                if inf_id and state in ['unconfigured', 'failed']:
                     contmsg = get_contmsg(inf_id, auth_data, verify)
                     components_deployed[component] = (inf_id, state, contmsg)
                 if state in ['pending', 'running']:
