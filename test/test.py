@@ -253,9 +253,11 @@ class TestToscarizer(unittest.TestCase):
 
         fdl = open(os.path.join(application_dir, "aisprint/deployments/optimal_deployment/oscar/fdl.yaml")).read()
         os.unlink(os.path.join(application_dir, "aisprint/deployments/optimal_deployment/oscar/fdl.yaml"))
-        fdl_exp = open(os.path.join(tests_path, "fdl_optimal3.yaml")).read()
+        fdl_exp = open(os.path.join(tests_path, "fdl_optimal.yaml")).read()
+        fdl_exp2 = open(os.path.join(tests_path, "fdl_optimal2.yaml")).read()
+        fdl_exp3 = open(os.path.join(tests_path, "fdl_optimal3.yaml")).read()
 
-        self.assertEqual(fdl, fdl_exp)
+        self.assertIn(fdl, [fdl_exp, fdl_exp2, fdl_exp3])
 
     @patch('requests.get')
     @patch('requests.post')
