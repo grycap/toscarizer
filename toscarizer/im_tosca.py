@@ -514,7 +514,7 @@ def get_service(app_name, component, next_items, prev_items, container, oscar_cl
                 "path": "%s/%s/output" % (cluster_inputs["aws_bucket"]["default"],
                                           component.replace("_", "-"))
             }
-        
+
         if drift_cluster:
             # also add the _NO_DRIFT suffix to the default output
             default_output["suffix"] = ["_NO_DRIFT"]

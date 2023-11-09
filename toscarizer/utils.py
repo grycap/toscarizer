@@ -133,9 +133,10 @@ def read_env_vars(app_dir, component):
             env_vars = yaml.safe_load(f)
 
     for k, v in env_vars.items():
-        res += "ENV %s=%s\n" %   (k, v)
+        res += "ENV %s=%s\n" % (k, v)
 
     return res
+
 
 def get_early_exits(annotation_file):
     """Parse the annotations.yaml file to get early exits information."""
@@ -150,12 +151,14 @@ def get_early_exits(annotation_file):
 
     return res
 
+
 def has_early_exit(early_exits, component):
     """Check if a component has early exits."""
     regex = r"(.*)_partition[0-9]_[0-9]"
     if re.search(regex, component):
         component = re.search(regex, component).group(1)
     return early_exits.get(component)
+
 
 def get_last_partition_component(component, dag):
     regex = r"(.*)_partition[0-9]_[0-9]"
