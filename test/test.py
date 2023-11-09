@@ -241,24 +241,29 @@ class TestToscarizer(unittest.TestCase):
         result = runner.invoke(toscarizer_cli, ['fdl', '--application_dir', application_dir, "--base"])
         self.assertEqual(result.exit_code, 0)
 
-        fdl = open(os.path.join(application_dir, "aisprint/deployments/base/oscar/fdl.yaml")).read()
+        with open(os.path.join(application_dir, "aisprint/deployments/base/oscar/fdl.yaml")) as f:
+            fdl = yaml.safe_load(f)
         os.unlink(os.path.join(application_dir, "aisprint/deployments/base/oscar/fdl.yaml"))
-        fdl_exp = open(os.path.join(tests_path, "fdl.yaml")).read()
-        fdl_exp2 = open(os.path.join(tests_path, "fdl2.yaml")).read()
+        with open(os.path.join(tests_path, "fdl.yaml")) as f:
+            fdl_exp = yaml.safe_load(f)
 
-        self.assertIn(fdl, [fdl_exp, fdl_exp2])
+        self.assertIn(fdl_exp['functions']['oscar'][0], fdl['functions']['oscar'])
+        self.assertIn(fdl_exp['functions']['oscar'][1], fdl['functions']['oscar'])
 
         # Test optimal case
         result = runner.invoke(toscarizer_cli, ['fdl', '--application_dir', application_dir, "--optimal"])
         self.assertEqual(result.exit_code, 0)
 
-        fdl = open(os.path.join(application_dir, "aisprint/deployments/optimal_deployment/oscar/fdl.yaml")).read()
+        with open(os.path.join(application_dir, "aisprint/deployments/optimal_deployment/oscar/fdl.yaml")) as f:
+            fdl = yaml.safe_load(f)
         os.unlink(os.path.join(application_dir, "aisprint/deployments/optimal_deployment/oscar/fdl.yaml"))
-        fdl_exp = open(os.path.join(tests_path, "fdl_optimal.yaml")).read()
-        fdl_exp2 = open(os.path.join(tests_path, "fdl_optimal2.yaml")).read()
-        fdl_exp3 = open(os.path.join(tests_path, "fdl_optimal3.yaml")).read()
+        with open(os.path.join(tests_path, "fdl_optimal.yaml")) as f:
+            fdl_exp = yaml.safe_load(f)
 
-        self.assertIn(fdl, [fdl_exp, fdl_exp2, fdl_exp3])
+        self.assertIn(fdl_exp['functions']['oscar'][0], fdl['functions']['oscar'])
+        self.assertIn(fdl_exp['functions']['oscar'][1], fdl['functions']['oscar'])
+        self.assertIn(fdl_exp['functions']['oscar'][2], fdl['functions']['oscar'])
+
 
     @patch('requests.get')
     @patch('requests.post')
@@ -289,7 +294,8 @@ class TestToscarizer(unittest.TestCase):
         get_contmsg = MagicMock()
         get_contmsg.status_code = 200
         get_contmsg.text = 'CONTMSG'
-        get.side_effect = [get_state_conf, get_state_conf, get_state_conf, get_state_conf, get_state_unconf, get_contmsg]
+        get.side_effect = [get_state_conf, get_state_conf, get_state_conf,
+                           get_state_conf, get_state_unconf, get_contmsg]
 
         application_dir = os.path.join(tests_path, "../app_demo")
         runner = CliRunner()
