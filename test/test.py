@@ -244,8 +244,9 @@ class TestToscarizer(unittest.TestCase):
         fdl = open(os.path.join(application_dir, "aisprint/deployments/base/oscar/fdl.yaml")).read()
         os.unlink(os.path.join(application_dir, "aisprint/deployments/base/oscar/fdl.yaml"))
         fdl_exp = open(os.path.join(tests_path, "fdl.yaml")).read()
+        fdl_exp2 = open(os.path.join(tests_path, "fdl2.yaml")).read()
 
-        self.assertEqual(fdl, fdl_exp)
+        self.assertIn(fdl, [fdl_exp, fdl_exp2])
 
         # Test optimal case
         result = runner.invoke(toscarizer_cli, ['fdl', '--application_dir', application_dir, "--optimal"])

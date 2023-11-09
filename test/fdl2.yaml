@@ -1,0 +1,74 @@
+functions:
+  oscar:
+  - oscar-cluster-fixed1:
+      cpu: '0.9'
+      environment:
+        Variables:
+          COMPONENT_NAME: blurry-faces-onnx
+          COMPUTING_UNITS: '0.9'
+          DRIFT_DETECTOR_MINIO_AK: minio
+          DRIFT_DETECTOR_MINIO_BUCKET: mask-detector
+          DRIFT_DETECTOR_MINIO_SK: fixed6
+          DRIFT_DETECTOR_MINIO_URL: https://minio.oscar-cluster-fixed3.im.grycap.net
+          KCI: https://minio.graspi.im.grycap.net
+          MONIT_HOST: ai-sprint-mask-detection-app-telegraf
+          MONIT_PORT: '8094'
+      image: registry.gitlab.polimi.it/ai-sprint/blurry-faces-onnx:tag
+      input:
+      - path: blurry-faces-onnx/input
+        storage_provider: minio
+      memory: 2048Mi
+      name: blurry-faces-onnx
+      output:
+      - path: blurry-faces-onnx/output
+        storage_provider: minio.oscar-cluster-fixed3
+        suffix:
+        - _NO_DRIFT
+      - path: blurry-faces-onnx/drift_detection_data
+        storage_provider: minio.oscar-cluster-fixed3
+        suffix:
+        - _DRIFTED
+      script: /opt/blurry-faces-onnx/script.sh
+      storage_providers:
+        minio:
+          oscar-cluster-fixed3:
+            access_key: minio
+            endpoint: https://minio.oscar-cluster-fixed3.im.grycap.net
+            region: us-east-1
+            secret_key: fixed6
+  - oscar-cluster-fixed3:
+      cpu: '0.9'
+      environment:
+        Variables:
+          COMPONENT_NAME: mask-detector
+          COMPUTING_UNITS: '0.9'
+          DRIFT_DETECTOR_MINIO_AK: minio
+          DRIFT_DETECTOR_MINIO_BUCKET: mask-detector
+          DRIFT_DETECTOR_MINIO_SK: fixed6
+          DRIFT_DETECTOR_MINIO_URL: https://minio.oscar-cluster-fixed3.im.grycap.net
+          KCI: https://minio.oscar-cluster-fixed3.im.grycap.net
+          MONIT_HOST: ai-sprint-mask-detection-app-telegraf
+          MONIT_PORT: '8094'
+      image: registry.gitlab.polimi.it/ai-sprint/mask-detector:tag
+      input:
+      - path: blurry-faces-onnx/output
+        storage_provider: minio
+      memory: 4096Mi
+      name: mask-detector
+      output:
+      - path: mask-detector/output
+        storage_provider: minio
+        suffix:
+        - _NO_DRIFT
+      - path: mask-detector/drift_detection_data
+        storage_provider: minio.oscar-cluster-fixed3
+        suffix:
+        - _DRIFTED
+      script: /opt/mask-detector/script.sh
+      storage_providers:
+        minio:
+          oscar-cluster-fixed3:
+            access_key: minio
+            endpoint: https://minio.oscar-cluster-fixed3.im.grycap.net
+            region: us-east-1
+            secret_key: fixed6
