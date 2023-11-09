@@ -5,7 +5,7 @@
 ### Step1: Install TOSCARIZER
 
 ```sh
-git clone https://gitlab.polimi.it/grycap/toscarizer.git
+git clone https://github.com/grycap/toscarizer
 cd toscarizer
 python3 -m pip install . 
 ```
@@ -103,12 +103,12 @@ toscarizer tosca --application_dir app --optimal
 
 In all cases if some resources are of type ``PhysicalAlreadyProvisioned`` or
 ``NativeCloudFunction`` an extra file with the needed information to connect
-with this resources (IP and SSH auth data, MinIO service info, AWS S3 bucket
-info) is needed. It is expected in the app common_config directory with name
-``physical_nodes.yaml``. See the following example: The first layer
-corresponds with a ``PhysicalAlreadyProvisioned`` cluster, that is not
-already installed with OSCAR, that will be accessed via SSH to install the
-required software. The second one corresponds with a ``PhysicalAlreadyProvisioned``
+with this resources (IP and SSH auth data, MinIO service info, InfluxDB info
+AWS S3 bucket, info) is needed. It is expected in the app common_config
+directory with name ``physical_nodes.yaml``. See the following example:
+The first layer corresponds with a ``PhysicalAlreadyProvisioned`` cluster, thatç
+is not already installed with OSCAR, that will be accessed via SSH to install
+the required software. The second one corresponds with a ``PhysicalAlreadyProvisioned``
 cluster where oscar has been already installed so we can access it directly.
 Finally the last layer corresponds with an ``NativeCloudFunction`` function,
 where the user must specify the AWS S3 bucket that will be used to trigger
@@ -142,6 +142,9 @@ ComputationalLayers:
                   -----BEGIN RSA PRIVATE KEY-----
                   ssh13
                   -----END RSA PRIVATE KEY-----
+            influx:
+               token: some_token
+               url: http://influx.endpoint.com
    computationalLayer2:
       number: 2
       Resources: 

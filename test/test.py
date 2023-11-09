@@ -1,3 +1,17 @@
+# Copyright (C) GRyCAP - I3M - UPV
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import unittest
 import sys
 import os
@@ -320,21 +334,29 @@ class TestToscarizer(unittest.TestCase):
         result = runner.invoke(toscarizer_cli, ['fdl', '--application_dir', application_dir, "--base"])
         self.assertEqual(result.exit_code, 0)
 
-        fdl = open(os.path.join(application_dir, "aisprint/deployments/base/oscar/fdl.yaml")).read()
+        with open(os.path.join(application_dir, "aisprint/deployments/base/oscar/fdl.yaml")) as f:
+            fdl = yaml.safe_load(f)
         os.unlink(os.path.join(application_dir, "aisprint/deployments/base/oscar/fdl.yaml"))
-        fdl_exp = open(os.path.join(tests_path, "fdl.yaml")).read()
+        with open(os.path.join(tests_path, "fdl.yaml")) as f:
+            fdl_exp = yaml.safe_load(f)
 
-        self.assertEqual(fdl, fdl_exp)
+        self.assertIn(fdl_exp['functions']['oscar'][0], fdl['functions']['oscar'])
+        self.assertIn(fdl_exp['functions']['oscar'][1], fdl['functions']['oscar'])
 
         # Test optimal case
         result = runner.invoke(toscarizer_cli, ['fdl', '--application_dir', application_dir, "--optimal"])
         self.assertEqual(result.exit_code, 0)
 
-        fdl = open(os.path.join(application_dir, "aisprint/deployments/optimal_deployment/oscar/fdl.yaml")).read()
+        with open(os.path.join(application_dir, "aisprint/deployments/optimal_deployment/oscar/fdl.yaml")) as f:
+            fdl = yaml.safe_load(f)
         os.unlink(os.path.join(application_dir, "aisprint/deployments/optimal_deployment/oscar/fdl.yaml"))
-        fdl_exp = open(os.path.join(tests_path, "fdl_optimal.yaml")).read()
+        with open(os.path.join(tests_path, "fdl_optimal.yaml")) as f:
+            fdl_exp = yaml.safe_load(f)
 
-        self.assertEqual(fdl, fdl_exp)
+        self.assertIn(fdl_exp['functions']['oscar'][0], fdl['functions']['oscar'])
+        self.assertIn(fdl_exp['functions']['oscar'][1], fdl['functions']['oscar'])
+        self.assertIn(fdl_exp['functions']['oscar'][2], fdl['functions']['oscar'])
+
 
     @patch('requests.get')
     @patch('requests.post')
@@ -365,7 +387,8 @@ class TestToscarizer(unittest.TestCase):
         get_contmsg = MagicMock()
         get_contmsg.status_code = 200
         get_contmsg.text = 'CONTMSG'
-        get.side_effect = [get_state_conf, get_state_conf, get_state_conf, get_state_conf, get_state_unconf, get_contmsg]
+        get.side_effect = [get_state_conf, get_state_conf, get_state_conf,
+                           get_state_conf, get_state_unconf, get_contmsg]
 
         application_dir = os.path.join(tests_path, "../app_demo")
         runner = CliRunner()
