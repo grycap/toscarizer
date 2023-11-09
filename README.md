@@ -144,7 +144,7 @@ ComputationalLayers:
                   -----END RSA PRIVATE KEY-----
             influx:
                token: some_token
-               url: http://influx.endpoint.com
+               endpoint: http://influx.endpoint.com
    computationalLayer2:
       number: 2
       Resources: 
