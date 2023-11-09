@@ -660,9 +660,11 @@ def gen_tosca_cluster(compute_layer, layer_num, res_name, phys_nodes, elastic, a
             ssh_key = get_physical_resource_data(compute_layer, res, phys_nodes, "fe_node", "ssh_key")
             set_node_credentials(tosca_comp["topology_template"]["node_templates"]["front"], ssh_user, ssh_key)
 
+        no_res = True
         for res_id, res in compute_layer["Resources"].items():
             if res["name"] != res_name:
                 continue
+            no_res = False
             tosca_wn = copy.deepcopy(wn_tosca_tpl)
             wn_name = res_id
 
@@ -750,6 +752,8 @@ def gen_tosca_cluster(compute_layer, layer_num, res_name, phys_nodes, elastic, a
                     if len(compute_layer["Resources"]) > 1:
                         raise Exception("Elastic option cannot be using with heterogeneous WNs.")
                     ec_fe["requirements"][1]["wn"] = "wn_node_%s" % wn_name
+        if no_res:
+            raise Exception("Resource %s not found in Compute Layer %s." % (res_name, layer_num))
 
     elif compute_layer["type"] == "PhysicalAlreadyProvisioned":
         if len(compute_layer["Resources"]) != 1:
