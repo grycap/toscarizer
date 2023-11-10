@@ -1,5 +1,7 @@
 # TOSCARIZER
 
+![TOSCARIZER-logo](toscarizer.png)
+
 ## Quick-Start
 
 ### Step1: Install TOSCARIZER
