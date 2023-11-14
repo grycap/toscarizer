@@ -112,7 +112,11 @@ def fdl(application_dir, base, optimal):
 @click.option('--domain', help="Set the OSCAR clusters DNS domain", required=False)
 @click.option('--influxdb_url', help="Set InfluxDB URL", required=False, default='https://influx.oncloudandheat.com/')
 @click.option('--influxdb_token', help="Set InfluxDB API token", required=False, default='')
-def tosca(application_dir, base, optimal, elastic, im_auth, domain, influxdb_url, influxdb_token):
+@click.option('--registry_server', help="Set a private registry server", required=False, default='')
+@click.option('--registry_username', help="Set a private registry username", required=False, default='')
+@click.option('--registry_password', help="Set a private registry password", required=False, default='')
+def tosca(application_dir, base, optimal, elastic, im_auth, domain, influxdb_url,
+          influxdb_token, registry_server, registry_username, registry_password):
     if not base and not optimal:
         print("--base or --optimal options must be set.")
         sys.exit(1)
@@ -143,10 +147,20 @@ def tosca(application_dir, base, optimal, elastic, im_auth, domain, influxdb_url
             app_name, dag = parse_dag("%s/%s" % (application_dir, OPTIMAL_DAG_FILE))
             qos_contraints_file = "%s/%s" % (application_dir, OPTIMAL_QOS_CONSTRAINTS_FILE)
 
+    secret = None
+    if registry_server and registry_username and registry_password:
+        secret = {
+            "name": "private_registry",
+            "server": registry_server,
+            "username": registry_username,
+            "password": registry_password
+        }
+
     toscas = gen_tosca_yamls(app_name, dag, resources_file, deployments_file,
                              "%s/%s" % (application_dir, PHYSICAL_NODES_FILE),
                              elastic, auth_data, domain, influxdb_url, influxdb_token,
-                             qos_contraints_file, "%s/%s" % (application_dir, CONTAINERS_FILE))
+                             qos_contraints_file, "%s/%s" % (application_dir, CONTAINERS_FILE),
+                             secret)
     for cl, tosca in toscas.items():
         if optimal:
             os.makedirs("%s/aisprint/deployments/optimal_deployment/im/" % application_dir, exist_ok=True)

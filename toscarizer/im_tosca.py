@@ -346,7 +346,8 @@ spec:
     return res
 
 
-def get_service(app_name, component, next_items, prev_items, container, oscar_clusters, drift_cluster, drift_bucket):
+def get_service(app_name, component, next_items, prev_items, container,
+                oscar_clusters, drift_cluster, drift_bucket, secret_name=None):
     """Generate the OSCAR service TOSCA."""
     service = {
         "type": "tosca.nodes.aisprint.FaaS.Function",
@@ -366,6 +367,9 @@ def get_service(app_name, component, next_items, prev_items, container, oscar_cl
             }
         }
     }
+
+    if secret_name:
+        service["properties"]["image_pull_secrets"] = secret_name
 
     if container.get("trustedExecution"):
         service["properties"]["enable_sgx"] = container.get("trustedExecution")
@@ -577,8 +581,24 @@ def get_service(app_name, component, next_items, prev_items, container, oscar_cl
     return res
 
 
-def gen_tosca_cluster(compute_layer, layer_num, res_name, phys_nodes, elastic, auth_data,
-                      domain, app_name, influxdb_url, influxdb_token, qos_constraints, component):
+def get_registry_secret(name, server, username, password):
+    """Generate a KubernetesSecretRegistry TOSCA."""
+    secret_node = {
+        "type": "tosca.nodes.indigo.KubernetesSecretRegistry",
+        "properties": {
+            "name": name,
+            "server": server,
+            "username": username,
+            "password": password
+        },
+        "requirements": [ {"host": "lrms_front_end"} ]
+    }
+
+    return {"registry_secret_%s" % name: secret_node}
+
+
+def gen_tosca_cluster(compute_layer, layer_num, res_name, phys_nodes, elastic, auth_data, domain,
+                      app_name, influxdb_url, influxdb_token, qos_constraints, component, secret=None):
     with open(TOSCA_TEMPLATE, 'r') as f:
         tosca_tpl = yaml.safe_load(f)
 
@@ -644,6 +664,9 @@ def gen_tosca_cluster(compute_layer, layer_num, res_name, phys_nodes, elastic, a
         tosca_comp["topology_template"]["inputs"]["local_influx_token"]["default"] = get_random_string(16)
         tosca_comp["topology_template"]["inputs"]["local_influx_pass"]["default"] = get_random_string(16)
         tosca_comp["topology_template"]["inputs"]["fe_os_image"]["default"] = None
+
+        if secret:
+            get_registry_secret(secret["name"], secret["server"], secret["username"], secret["password"])
 
         # Add SSH info for the Front-End node
         if compute_layer["type"] == "PhysicalToBeProvisioned":

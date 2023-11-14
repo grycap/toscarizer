@@ -106,6 +106,27 @@ class TestToscarizer(unittest.TestCase):
         self.assertEqual(c1, c1_exp)
         self.assertEqual(c2, c2_exp)
 
+        # Test add registry secret
+        runner = CliRunner()
+        result = runner.invoke(toscarizer_cli, ['tosca', '--application_dir', application_dir, '--base',
+                                                '--influxdb_token', 'influx_token', '--registry_server',
+                                                'server', '--registry_user', 'user', '--registry_password',
+                                                'password'])
+        self.assertEqual(result.exit_code, 0)
+
+        c1 = open(os.path.join(application_dir, "aisprint/deployments/base/im/blurry-faces-onnx.yaml")).read()
+        c2 = open(os.path.join(application_dir, "aisprint/deployments/base/im/mask-detector.yaml")).read()
+        c1_exp = open(os.path.join(tests_path, "blurry-faces-onnx-aws.yaml")).read()
+        c2_exp = open(os.path.join(tests_path, "mask-detector-aws.yaml")).read()
+
+        os.unlink(os.path.join(application_dir,
+                               "aisprint/deployments/base/im/blurry-faces-onnx.yaml"))
+        os.unlink(os.path.join(application_dir,
+                               "aisprint/deployments/base/im/mask-detector.yaml"))
+
+        self.assertEqual(c1, c1_exp)
+        self.assertEqual(c2, c2_exp)
+
         # Test optimal case
         result = runner.invoke(toscarizer_cli, ['tosca', '--application_dir', application_dir, '--optimal',
                                                 '--influxdb_token', 'influx_token'])
