@@ -1,0 +1,72 @@
+imports:
+- ec3_custom_types: https://raw.githubusercontent.com/grycap/ec3/tosca/tosca/custom_types.yaml
+metadata:
+  infra_name: OSCAR blurry-faces-onnx
+topology_template:
+  inputs:
+    cluster_name:
+      default: oscar-cluster-fixed1
+      type: string
+    top_influx_bucket:
+      default: ai-sprint-mask-detection-app-bucket
+      type: string
+    top_influx_org:
+      default: ai-sprint
+      type: string
+    top_influx_token:
+      default: fixed1
+      type: string
+    top_influx_url:
+      default: https://influx.oscar-cluster-fixed3.im.grycap.net
+      type: string
+  node_templates:
+    oscar_service_blurry-faces-onnx:
+      properties:
+        cpu: 0.9
+        env_variables:
+          COMPONENT_NAME: blurry-faces-onnx
+          COMPUTING_UNITS: '0.9'
+          DRIFT_DETECTOR_MINIO_AK: minio
+          DRIFT_DETECTOR_MINIO_BUCKET: mask-detector
+          DRIFT_DETECTOR_MINIO_SK: fixed6
+          DRIFT_DETECTOR_MINIO_URL: https://minio.oscar-cluster-fixed3.im.grycap.net
+          KCI: https://minio.graspi.im.grycap.net
+          MONIT_HOST: ai-sprint-mask-detection-app-telegraf
+          MONIT_PORT: '8094'
+        image: registry.gitlab.polimi.it/ai-sprint/blurry-faces-onnx:tag
+        image_pull_secrets: private_registry
+        input:
+        - path: blurry-faces-onnx/input
+          storage_provider: minio
+        memory: 2048Mi
+        name: blurry-faces-onnx
+        output:
+        - path: blurry-faces-onnx/output
+          storage_provider: minio.oscar-cluster-fixed3
+          suffix:
+          - _NO_DRIFT
+        - path: blurry-faces-onnx/drift_detection_data
+          storage_provider: minio.oscar-cluster-fixed3
+          suffix:
+          - _DRIFTED
+        script: /opt/blurry-faces-onnx/script.sh
+        storage_providers:
+          minio:
+            oscar-cluster-fixed3:
+              access_key: minio
+              endpoint: https://minio.oscar-cluster-fixed3.im.grycap.net
+              region: us-east-1
+              secret_key: fixed6
+      type: tosca.nodes.aisprint.FaaS.Function
+  outputs:
+    oscar_service_cred:
+      value:
+        get_attribute:
+        - oscar_service_blurry-faces-onnx
+        - credential
+    oscar_service_url:
+      value:
+        get_attribute:
+        - oscar_service_blurry-faces-onnx
+        - endpoint
+tosca_definitions_version: tosca_simple_yaml_1_0

@@ -216,7 +216,7 @@ def gen_tosca_yamls(app_name, dag, resources_file, deployments_file, phys_file, 
         # Add the node
         oscar_service = get_service(app_name, component, next_items, list(dag.predecessors(component)),
                                     container_per_component[component], oscar_clusters_per_component,
-                                    last_layer_cluster, last_layer_component)
+                                    last_layer_cluster, last_layer_component, secret)
         oscar_clusters_per_component[component] = merge_templates(oscar_clusters_per_component[component],
                                                                   oscar_service)
 
@@ -347,7 +347,7 @@ spec:
 
 
 def get_service(app_name, component, next_items, prev_items, container,
-                oscar_clusters, drift_cluster, drift_bucket, secret_name=None):
+                oscar_clusters, drift_cluster, drift_bucket, secret=None):
     """Generate the OSCAR service TOSCA."""
     service = {
         "type": "tosca.nodes.aisprint.FaaS.Function",
@@ -368,8 +368,8 @@ def get_service(app_name, component, next_items, prev_items, container,
         }
     }
 
-    if secret_name:
-        service["properties"]["image_pull_secrets"] = secret_name
+    if secret:
+        service["properties"]["image_pull_secrets"] = secret["name"]
 
     if container.get("trustedExecution"):
         service["properties"]["enable_sgx"] = container.get("trustedExecution")

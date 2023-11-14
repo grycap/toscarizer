@@ -267,6 +267,7 @@ topology_template:
           MONIT_HOST: ai-sprint-mask-detection-app-telegraf
           MONIT_PORT: '8094'
         image: registry.gitlab.polimi.it/ai-sprint/mask-detector:tag
+        image_pull_secrets: private_registry
         input:
         - path: blurry-faces-onnx/output
           storage_provider: minio
