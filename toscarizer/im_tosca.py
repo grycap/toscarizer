@@ -120,7 +120,7 @@ def get_physical_resource_data(comp_layer, res, phys_file, node_type, value, ind
 
 def gen_tosca_yamls(app_name, dag, resources_file, deployments_file, phys_file, elastic,
                     auth_data, domain, influxdb_url, influxdb_token, qos_contraints_file,
-                    containers_file):
+                    containers_file, secret):
     with open(deployments_file, 'r') as f:
         deployments = yaml.safe_load(f)
         if "System" in deployments:
@@ -188,7 +188,7 @@ def gen_tosca_yamls(app_name, dag, resources_file, deployments_file, phys_file, 
         oscar_clusters_per_component[component] = gen_tosca_cluster(cls[cl_name], num, res_name, phys_nodes,
                                                                     elastic, auth_data, domain, app_name,
                                                                     influxdb_url, influxdb_token, qos_contraints,
-                                                                    component)
+                                                                    component, secret)
 
     # Gen influx layers
     layers = gen_next_layer_influx(oscar_clusters_per_component, app_name)
@@ -594,7 +594,7 @@ def get_registry_secret(name, server, username, password):
         "requirements": [ {"host": "lrms_front_end"} ]
     }
 
-    return {"registry_secret_%s" % name: secret_node}
+    return secret_node
 
 
 def gen_tosca_cluster(compute_layer, layer_num, res_name, phys_nodes, elastic, auth_data, domain,
@@ -666,7 +666,8 @@ def gen_tosca_cluster(compute_layer, layer_num, res_name, phys_nodes, elastic, a
         tosca_comp["topology_template"]["inputs"]["fe_os_image"]["default"] = None
 
         if secret:
-            get_registry_secret(secret["name"], secret["server"], secret["username"], secret["password"])
+            secret_node = get_registry_secret(secret["name"], secret["server"], secret["username"], secret["password"])
+            tosca_comp["topology_template"]["node_templates"]["registry_secret_%s" % secret["name"]] = secret_node
 
         # Add SSH info for the Front-End node
         if compute_layer["type"] == "PhysicalToBeProvisioned":
