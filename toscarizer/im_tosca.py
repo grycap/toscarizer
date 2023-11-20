@@ -210,7 +210,7 @@ def gen_tosca_yamls(app_name, dag, resources_file, deployments_file, phys_file, 
         last_layer_cluster = layers[max_layer][0]["cluster"]
         last_layer_component = layers[max_layer][0]["component"]
         merge_templates(last_layer_cluster, drift_detector)
-    
+
     if space4ai_r:
         space4ai_r_dep = get_space4ai_r_dep(application_url)
         merge_templates(layers[max_layer][0]["cluster"], space4ai_r_dep)
@@ -281,7 +281,8 @@ def get_space4ai_r_dep(application_url):
         "requirements": [{"host": "lrms_front_end"}, {"dependency": "lrms_front_end"}],
         "properties": {
             "namespace": "space4air",
-            "chart_url": "https://gitlab.polimi.it/ai-sprint/runtime-manager-docker-archive/-/raw/master/s4air-helm.tar.gz",
+            "chart_url":
+                "https://gitlab.polimi.it/ai-sprint/runtime-manager-docker-archive/-/raw/master/s4air-helm.tar.gz",
             "name": "space4air",
             "values": {
                 "dummy": "no"
@@ -320,7 +321,8 @@ def get_space4ai_r_dep(application_url):
         }
     }
 
-    res = {"topology_template": {"node_templates": {"space4air": space4ai_r_chart, "get_space4air_app_data": get_app_data}}}
+    res = {"topology_template": {"node_templates": {"space4air": space4ai_r_chart,
+                                                    "get_space4air_app_data": get_app_data}}}
 
     return res
 
