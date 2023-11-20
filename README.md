@@ -192,6 +192,15 @@ The generated TOSCA will also set the needed recipes to include the AI-SPRINT
 monitoring system. These recipes require to set the central InfluxDB instance URL
 (`--influxdb_url` option) and a valid API token (`--influxdb_token` option).
 
+TOSCARIZER can also deploy [SPACE4AI-R](https://gitlab.polimi.it/ai-sprint/space4ai-r-optimizer)
+component on the deployed infrastructure using the `--space4ai_r` option.
+In this case the user must also provide a git url with the full content of the
+application directory with the option `--application_url`.
+
+```sh
+toscarizer tosca --application_dir app --optimal --space4ai_r --application_url https://gitlab.polimi.it/ai-sprint/runtime-manager-app
+```
+
 ### Step5: Deploy TOSCA YAML files
 
 To deploy the TOSCA files generated for the base case use:
