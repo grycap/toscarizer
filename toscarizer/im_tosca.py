@@ -290,6 +290,8 @@ def get_space4ai_r_dep(application_url):
         }
     }
 
+    command = ("apk add git && mkdir /data/git && cd /data/git && "
+               "git clone %s && mv * /data/app && rm -rf /data/git") % application_url
     get_app_data = {
         "type": "tosca.nodes.indigo.KubernetesObject",
         "requirements": [{"host": "lrms_front_end"}, {"dependency": "space4air"}],
@@ -314,10 +316,10 @@ def get_space4ai_r_dep(application_url):
                     command:
                     - sh
                     - -c
-                    - apk add git && mkdir /data/git && cd /data/git && git clone %s && mv * /data/app && rm -rf /data/git
+                    - %s
                     volumeMounts:
                       - mountPath: '/data'
-                        name: pv-storage""" % application_url
+                        name: pv-storage""" % command
         }
     }
 
