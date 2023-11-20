@@ -206,15 +206,14 @@ def gen_tosca_yamls(app_name, dag, resources_file, deployments_file, phys_file, 
                                         layers[max_layer][0]["component"],
                                         qos_contraints,
                                         max_layer)
-    if drift_detector or space4ai_r:
+    if drift_detector:
         last_layer_cluster = layers[max_layer][0]["cluster"]
         last_layer_component = layers[max_layer][0]["component"]
-    if drift_detector:
         merge_templates(last_layer_cluster, drift_detector)
     
     if space4ai_r:
         space4ai_r_dep = get_space4ai_r_dep(application_url)
-        merge_templates(last_layer_cluster, space4ai_r_dep)
+        merge_templates(layers[max_layer][0]["cluster"], space4ai_r_dep)
 
     # Now create the OSCAR services and merge in the correct OSCAR cluster
     for component, next_items in dag.adj.items():
