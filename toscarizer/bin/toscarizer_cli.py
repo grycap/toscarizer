@@ -112,7 +112,10 @@ def fdl(application_dir, base, optimal):
 @click.option('--domain', help="Set the OSCAR clusters DNS domain", required=False)
 @click.option('--influxdb_url', help="Set InfluxDB URL", required=False, default='https://influx.oncloudandheat.com/')
 @click.option('--influxdb_token', help="Set InfluxDB API token", required=False, default='')
-def tosca(application_dir, base, optimal, elastic, im_auth, domain, influxdb_url, influxdb_token):
+@click.option('--space4ai_r', help="Install SPACE4AI-R in the deployment", default=False, is_flag=True)
+@click.option('--application_url', help="Git URL to clone the application", required=False, default='')
+def tosca(application_dir, base, optimal, elastic, im_auth, domain, influxdb_url,
+          influxdb_token, space4ai_r, application_url):
     if not base and not optimal:
         print("--base or --optimal options must be set.")
         sys.exit(1)
@@ -146,7 +149,8 @@ def tosca(application_dir, base, optimal, elastic, im_auth, domain, influxdb_url
     toscas = gen_tosca_yamls(app_name, dag, resources_file, deployments_file,
                              "%s/%s" % (application_dir, PHYSICAL_NODES_FILE),
                              elastic, auth_data, domain, influxdb_url, influxdb_token,
-                             qos_contraints_file, "%s/%s" % (application_dir, CONTAINERS_FILE))
+                             qos_contraints_file, "%s/%s" % (application_dir, CONTAINERS_FILE),
+                             space4ai_r, application_url)
     for cl, tosca in toscas.items():
         if optimal:
             os.makedirs("%s/aisprint/deployments/optimal_deployment/im/" % application_dir, exist_ok=True)

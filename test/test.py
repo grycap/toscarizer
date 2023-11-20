@@ -185,7 +185,9 @@ class TestToscarizer(unittest.TestCase):
                                      "fixed1", "fixed10", "fixed3", "fixed6", "fixed13", "fixed6", "fixed1",
                                      "fixed16", "fixed17", "fixed18", "fixed19", "fixed20", "fixed21", "fixed22",
                                      "fixed23", "fixed24", "fixed25", "fixed26", "fixed27", "fixed28", "fixed29",
-                                     "fixed30", "fixed31"]
+                                     "fixed30", "fixed31", "fixed17", "fixed33", "fixed19", "fixed20", "fixed21", "fixed22",
+                                     "fixed23", "fixed24", "fixed40", "fixed26", "fixed27", "fixed28", "fixed29", "fixed30",
+                                     "fixed31"]
         application_dir = os.path.join(tests_path, "../app_demo")
 
         # Test base elastic case
@@ -219,7 +221,6 @@ class TestToscarizer(unittest.TestCase):
         result = runner.invoke(toscarizer_cli, ['tosca', '--application_dir', application_dir, "--optimal"])
         self.assertEqual(result.exit_code, 0)
 
-        os.unlink(os.path.join(application_dir, 'aisprint/designs/containers.yaml'))
         c1 = open(os.path.join(application_dir,
                                "aisprint/deployments/optimal_deployment/im/blurry-faces-onnx_partition1_1.yaml")).read()
         c2 = open(os.path.join(application_dir,
@@ -229,6 +230,26 @@ class TestToscarizer(unittest.TestCase):
         c1_exp = open(os.path.join(tests_path, "blurry-faces-onnx_partition1_1.yaml")).read()
         c2_exp = open(os.path.join(tests_path, "blurry-faces-onnx_partition1_2.yaml")).read()
         c3_exp = open(os.path.join(tests_path, "mask-detector-optimal.yaml")).read()
+
+        self.assertEqual(c1, c1_exp)
+        self.assertEqual(c2, c2_exp)
+        self.assertEqual(c3, c3_exp)
+
+        # Test optimal case with space4air
+        result = runner.invoke(toscarizer_cli, ['tosca', '--application_dir', application_dir, "--optimal", "--space4ai_r",
+                                                "--application_url", "https://gitlab.polimi.it/ai-sprint/runtime-manager-app/"])
+        self.assertEqual(result.exit_code, 0)
+
+        os.unlink(os.path.join(application_dir, 'aisprint/designs/containers.yaml'))
+        c1 = open(os.path.join(application_dir,
+                               "aisprint/deployments/optimal_deployment/im/blurry-faces-onnx_partition1_1.yaml")).read()
+        c2 = open(os.path.join(application_dir,
+                               "aisprint/deployments/optimal_deployment/im/blurry-faces-onnx_partition1_2.yaml")).read()
+        c3 = open(os.path.join(application_dir,
+                               "aisprint/deployments/optimal_deployment/im/mask-detector.yaml")).read()
+        c1_exp = open(os.path.join(tests_path, "blurry-faces-onnx_partition1_1.yaml")).read()
+        c2_exp = open(os.path.join(tests_path, "blurry-faces-onnx_partition1_2.yaml")).read()
+        c3_exp = open(os.path.join(tests_path, "mask-detector-optimal-sair.yaml")).read()
 
         self.assertEqual(c1, c1_exp)
         self.assertEqual(c2, c2_exp)
