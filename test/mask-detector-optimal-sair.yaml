@@ -158,9 +158,9 @@ topology_template:
           \                      claimName: aml-claim0\n                containers:\n\
           \                  - name: pv-load\n                    image: alpine\n\
           \                    command:\n                    - sh\n              \
-          \      - -c\n                    - apk add git && mkdir /data/git cd /data/git\
-          \ && git clone https://gitlab.polimi.it/ai-sprint/runtime-manager-app/ &&\
-          \ mv * /data/app && rm -rf /data/git\n                    volumeMounts:\n\
+          \      - -c\n                    - apk add git && mkdir /data/git && cd\
+          \ /data/git && git clone https://gitlab.polimi.it/ai-sprint/runtime-manager-app/\
+          \ && mv * /data/app && rm -rf /data/git\n                    volumeMounts:\n\
           \                      - mountPath: '/data'\n                        name:\
           \ pv-storage"
       requirements:
