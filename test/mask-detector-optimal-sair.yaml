@@ -313,7 +313,7 @@ topology_template:
       type: tosca.nodes.aisprint.FaaS.Function
     space4air:
       properties:
-        chart_url: https://gitlab.polimi.it/ai-sprint/runtime-manager-app/
+        chart_url: https://gitlab.polimi.it/ai-sprint/runtime-manager-docker-archive/-/raw/master/s4air-helm.tar.gz
         name: space4air
         namespace: space4air
         values:

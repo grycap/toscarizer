@@ -281,7 +281,7 @@ def get_space4ai_r_dep(application_url):
         "requirements": [{"host": "lrms_front_end"}, {"dependency": "lrms_front_end"}],
         "properties": {
             "namespace": "space4air",
-            "chart_url": "https://gitlab.polimi.it/ai-sprint/runtime-manager-app/",
+            "chart_url": "https://gitlab.polimi.it/ai-sprint/runtime-manager-docker-archive/-/raw/master/s4air-helm.tar.gz",
             "name": "space4air",
             "values": {
                 "dummy": "no"
