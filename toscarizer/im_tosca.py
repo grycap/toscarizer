@@ -120,7 +120,7 @@ def get_physical_resource_data(comp_layer, res, phys_file, node_type, value, ind
 
 def gen_tosca_yamls(app_name, dag, resources_file, deployments_file, phys_file, elastic,
                     auth_data, domain, influxdb_url, influxdb_token, qos_contraints_file,
-                    containers_file):
+                    containers_file, space4ai_r, application_url):
     with open(deployments_file, 'r') as f:
         deployments = yaml.safe_load(f)
         if "System" in deployments:
@@ -210,6 +210,10 @@ def gen_tosca_yamls(app_name, dag, resources_file, deployments_file, phys_file, 
         last_layer_cluster = layers[max_layer][0]["cluster"]
         last_layer_component = layers[max_layer][0]["component"]
         merge_templates(last_layer_cluster, drift_detector)
+    
+    if space4ai_r:
+        space4ai_r_dep = get_space4ai_r_dep(application_url)
+        merge_templates(last_layer_cluster, space4ai_r_dep)
 
     # Now create the OSCAR services and merge in the correct OSCAR cluster
     for component, next_items in dag.adj.items():
@@ -269,6 +273,56 @@ def gen_next_layer_influx(oscar_clusters, app_name):
                 cluster_inputs["top_influx_bucket"] = {"default": "%s-bucket" % app_name,
                                                        "type": "string"}
     return layers
+
+
+def get_space4ai_r_dep(application_url):
+    space4ai_r_chart = {
+        "type": "tosca.nodes.indigo.Helm.Chart",
+        "requirements": [{"host": "lrms_front_end"}, {"dependency": "lrms_front_end"}],
+        "properties": {
+            "namespace": "space4air",
+            "chart_url": "https://gitlab.polimi.it/ai-sprint/runtime-manager-app/",
+            "name": "space4air",
+            "values": {
+                "dummy": "no"
+            }
+        }
+    }
+
+    get_app_data = {
+        "type": "tosca.nodes.indigo.KubernetesObject",
+        "requirements": [{"host": "lrms_front_end"}, {"dependency": "space4air"}],
+        "properties": {
+            "spec": """
+          apiVersion: batch/v1
+          kind: Job
+          metadata:
+            namespace: space4air
+            name: pv-load-space4air-app-data
+          spec:
+            template:
+              spec:
+                restartPolicy: OnFailure
+                volumes:
+                  - name: pv-storage
+                    persistentVolumeClaim:
+                      claimName: aml-claim0
+                containers:
+                  - name: pv-load
+                    image: alpine
+                    command:
+                    - sh
+                    - -c
+                    - apk add git && mkdir /data/git cd /data/git && git clone %s && mv * /data/app && rm -rf /data/git
+                    volumeMounts:
+                      - mountPath: '/data'
+                        name: pv-storage""" % application_url
+        }
+    }
+
+    res = {"topology_template": {"node_templates": {"space4air": space4ai_r_chart, "get_space4air_app_data": get_app_data}}}
+
+    return res
 
 
 def get_drift_detector(containers_file, oscar_cluster, component, qos_contraints, layer_num):
