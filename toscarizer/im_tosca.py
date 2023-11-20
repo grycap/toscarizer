@@ -314,7 +314,7 @@ def get_space4ai_r_dep(application_url):
                     command:
                     - sh
                     - -c
-                    - apk add git && mkdir /data/git cd /data/git && git clone %s && mv * /data/app && rm -rf /data/git
+                    - apk add git && mkdir /data/git && cd /data/git && git clone %s && mv * /data/app && rm -rf /data/git
                     volumeMounts:
                       - mountPath: '/data'
                         name: pv-storage""" % application_url
