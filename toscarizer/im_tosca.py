@@ -206,9 +206,10 @@ def gen_tosca_yamls(app_name, dag, resources_file, deployments_file, phys_file, 
                                         layers[max_layer][0]["component"],
                                         qos_contraints,
                                         max_layer)
-    if drift_detector:
+    if drift_detector or space4ai_r:
         last_layer_cluster = layers[max_layer][0]["cluster"]
         last_layer_component = layers[max_layer][0]["component"]
+    if drift_detector:
         merge_templates(last_layer_cluster, drift_detector)
     
     if space4ai_r:
