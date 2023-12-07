@@ -61,7 +61,9 @@ def generate_dockerfiles(base_image, app_dir, components, resources):
             dockerfile_path = "%s/Dockerfile" % dockerfile_dir
             dockerfile = "FROM %s\n%s\n%s" % (base_image,
                                               env_vars,
-                                              dockerfile_tpl.replace("{{component_name}}", component))
+                                              dockerfile_tpl.replace("{{component_name}}",
+                                                                     component).replace("{{partition_name}}",
+                                                                                        part_name))
             with open(dockerfile_path, 'w+') as f:
                 f.write(dockerfile)
 
