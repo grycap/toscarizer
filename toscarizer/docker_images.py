@@ -53,9 +53,6 @@ def generate_dockerfiles(base_image, app_dir, components, resources):
             else:
                 part_name = "%s_%s" % (component, partition)
 
-            if part_name not in resources:
-                part_name = get_part_x_name(part_name)
-
             dockerfiles[component][partition] = []
             dockerfile_dir = "%s/aisprint/designs/%s/%s" % (app_dir, component, partition)
             dockerfile_path = "%s/Dockerfile" % dockerfile_dir
@@ -66,6 +63,9 @@ def generate_dockerfiles(base_image, app_dir, components, resources):
                                                                                         part_name))
             with open(dockerfile_path, 'w+') as f:
                 f.write(dockerfile)
+
+            if part_name not in resources:
+                part_name = get_part_x_name(part_name)
 
             # Generate image for SCAR in ECR
             if resources[part_name]["aws"]:
