@@ -1,0 +1,5 @@
+system:
+  name: filter_classifier_early_exits
+  local_constraints: {}
+  global_constraints: {}
+  throughput_component: filter

@@ -1,0 +1,13 @@
+System:
+  name: filter_classifier_early_exits
+  components:
+  - filter
+  - classifier_partition1_1
+  - classifier_partition1_2
+  dependencies:
+  - - filter
+    - classifier_partition1_1
+    - 1
+  - - classifier_partition1_1
+    - classifier_partition1_2
+    - 0.75

@@ -134,6 +134,99 @@ class TestToscarizer(unittest.TestCase):
         self.assertEqual(c3, c3_exp)
 
     def test_10_docker(self):
+        files = ['aisprint/designs/classifier/base/Dockerfile',
+                 'aisprint/designs/classifier/partition1_1/Dockerfile',
+                 'aisprint/designs/classifier/partition1_2/Dockerfile',
+                 'aisprint/designs/filter/base/Dockerfile',
+                 'aisprint/designs/classifier/base/script.sh',
+                 'aisprint/designs/classifier/partition1_1/script.sh',
+                 'aisprint/designs/classifier/partition1_2/script.sh',
+                 'aisprint/designs/filter/base/script.sh']
+        application_dir = os.path.join(tests_path, "../app_early")
+
+        runner = CliRunner()
+        result = runner.invoke(toscarizer_cli, ['docker', "--dry-run", '--application_dir', application_dir,
+                                                "--registry", "docker.io", "--registry_folder", "/micafer"])
+
+        self.assertEqual(result.exit_code, 0)
+        for fname in files:
+            self.assertTrue(os.path.isfile(os.path.join(application_dir, fname)))
+            os.unlink(os.path.join(application_dir, fname))
+
+        with open(os.path.join(application_dir, 'aisprint/designs/containers.yaml'), 'r') as f:
+            containers = yaml.safe_load(f)
+        expected = {
+            'components': {
+                'classifier': {
+                    'docker_images': [
+                        'docker.io/micafer/classifier_base_amd64:latest',
+                        'docker.io/micafer/classifier_partition1_1_amd64:latest',
+                        'docker.io/micafer/classifier_partition1_2_amd64:latest'
+                    ]
+                },
+                'filter': {
+                    'docker_images': [
+                        'docker.io/micafer/filter_base_amd64:latest',
+                        'docker.io/micafer/filter_partition1_2_amd64:latest',
+                        'docker.io/micafer/filter_partition1_1_amd64:latest'
+                    ]
+                }
+            }
+        }
+        self.assertEqual(containers, expected)
+
+    @patch('toscarizer.im_tosca.get_random_string')
+    def test_15_tosca(self, random_string):
+        random_string.side_effect = ["fixed1", "fixed2", "fixed3", "fixed4", "fixed5", "fixed6", "fixed1", "fixed4",
+                                     "fixed1", "fixed10", "fixed3", "fixed6", "fixed13", "fixed6", "fixed1",
+                                     "fixed2", "fixed3", "fixed4", "fixed5", "fixed6", "fixed1", "fixed22",
+                                     "fixed1", "fixed24", "fixed25", "fixed6", "fixed13", "fixed28", "fixed29",
+                                     "fixed30", "fixed31", "fixed32", "fixed33", "fixed34", "fixed35", "fixed36"]
+        application_dir = os.path.join(tests_path, "../app_early")
+
+        # Test base case
+        runner = CliRunner()
+        result = runner.invoke(toscarizer_cli, ['tosca', '--application_dir', application_dir, "--base"])
+        self.assertEqual(result.exit_code, 0)
+
+        c1 = open(os.path.join(application_dir, "aisprint/deployments/base/im/classifier.yaml")).read()
+        c2 = open(os.path.join(application_dir, "aisprint/deployments/base/im/filter.yaml")).read()
+        c1_exp = open(os.path.join(tests_path, "classifier.yaml")).read()
+        c2_exp = open(os.path.join(tests_path, "filter.yaml")).read()
+
+        self.assertEqual(c1, c1_exp)
+        self.assertEqual(c2, c2_exp)
+
+        os.unlink(os.path.join(application_dir, "aisprint/deployments/base/im/classifier.yaml"))
+        os.unlink(os.path.join(application_dir, "aisprint/deployments/base/im/filter.yaml"))
+
+        # Test optimal case
+        result = runner.invoke(toscarizer_cli, ['tosca', '--application_dir', application_dir, "--optimal"])
+        self.assertEqual(result.exit_code, 0)
+
+        os.unlink(os.path.join(application_dir, 'aisprint/designs/containers.yaml'))
+        c1 = open(os.path.join(application_dir,
+                               "aisprint/deployments/optimal_deployment/im/classifier_partition1_1.yaml")).read()
+        c2 = open(os.path.join(application_dir,
+                               "aisprint/deployments/optimal_deployment/im/classifier_partition1_2.yaml")).read()
+        c3 = open(os.path.join(application_dir,
+                               "aisprint/deployments/optimal_deployment/im/filter.yaml")).read()
+        c1_exp = open(os.path.join(tests_path, "classifier_partition1_1.yaml")).read()
+        c2_exp = open(os.path.join(tests_path, "classifier_partition1_2.yaml")).read()
+        c3_exp = open(os.path.join(tests_path, "filter.yaml")).read()
+
+        os.unlink(os.path.join(application_dir,
+                               "aisprint/deployments/optimal_deployment/im/classifier_partition1_1.yaml"))
+        os.unlink(os.path.join(application_dir,
+                               "aisprint/deployments/optimal_deployment/im/classifier_partition1_2.yaml"))
+        os.unlink(os.path.join(application_dir,
+                               "aisprint/deployments/optimal_deployment/im/filter.yaml"))
+
+        self.assertEqual(c1, c1_exp)
+        self.assertEqual(c2, c2_exp)
+        self.assertEqual(c3, c3_exp)
+
+    def test_20_docker(self):
         files = ['aisprint/designs/blurry-faces-onnx/base/Dockerfile',
                  'aisprint/designs/blurry-faces-onnx/partition1_1/Dockerfile',
                  'aisprint/designs/blurry-faces-onnx/partition1_2/Dockerfile',
@@ -180,7 +273,7 @@ class TestToscarizer(unittest.TestCase):
         self.assertEqual(containers, expected)
 
     @patch('toscarizer.im_tosca.get_random_string')
-    def test_15_tosca(self, random_string):
+    def test_25_tosca(self, random_string):
         random_string.side_effect = ["fixed1", "fixed2", "fixed3", "fixed4", "fixed5", "fixed6", "fixed1", "fixed4",
                                      "fixed1", "fixed10", "fixed3", "fixed6", "fixed13", "fixed6", "fixed1",
                                      "fixed16", "fixed17", "fixed18", "fixed19", "fixed20", "fixed21", "fixed22",
@@ -234,7 +327,7 @@ class TestToscarizer(unittest.TestCase):
         self.assertEqual(c2, c2_exp)
         self.assertEqual(c3, c3_exp)
 
-    def test_20_fdl(self):
+    def test_30_fdl(self):
         application_dir = os.path.join(tests_path, "../app_demo")
         # Test base case
         runner = CliRunner()
@@ -268,7 +361,7 @@ class TestToscarizer(unittest.TestCase):
     @patch('requests.get')
     @patch('requests.post')
     @patch('time.sleep')
-    def test_30_deploy(self, sleep, post, get):
+    def test_40_deploy(self, sleep, post, get):
         create_im = MagicMock()
         create_im.status_code = 200
         create_im.text = "https://im/inf_id1"
@@ -335,7 +428,7 @@ class TestToscarizer(unittest.TestCase):
 
     @patch('requests.get')
     @patch('builtins.print')
-    def test_40_outputs(self, mock_print, get):
+    def test_50_outputs(self, mock_print, get):
         resp = MagicMock()
         resp.status_code = 200
         resp.json.return_value = {"outputs": {"out1": "value1"}}
@@ -366,7 +459,7 @@ class TestToscarizer(unittest.TestCase):
                                                               '  out1: value1\n'))
 
     @patch('requests.delete')
-    def test_50_delete(self, delete):
+    def test_60_delete(self, delete):
         delete_resp = MagicMock()
         delete_resp.status_code = 200
         delete_resp.text = ""

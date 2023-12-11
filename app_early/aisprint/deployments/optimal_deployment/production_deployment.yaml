@@ -1,0 +1,119 @@
+System:
+  name: filter_classifier_early_exits
+  NetworkDomains:
+    ND1:
+      name: Network Domain 1
+      AccessDelay: 2.77e-06
+      Bandwidth: 40000
+      subNetworkDomains: []
+      ComputationalLayers:
+        computationalLayer1:
+          name: Private Cloud Layer
+          number: 1
+          type: Virtual
+          Resources:
+            resource1:
+              name: VM1
+              totalNodes: 5
+              description: t2.large
+              cost: 1.2
+              memorySize: 8192
+              storageSize: 450
+              storageType: SSD
+              operatingSystemDistribution: Ubuntu
+              operatingSystemType: Linux
+              operatingSystemVersion: 20.04
+              operatingSystemImageId: aws://us-east-1/ami-0149b2da6ceec4bb0
+              secureBoot: false
+              measuredBoot: false
+              onSpot: false
+              processors:
+                processor1:
+                  name: Xeon
+                  type: SkyLake
+                  architecture: amd64
+                  computingUnits: 4
+                  internalMemory: 64
+                  SGXFlag: false
+    ND2:
+      name: Network Domain 2
+      AccessDelay: 2.77e-06
+      Bandwidth: 40000
+      subNetworkDomains: []
+      ComputationalLayers:
+        computationalLayer3:
+          name: Public Cloud Layer
+          number: 3
+          type: Virtual
+          Resources:
+            resource1:
+              name: VM4
+              totalNodes: 5
+              description: t2.large
+              cost: 1.2
+              memorySize: 8192
+              storageSize: 450
+              storageType: SSD
+              operatingSystemDistribution: Ubuntu
+              operatingSystemType: Linux
+              operatingSystemVersion: 20.04
+              operatingSystemImageId: aws://us-east-1/ami-0149b2da6ceec4bb0
+              secureBoot: false
+              measuredBoot: false
+              onSpot: false
+              processors:
+                processor1:
+                  name: Xeon
+                  type: SkyLake
+                  architecture: amd64
+                  computingUnits: 4
+                  internalMemory: 64
+                  SGXFlag: false
+    ND3:
+      name: Network Domain 3
+      AccessDelay: 2.77e-06
+      Bandwidth: 40000
+      subNetworkDomains:
+      - ND1
+      - ND2
+  Components:
+    component1:
+      name: filter
+      executionLayer: 1
+      Containers:
+        container1:
+          image: img1_0_0_1
+          memorySize: 1024
+          computingUnits: 0.9
+          trustedExecution: false
+          networkProtection: false
+          fileSystemProtection: false
+          GPURequirement: false
+          selectedExecutionResource: VM1
+    component2:
+      name: classifier_partition1_1
+      executionLayer: 3
+      Containers:
+        container1:
+          image: img2_0_0_1
+          memorySize: 1024
+          computingUnits: 0.9
+          trustedExecution: false
+          networkProtection: false
+          fileSystemProtection: false
+          GPURequirement: false
+          selectedExecutionResource: VM4
+    component3:
+      name: classifier_partition1_2
+      executionLayer: 3
+      Containers:
+        container1:
+          image: img2_0_0_1
+          memorySize: 1024
+          computingUnits: 0.9
+          trustedExecution: false
+          networkProtection: false
+          fileSystemProtection: false
+          GPURequirement: false
+          selectedExecutionResource: VM4
+  DeploymentName: deployment4

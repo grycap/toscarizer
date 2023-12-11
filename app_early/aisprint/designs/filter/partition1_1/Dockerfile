@@ -1,10 +1,11 @@
-RUN mkdir /opt/{{component_name}}
-RUN ln -s /opt/{{component_name}} /opt/{{partition_name}}
+FROM registry.gitlab.polimi.it/ai-sprint/toscarizer/ai-sprint-base
 
-WORKDIR /opt/{{component_name}}
+RUN mkdir /opt/filter
+
+WORKDIR /opt/filter
 
 # Copy requirements files
-COPY requirements.* /opt/{{component_name}}/
+COPY requirements.* /opt/filter/
 
 # Instal system requirements first
 RUN touch requirements.sys && \
@@ -17,5 +18,5 @@ RUN pip install --upgrade pip
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application and onnx models
-COPY . /opt/{{component_name}}/
-RUN chmod +x /opt/{{component_name}}/script.sh
+COPY . /opt/filter/
+RUN chmod +x /opt/filter/script.sh

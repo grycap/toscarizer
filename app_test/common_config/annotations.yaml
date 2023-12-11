@@ -1,0 +1,14 @@
+app_test/src/blurry-faces-onnx/main.py:
+  component_name:
+    name: blurry-faces-onnx
+  exec_time:
+    local_time_thr: 20
+  expected_throughput:
+    rate: 0.25
+  partitionable_model:
+    onnx_file: version-RFB-640.onnx
+app_test/src/mask-detector/main.py:
+  component_name:
+    name: mask-detector
+  exec_time:
+    local_time_thr: 10

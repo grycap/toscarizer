@@ -1,0 +1,11 @@
+components:
+  classifier:
+    partitions:
+    - base
+    - partition1_1
+    - partition1_2
+  filter:
+    partitions:
+    - base
+    - partition1_2
+    - partition1_1

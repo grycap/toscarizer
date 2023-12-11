@@ -32,9 +32,11 @@ from toscarizer.utils import (DEPLOYMENTS_FILE,
                               QOS_CONSTRAINTS_FILE,
                               OPTIMAL_QOS_CONSTRAINTS_FILE,
                               RELATIVE_QOS_CONSTRAINTS_FILE,
+                              ANNOTATIONS_FILE,
                               parse_dag,
                               parse_resources,
-                              get_base_deployment_name)
+                              get_base_deployment_name,
+                              get_early_exits)
 from toscarizer.fdl import generate_fdl
 from toscarizer.docker_images import generate_dockerfiles, build_and_push, generate_containers
 from toscarizer.im_tosca import gen_tosca_yamls
@@ -143,10 +145,13 @@ def tosca(application_dir, base, optimal, elastic, im_auth, domain, influxdb_url
             app_name, dag = parse_dag("%s/%s" % (application_dir, OPTIMAL_DAG_FILE))
             qos_contraints_file = "%s/%s" % (application_dir, OPTIMAL_QOS_CONSTRAINTS_FILE)
 
+    early_exits = get_early_exits("%s/%s" % (application_dir, ANNOTATIONS_FILE))
+
     toscas = gen_tosca_yamls(app_name, dag, resources_file, deployments_file,
                              "%s/%s" % (application_dir, PHYSICAL_NODES_FILE),
                              elastic, auth_data, domain, influxdb_url, influxdb_token,
-                             qos_contraints_file, "%s/%s" % (application_dir, CONTAINERS_FILE))
+                             qos_contraints_file, "%s/%s" % (application_dir, CONTAINERS_FILE),
+                             early_exits)
     for cl, tosca in toscas.items():
         if optimal:
             os.makedirs("%s/aisprint/deployments/optimal_deployment/im/" % application_dir, exist_ok=True)

@@ -1,0 +1,19 @@
+filter_classifier_early_exits/src/classifier/main.py:
+  component_name:
+    name: classifier
+  early_exits_model:
+    condition_function: early_exit_condition
+    onnx_file: ee_classifier.onnx
+    transition_probabilities:
+    - 0.75
+  exec_time:
+    local_time_thr: 10
+filter_classifier_early_exits/src/filter/main.py:
+  component_name:
+    name: filter
+  exec_time:
+    local_time_thr: 20
+  expected_throughput:
+    rate: 1
+  partitionable_model:
+    onnx_file: filter.onnx
